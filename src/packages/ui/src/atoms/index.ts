@@ -5,3 +5,7 @@ export * from "./Logo";
 export * from "./StatusDot";
 export * from "./Surface";
 export * from "./Swatch";
+export * from "./Chip";
+export * from "./Select";
+export * from "./Slider";
+export * from "./TextField";
