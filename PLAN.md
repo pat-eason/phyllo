@@ -111,7 +111,12 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 |---|---|---|---|---|---|
 | T7.5a | build agent | self-test mode + `pnpm tauri build` | T3.7 | built app runs the DoD flow in WKWebView (open, play starter, edit, save, reopen from library, export WAV) and writes a pass report | done |
 
-T7.1 shortcuts (SPEC §7) · T7.2 a11y pass (SPEC §8) · T7.3 screenshot parity fixes · T7.4 performance (no React re-render for playhead/meters) · T7.5 `pnpm tauri build` packaging + end-to-end smoke (open, play starter, edit, save, reopen, export WAV) · T7.V final verifier against SPEC §6 + DoD.
+| T7.1 | shell agent (in T3.7) | shortcuts SPEC §7 | T3.7 | table-driven, input isolation; verified 20/20 by T3.V | done |
+| T7.2 | F4/F6/F7/F8/F10 | a11y pass SPEC §8 | T2.V, T3.V | axe 0 violations on all screens × 2 themes (F10) | done |
+| T7.3 | F7/F8/F10 | screenshot parity fixes | T3.V | 0 S1/S2 visual defects; S3 fixed or recorded | done |
+| T7.4 | T3.3/T3.1 | performance | — | zero Timeline/Inspector re-renders while playing, 60 fps (T3.V) | done |
+| T7.5 | T7.5a + F9 | `pnpm tauri build` + DoD flow, CSP, single instance | — | selftest 13/13 in release app, CSP enforced | done |
+| T7.V | verifier | read-only | all | whole-project DoD audit | active |
 
 ### Follow-ups backlog (not yet assigned)
 - ~~B1~~ done (T6.5, D133): Sample folders: call `native.sampleFoldersWatch(all)` + `sampleFolderScan` → `engine.registerSamples({name: [convertFileSrc(path)]})` with collision suffixes; rescan on `onSamplesChanged` (state layer) — from T3.4/T6.1.
