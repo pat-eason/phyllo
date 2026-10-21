@@ -26,7 +26,19 @@ use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let builder = tauri::Builder::default()
+    let selftest = selftest::SelftestConfig::from_env();
+    let builder = tauri::Builder::default();
+    // Must be the first plugin (D96). A self-test run is a separate throwaway instance: it must not hand itself to a
+    // Phyllo the user already has open.
+    #[cfg(desktop)]
+    let builder = if selftest.enabled {
+        builder
+    } else {
+        builder.plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
+            commands::on_second_instance(app, argv, &cwd)
+        }))
+    };
+    let builder = builder
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
@@ -42,7 +54,7 @@ pub fn run() {
         .manage(media::MediaState::default())
         .manage(windows::KeepRunning::default())
         .manage(open_files::OpenFileQueue::default())
-        .manage(selftest::SelftestConfig::from_env());
+        .manage(selftest);
 
     // Global shortcuts exist on desktop only.
     #[cfg(desktop)]
@@ -92,6 +104,7 @@ pub fn run() {
             commands::export_chunk,
             commands::export_finish,
             commands::export_cancel,
+            commands::export_unique_path,
             commands::midi_file_write,
             commands::menu_set_state,
             commands::menu_set_recent,

@@ -214,7 +214,7 @@ test("#12 limiter is on by default and holds −0.3 dBFS on the house and 16-bit
   }
 });
 
-test("#12 #19 renderOffline goes through the limiter and doesn't flood cross-context errors", async () => {
+test("#12 #19 B19 renderOffline goes through the limiter, doesn't flood cross-context errors or drop haps", async () => {
   const r = await page.evaluate(async () => {
     const h = window.harness;
     const s = h.starterProgram("stage");
@@ -224,6 +224,7 @@ test("#12 #19 renderOffline goes through the limiter and doesn't flood cross-con
     h.engine.play(); // live voices end while superdough is on the offline context
     await new Promise((res) => setTimeout(res, 600));
     const before = window.errorEvents.length;
+    const logsBefore = h.logs.length;
     const hot: GeneratedProgram = {
       code: `setcpm(120/4)\n$: note("c2 g2").s("sawtooth").gain(4)`,
       lines: { hot: { start: 2, end: 2 } },
@@ -242,6 +243,7 @@ test("#12 #19 renderOffline goes through the limiter and doesn't flood cross-con
       hot: peak(hotBuf),
       song: peak(songBuf),
       errors: window.errorEvents.slice(before),
+      renderWarnings: h.logs.slice(logsBefore).filter((l) => l.level !== "debug" && /offline render|audio context/i.test(l.message)),
       status: h.engine.status,
     };
   });
@@ -250,6 +252,8 @@ test("#12 #19 renderOffline goes through the limiter and doesn't flood cross-con
   expect(r.song).toBeGreaterThan(0.05);
   expect(r.song).toBeLessThanOrEqual(CEILING);
   expect(r.errors).toEqual([]);
+  // B19: no hap fails to build offline because superdough handed it a node of the live context
+  expect(r.renderWarnings).toEqual([]);
   expect(r.status.ok, JSON.stringify(r.status)).toBe(true);
 });
 

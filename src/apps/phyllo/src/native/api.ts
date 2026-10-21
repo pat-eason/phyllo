@@ -117,6 +117,12 @@ export interface NativeApi {
   /** Discard the session and any partial data. Idempotent. */
   exportCancel(sessionId: string): Promise<void>;
   /**
+   * A path for a default-named export that won't replace an earlier file (B12): `fileName` if free, else
+   * `<stem> 2.<ext>`, `<stem> 3.<ext>`… A bare name resolves in `Exports/` (the result is absolute); an absolute
+   * path keeps its folder. Nothing is written. In the browser (downloads) it returns `fileName` unchanged.
+   */
+  exportUniquePath(fileName: string): Promise<string>;
+  /**
    * Write a Standard MIDI File (type 1: a tempo track plus one track per entry). A bare file name goes to
    * `Exports/`; `.mid` is added if missing. In the browser this triggers a download.
    */

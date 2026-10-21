@@ -39,6 +39,12 @@ export interface EngineOptions {
   resolveUrl?: (url: string) => string | Promise<string>;
   /** Scheduler look-ahead in ms (default 100, Strudel's fixed value; DECISIONS V16). */
   lookaheadMs?: number;
+  /**
+   * AudioContext sample rate in Hz, applied when `init()` creates the context (B8). null/absent = the device
+   * default. The live rate can't change afterwards: read `engine.sampleRate` and compare to show "applies after
+   * restart". Rates outside 8–96 kHz, or ones the platform rejects, fall back to the device default.
+   */
+  sampleRate?: number | null;
 }
 
 /** Bars are 1-based and inclusive, like `Project.loop`. */
@@ -130,6 +136,7 @@ export interface PhylloEngine {
   /** `AudioContext.setSinkId` when supported; false otherwise (SPEC §10 Q2). null = system default. */
   setOutputDevice(deviceId: string | null): Promise<boolean>;
   listOutputDevices(): Promise<OutputDevice[]>;
+  /** The live AudioContext's actual rate in Hz (0 before `init`). Fixed for the engine's lifetime (B8). */
   readonly sampleRate: number;
 
   /** Faster-than-real-time render on an OfflineAudioContext (DECISIONS V11). */

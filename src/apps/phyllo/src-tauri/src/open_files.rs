@@ -49,6 +49,17 @@ pub fn paths_from_args(args: impl IntoIterator<Item = OsString>) -> Vec<PathBuf>
         .collect()
 }
 
+/// Openable files from a second launch's `argv` (program name first), relative paths resolved against that launch's
+/// `cwd` (or `fallback` when it is empty).
+pub fn second_instance_paths(argv: Vec<String>, cwd: &str, fallback: &Path) -> Vec<String> {
+    let cwd = if cwd.is_empty() {
+        fallback.to_path_buf()
+    } else {
+        PathBuf::from(cwd)
+    };
+    filter_paths(paths_from_args(argv.into_iter().map(OsString::from)), &cwd)
+}
+
 /// Local paths from the URLs macOS passes to `application:openURLs:`; non-`file:` URLs are dropped.
 pub fn paths_from_urls(urls: &[tauri::Url]) -> Vec<PathBuf> {
     urls.iter()
@@ -97,6 +108,35 @@ impl OpenFileQueue {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn second_instance_paths_use_the_second_launchs_cwd() {
+        let argv = vec![
+            "/Applications/Phyllo.app/Contents/MacOS/phyllo".to_string(),
+            "--flag".to_string(),
+            "songs/Groove.phyllo".to_string(),
+            "/abs/beat.strudel".to_string(),
+            "notes.txt".to_string(),
+            "songs/Groove.phyllo".to_string(),
+        ];
+        assert_eq!(
+            second_instance_paths(argv, "/Users/me", Path::new("/fallback")),
+            vec![
+                "/Users/me/songs/Groove.phyllo".to_string(),
+                "/abs/beat.strudel".to_string()
+            ]
+        );
+    }
+
+    #[test]
+    fn second_instance_paths_fall_back_when_cwd_is_unknown() {
+        let argv = vec!["phyllo".to_string(), "a.phyllo".to_string()];
+        assert_eq!(
+            second_instance_paths(argv, "", Path::new("/fallback")),
+            vec!["/fallback/a.phyllo".to_string()]
+        );
+        assert!(second_instance_paths(vec!["phyllo".into()], "/x", Path::new("/f")).is_empty());
+    }
 
     #[test]
     fn openable_extensions_are_case_insensitive() {

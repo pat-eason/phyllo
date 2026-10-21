@@ -46,7 +46,16 @@ interface AudioOptionsBase {
   reveal: boolean;
 }
 
-export interface MixdownOptions extends AudioOptionsBase {
+/**
+ * `autoName`: the path is the dialog's default, not one the user typed or chose, so an existing file must not be
+ * replaced: the export takes the next free name (`Groove 2.wav`, `Groove 3.wav`…; B12). Bare file names and a
+ * missing code path are always treated as default names.
+ */
+interface AutoNamed {
+  autoName?: boolean;
+}
+
+export interface MixdownOptions extends AudioOptionsBase, AutoNamed {
   kind: "mixdown";
   /** Absolute path (or a bare name, which native puts in `Exports/`). */
   path: string;
@@ -54,12 +63,12 @@ export interface MixdownOptions extends AudioOptionsBase {
 
 export interface StemsOptions extends AudioOptionsBase {
   kind: "stems";
-  /** Absolute, existing folder. */
+  /** Absolute, existing folder. Stem (and code) file names are always generated, so they never replace earlier files. */
   folder: string;
   trackIds: string[];
 }
 
-export interface MidiOptions {
+export interface MidiOptions extends AutoNamed {
   kind: "midi";
   range: ExportRange;
   path: string;
@@ -67,7 +76,7 @@ export interface MidiOptions {
   layout: "tracks" | "single";
 }
 
-export interface CodeOptions {
+export interface CodeOptions extends AutoNamed {
   kind: "code";
   action: "file" | "link";
   /** `section` renders the section at `sectionBar` (the code drawer's "This section"). */
@@ -114,6 +123,7 @@ export type ExportNative = Pick<
   | "exportFinish"
   | "exportCancel"
   | "midiFileWrite"
+  | "exportUniquePath"
   | "strudelWrite"
   | "revealInFinder"
   | "notify"
@@ -236,6 +246,21 @@ export function withExtension(path: string, ext: string): string {
 }
 
 const fileName = (path: string) => path.split(/[\\/]/).pop() ?? path;
+
+/** Adds `ext` when the last path component has no extension (what native does on write). */
+function ensureExtension(path: string, ext: string): string {
+  const name = fileName(path);
+  return name.lastIndexOf(".") > 0 ? path : `${path}.${ext}`;
+}
+
+/**
+ * The path to write: `path` itself when the user chose it, otherwise the next free name for it (B12). `ext` is added
+ * first so the free-name check sees the file native will actually write.
+ */
+async function targetPath(deps: ExportDeps, path: string, ext: string, autoName: boolean | undefined): Promise<string> {
+  const auto = autoName === true || !/[\\/]/.test(path);
+  return auto ? deps.native.exportUniquePath(ensureExtension(path, ext)) : path;
+}
 
 function songProgram(project: Project): GeneratedProgram {
   return generate(project, { scope: "song", instrument: false });
@@ -364,7 +389,8 @@ async function afterAudio(written: ExportResult, opts: AudioOptionsBase, deps: E
 async function exportMixdown(project: Project, opts: MixdownOptions, deps: ExportDeps): Promise<ExportJobResult> {
   const program = songProgram(project);
   const { buffer, realtime } = await renderAudio(project, program, opts, deps, { from: 0, to: RENDER_SHARE });
-  const written = await encode(buffer, opts.path, opts, deps, { from: RENDER_SHARE, to: 1 });
+  const path = await targetPath(deps, opts.path, FORMAT_EXT[opts.format], opts.autoName);
+  const written = await encode(buffer, path, opts, deps, { from: RENDER_SHARE, to: 1 });
   const files = await afterAudio(written, opts, deps, program);
   const body = formatExportNotification(written, { format: opts.format, bitDepth: opts.bitDepth });
   await notifyFinished(deps, body, written.path);
@@ -395,13 +421,13 @@ async function exportStems(project: Project, opts: StemsOptions, deps: ExportDep
     const from = i * share;
     const split = from + share * RENDER_SHARE;
     const { buffer } = await renderAudio(project, program, opts, deps, { from, to: split }, [track.id]);
-    const path = joinPath(opts.folder, `${safeFileName(project.name)} - ${safeFileName(track.name)}.${ext}`);
+    const path = await deps.native.exportUniquePath(joinPath(opts.folder, `${safeFileName(project.name)} - ${safeFileName(track.name)}.${ext}`));
     const written = await encode(buffer, path, opts, deps, { from: split, to: from + share });
     files.push(written.path);
     duration = written.durationSec;
   }
   if (opts.saveCode) {
-    const codePath = joinPath(opts.folder, `${safeFileName(project.name)}.strudel`);
+    const codePath = await deps.native.exportUniquePath(joinPath(opts.folder, `${safeFileName(project.name)}.strudel`));
     await deps.native.strudelWrite(codePath, program.code);
     files.push(codePath);
   }
@@ -441,7 +467,8 @@ async function exportMidi(project: Project, opts: MidiOptions, deps: ExportDeps)
     });
   }
   deps.onProgress?.({ phase: "encoding", fraction: 0.5 });
-  const written = await deps.native.midiFileWrite(opts.path, { bpm: project.tempo.bpm, tracks });
+  const path = await targetPath(deps, opts.path, "mid", opts.autoName);
+  const written = await deps.native.midiFileWrite(path, { bpm: project.tempo.bpm, tracks });
   deps.onProgress?.({ phase: "encoding", fraction: 1 });
   const noteCount = tracks.reduce((n, t) => n + t.notes.length, 0);
   const trackWord = tracks.length === 1 ? "track" : "tracks";
@@ -465,7 +492,7 @@ async function exportCode(project: Project, opts: CodeOptions, deps: ExportDeps)
     await deps.copyText(link);
     return { kind: "code", path: null, files: [], title: "Link copied", detail: "Paste it into a browser to open the song on strudel.cc", link };
   }
-  const path = opts.path ?? `${safeFileName(project.name)}.strudel`;
+  const path = await targetPath(deps, opts.path ?? `${safeFileName(project.name)}.strudel`, "strudel", opts.autoName);
   await deps.native.strudelWrite(path, program.code);
   return { kind: "code", path, files: [path], title: "Code saved", detail: fileName(path) };
 }
