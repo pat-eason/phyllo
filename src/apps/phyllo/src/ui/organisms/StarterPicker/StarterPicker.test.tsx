@@ -25,6 +25,19 @@ describe("StarterPicker", () => {
     vi.useRealTimers();
   });
 
+  it("should render the multi-line code preview without React errors", () => {
+    // Arrange
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    // Act
+    renderPicker();
+
+    // Assert
+    expect(codeListing().textContent?.split("\n").length).toBeGreaterThan(2);
+    expect(errors).not.toHaveBeenCalled();
+    errors.mockRestore();
+  });
+
   it("should mark step 1 as the current step", () => {
     // Arrange / Act
     renderPicker();

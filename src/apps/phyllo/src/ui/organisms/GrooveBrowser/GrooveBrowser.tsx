@@ -1,7 +1,7 @@
 import { Button, Chip, EmptyState } from "@phyllo/ui";
 import type { GrooveSummary } from "@phyllo/model";
 import { useEffect, useRef, useState } from "react";
-import { useLibrary, useNative } from "../../../hooks";
+import { useAudition, useLibrary, useNative } from "../../../hooks";
 import { ContextMenu } from "./ContextMenu";
 import type { MenuItem } from "./ContextMenu";
 import { grooveCount } from "./format";
@@ -14,6 +14,7 @@ import type { ContextAnchor } from "./interaction";
 import { LibrarySidebar } from "./LibrarySidebar";
 import { LibraryToolbar } from "./LibraryToolbar";
 import { ManageTagsDialog } from "./ManageTagsDialog";
+import { firstSectionBar, readGroove } from "./readGroove";
 import { RenameDialog } from "./RenameDialog";
 import { hasTag } from "./tags";
 import { TagEditorDialog } from "./TagEditorDialog";
@@ -47,7 +48,6 @@ interface MenuState {
 }
 
 const NOTICE_MS = 6000;
-const PREVIEW_UNAVAILABLE = "Open to play";
 
 /**
  * The Groove library: collections and tags on the left, search / sort / tile size / view on top, then the grooves as
@@ -66,7 +66,7 @@ export function GrooveBrowser({ onOpenGroove, onBulkExport, onNewGroove, onImpor
   const [dialog, setDialog] = useState<DialogState | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
+  const { auditioning, audition, stop } = useAudition();
 
   const actions = createGrooveActions({ library, native, notify: setNotice, onOpenGroove });
   const listView = library.view === "list";
@@ -81,16 +81,22 @@ export function GrooveBrowser({ onOpenGroove, onBulkExport, onNewGroove, onImpor
     return () => clearTimeout(timer);
   }, [notice]);
 
-  // The play buttons come from GrooveCard, which has no disabled prop; mark them here (see `previewUnavailable`).
-  useEffect(() => {
-    contentRef.current?.querySelectorAll<HTMLElement>('button[aria-label^="Play "]').forEach((button) => {
-      button.title = PREVIEW_UNAVAILABLE;
-      button.setAttribute("aria-disabled", "true");
+  // Play on a tile or row auditions the groove's first section as a clean preview; the open project comes back on stop.
+  function previewGroove(groove: GrooveSummary) {
+    if (auditioning === groove.path) {
+      stop();
+      return;
+    }
+    audition(groove.path, () => readGroove(native, groove), { startBar: firstSectionBar }).catch((error: unknown) => {
+      const reason = error instanceof Error ? error.message : String(error);
+      setNotice({ tone: "error", text: `Couldn't play ${groove.name}: ${reason}` });
     });
-  });
+  }
 
-  function previewUnavailable(groove: GrooveSummary) {
-    setNotice({ tone: "info", text: `Preview isn't available yet. Open ${groove.name} to play it.` });
+  // Opening ends the audition first so the previous project (and its unsaved-changes guard) is back in place.
+  function openGroove(groove: GrooveSummary) {
+    stop();
+    void actions.open(groove);
   }
 
   function clearAll() {
@@ -133,7 +139,7 @@ export function GrooveBrowser({ onOpenGroove, onBulkExport, onNewGroove, onImpor
       ];
     }
     return [
-      { id: "open", label: "Open", onSelect: () => void actions.open(first) },
+      { id: "open", label: "Open", onSelect: () => openGroove(first) },
       { id: "rename", label: "Rename", onSelect: () => setDialog({ kind: "rename", groove: first }) },
       { id: "duplicate", label: "Duplicate", onSelect: () => void actions.duplicate(first) },
       { id: "tags", label: "Edit tags", onSelect: () => setDialog({ kind: "tags", targets: [first] }) },
@@ -163,8 +169,8 @@ export function GrooveBrowser({ onOpenGroove, onBulkExport, onNewGroove, onImpor
   }
 
   const handlers = {
-    onOpen: (groove: GrooveSummary) => void actions.open(groove),
-    onPreview: previewUnavailable,
+    onOpen: openGroove,
+    onPreview: previewGroove,
     onFavoriteChange: (groove: GrooveSummary) => void actions.toggleFavorite(groove),
     onContextMenu: openMenu,
   };
@@ -249,7 +255,7 @@ export function GrooveBrowser({ onOpenGroove, onBulkExport, onNewGroove, onImpor
           </p>
         ) : null}
 
-        <div ref={contentRef} className={styles["content"]}>
+        <div className={styles["content"]}>
           {library.error ? (
             <div className={styles["problem"]} role="alert">
               <span>Couldn&apos;t read your grooves: {library.error}</span>
@@ -281,9 +287,17 @@ export function GrooveBrowser({ onOpenGroove, onBulkExport, onNewGroove, onImpor
               action={filtersActive ? { label: "Clear filters", onClick: clearAll } : undefined}
             />
           ) : listView ? (
-            <GrooveTable grooves={library.results} now={clock} sort={library.sort} onSortChange={library.setSort} selection={selection} {...handlers} />
+            <GrooveTable
+              grooves={library.results}
+              now={clock}
+              sort={library.sort}
+              onSortChange={library.setSort}
+              selection={selection}
+              previewingPath={auditioning}
+              {...handlers}
+            />
           ) : (
-            <GrooveGrid grooves={library.results} size={library.tileSize} now={clock} {...handlers} />
+            <GrooveGrid grooves={library.results} size={library.tileSize} now={clock} previewingPath={auditioning} {...handlers} />
           )}
           {library.scanErrors.length > 0 ? (
             <p className={styles["quiet"]}>{library.scanErrors.length === 1 ? "1 file couldn't be read." : `${library.scanErrors.length} files couldn't be read.`}</p>

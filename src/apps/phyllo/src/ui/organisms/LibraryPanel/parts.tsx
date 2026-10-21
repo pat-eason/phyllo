@@ -50,7 +50,7 @@ export function SoundChip({ entry, actions }: SoundChipProps) {
         variant="code"
         className={styles["soundChip"]}
         data-instrument={isSynth ? undefined : ""}
-        data-previewing={previewing ? "" : undefined}
+        selected={previewing}
         title={isSynth ? `${entry.name}: ${entry.description}` : entry.code}
         aria-roledescription="draggable sound"
         draggable

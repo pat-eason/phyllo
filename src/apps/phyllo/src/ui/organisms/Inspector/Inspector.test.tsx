@@ -351,6 +351,22 @@ describe("Inspector", () => {
     expect(actions()).toEqual([{ type: "track/setSource", trackId: "kick", source: { bank: "RolandTR808" } }]);
   });
 
+  it("should offer the linked sample names to a sample track's sound picker", async () => {
+    // Arrange
+    const { actions, stores, user } = setup({
+      selected: "hats",
+      patch: { hats: { kind: "sample", source: { type: "s", sound: "hh", bank: null }, pattern: "hh*8" } },
+    });
+    act(() => stores.samples.setState({ names: ["vox", "kick_dusty"] }));
+    await user.click(screen.getByRole("button", { name: /Change sound/ }));
+
+    // Act
+    await user.click(within(screen.getByRole("dialog", { name: "Choose a sound" })).getByRole("button", { name: /kick_dusty/ }));
+
+    // Assert
+    expect(actions()).toEqual([{ type: "track/setSource", trackId: "hats", source: { sound: "kick_dusty" } }]);
+  });
+
   it("should close the picker on Escape without changing the sound", async () => {
     // Arrange
     const { actions, user } = setup();

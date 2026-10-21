@@ -14,6 +14,8 @@ export interface GrooveTableProps extends GrooveHandlers {
   sort: LibrarySort;
   onSortChange: (sort: LibrarySort) => void;
   selection: RowSelection;
+  /** Path of the groove being auditioned: its play button shows pause. */
+  previewingPath: string | null;
 }
 
 interface Column {
@@ -54,7 +56,7 @@ function ariaSortFor(column: Column, sort: LibrarySort): "ascending" | "descendi
  * Table view. Rows are GrooveCard rows with a roving tab stop: Up/Down/Home/End move, Shift+Up/Down extend the
  * selection, Space toggles, Enter opens, Esc clears. Click selects, ⌘/Ctrl-click toggles, ⇧-click selects a range.
  */
-export function GrooveTable({ grooves, now, sort, onSortChange, selection, onOpen, onPreview, onFavoriteChange, onContextMenu }: GrooveTableProps) {
+export function GrooveTable({ grooves, now, sort, onSortChange, selection, previewingPath, onOpen, onPreview, onFavoriteChange, onContextMenu }: GrooveTableProps) {
   const [activePath, setActivePath] = useState<string | null>(null);
   const rows = useRef(new Map<string, HTMLElement>());
 
@@ -150,7 +152,8 @@ export function GrooveTable({ grooves, now, sort, onSortChange, selection, onOpe
               }}
               groove={toCardData(groove, now)}
               variant="row"
-              className={selection.isSelected(groove.path) ? styles["selectedRow"] : undefined}
+              selected={selection.isSelected(groove.path)}
+              previewing={groove.path === previewingPath}
               aria-selected={selection.isSelected(groove.path)}
               tabIndex={groove.path === tabStop ? 0 : -1}
               onFocus={(event) => {

@@ -1,7 +1,9 @@
 import type { UiMode } from "@phyllo/model";
 import { Button, EmptyState, Icon, IconButton, StatusDot } from "@phyllo/ui";
 import type { StatusDotStatus } from "@phyllo/ui";
-import { useId, useState } from "react";
+import { useId, useMemo, useState } from "react";
+import { useSamples } from "../../../hooks";
+import type { SampleFile } from "../../../native/types";
 import { GroupHeading, SampleList } from "./parts";
 import { shortPath } from "./soundRefs";
 import type { LinkedFolder, SampleFolders } from "./useSampleFolders";
@@ -25,20 +27,32 @@ const STATUS: Record<LinkedFolder["scan"]["status"], { dot: StatusDotStatus; lab
   error: { dot: "warn", label: "Can't read this folder" },
 };
 
+/** Registered name by file path: the name `s("…")` plays, which differs from the file's own when folders collide. */
+type RegisteredNames = ReadonlyMap<string, string>;
+
+function withRegisteredNames(files: readonly SampleFile[], names: RegisteredNames): readonly SampleFile[] {
+  return files.map((file) => {
+    const name = names.get(file.path);
+    return name === undefined || name === file.name ? file : { ...file, name };
+  });
+}
+
 interface FolderSectionProps {
   folder: LinkedFolder;
+  names: RegisteredNames;
   mode: UiMode;
   query: string;
   actions: LibraryActions;
   onUnlink(): void;
 }
 
-function FolderSection({ folder, mode, query, actions, onUnlink }: FolderSectionProps) {
+function FolderSection({ folder, names, mode, query, actions, onUnlink }: FolderSectionProps) {
   const [open, setOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const listId = useId();
   const needle = query.trim().toLowerCase();
-  const matches = needle ? folder.scan.files.filter((file) => file.name.toLowerCase().includes(needle)) : folder.scan.files;
+  const files = withRegisteredNames(folder.scan.files, names);
+  const matches = needle ? files.filter((file) => file.name.toLowerCase().includes(needle)) : files;
   // A search opens the folders that have hits; otherwise the user's own toggle decides.
   const expanded = needle ? true : open;
   const visible = showAll ? matches : matches.slice(0, FILE_PAGE);
@@ -83,10 +97,17 @@ function FolderSection({ folder, mode, query, actions, onUnlink }: FolderSection
   );
 }
 
-/** Samples tab: the linked folders, each expandable to its files. Registering samples with the engine happens elsewhere. */
+/**
+ * Samples tab: the linked folders, each expandable to its files, listed by the name the engine registered
+ * (`useSamples()`; collisions across folders get `2`, `3`…). Registering samples with the engine happens in the state layer.
+ */
 export function SamplesTab({ mode, query, actions, samples, onClearSearch }: SamplesTabProps) {
+  const { samples: registered } = useSamples();
+  const names = useMemo<RegisteredNames>(() => new Map(registered.map((sample) => [sample.path, sample.name])), [registered]);
   const needle = query.trim().toLowerCase();
-  const anyMatch = samples.folders.some((folder) => folder.scan.files.some((file) => file.name.toLowerCase().includes(needle)));
+  const anyMatch = samples.folders.some((folder) =>
+    withRegisteredNames(folder.scan.files, names).some((file) => file.name.toLowerCase().includes(needle)),
+  );
 
   let body;
   if (samples.folders.length === 0) {
@@ -113,6 +134,7 @@ export function SamplesTab({ mode, query, actions, samples, onClearSearch }: Sam
           <FolderSection
             key={folder.path}
             folder={folder}
+            names={names}
             mode={mode}
             query={query}
             actions={actions}

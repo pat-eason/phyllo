@@ -17,3 +17,5 @@ export { useNative } from "./useNative";
 export { useAppStores } from "../state/context";
 export { useMidiInput, useRecorder, useSampleNames, useSamples } from "./useRecorder";
 export type { UseRecorder } from "./useRecorder";
+export { useAudition, AUDITION_PROJECT_ID } from "./useAudition";
+export type { Audition, AuditionOptions, AuditionSource } from "./useAudition";

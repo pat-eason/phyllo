@@ -4,7 +4,7 @@ import type { GrooveSummary, StarterDef, StarterId } from "@phyllo/model";
 import { Button, Logo, Select, StarterCard } from "@phyllo/ui";
 import type { SelectOption } from "@phyllo/ui";
 import { useEffect, useId, useMemo, useState } from "react";
-import { useLibrary, useProject, useTips, useUiMode } from "../../../hooks";
+import { useAudition, useLibrary, useProject, useTips, useUiMode } from "../../../hooks";
 import { CodePreview } from "./CodePreview";
 import { StarterPickerHeaderActions } from "./HeaderActions";
 import { ImportLink } from "./ImportLink";
@@ -12,10 +12,11 @@ import { RecentProjects } from "./RecentProjects";
 import { recentGrooves } from "./recent";
 import styles from "./StarterPicker.module.css";
 import { TempoStepper } from "./TempoStepper";
-import { useAudition } from "./useAudition";
 
 const STEPS = ["Start", "Tempo & key", "Sounds", "Play"] as const;
 const CURRENT_STEP = 0;
+/** Audition key of the picked starter (the shared audition slot is also used by the groove library). */
+const STARTER_AUDITION = "starter";
 
 const KEY_OPTIONS: SelectOption<string>[] = KEY_ROOTS.flatMap((root) =>
   KEY_MODES.map((mode) => {
@@ -68,6 +69,7 @@ export function StarterPicker({
   const { grooves, open } = useLibrary();
   const { highlight } = useTips();
   const audition = useAudition();
+  const auditioning = audition.auditioning === STARTER_AUDITION;
 
   const initial = getStarter(initialStarter) ?? FALLBACK_STARTER;
   const [starterId, setStarterId] = useState<StarterId>(initial.id);
@@ -189,10 +191,10 @@ export function StarterPicker({
                 <Button
                   size="lg"
                   className={styles["previewButton"]}
-                  iconStart={audition.auditioning ? "stop" : "play"}
-                  onClick={() => (audition.auditioning ? audition.stop() : void audition.start(preview))}
+                  iconStart={auditioning ? "stop" : "play"}
+                  onClick={() => (auditioning ? audition.stop() : void audition.audition(STARTER_AUDITION, preview))}
                 >
-                  {audition.auditioning ? "Stop preview" : "Preview"}
+                  {auditioning ? "Stop preview" : "Preview"}
                 </Button>
                 <Button
                   variant="primary"

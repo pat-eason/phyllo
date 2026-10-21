@@ -3,7 +3,7 @@ import type { TransportPosition } from "@phyllo/model";
 import { IconButton, Readout, TransportControls } from "@phyllo/ui";
 import type { ReadoutCell, ReadoutSubscribe } from "@phyllo/ui";
 import { useMemo, useRef } from "react";
-import type { KeyboardEvent, MouseEvent } from "react";
+import type { KeyboardEvent } from "react";
 import { useProjectSelector, useSettings, useTransport, useUiMode } from "../../../hooks";
 import styles from "./AppHeader.module.css";
 import { addTap, bpmFromTaps, clampBpm } from "./tapTempo";
@@ -44,17 +44,7 @@ export function TransportSection() {
     if (Number.isFinite(parsed)) setBpm(clampBpm(parsed));
   }
 
-  // Tap tempo lives on the BPM cell: clicking its "BPM · TAP" caption (Guided) or pressing T while the cell has focus.
-  // The cell's own click would open the editor, so a caption click is claimed in the capture phase.
-  function onReadoutClickCapture(event: MouseEvent<HTMLDivElement>) {
-    const target = event.target;
-    if (pro || !(target instanceof HTMLElement) || target.tagName !== "SPAN") return;
-    if (target.textContent === bpmCaption && target.closest('[data-cell="bpm"]')) {
-      event.stopPropagation();
-      tap();
-    }
-  }
-
+  // Tap tempo lives on the BPM cell: its "BPM · TAP" caption button (Guided) or T while the cell has focus.
   function onReadoutKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     const target = event.target;
     if (event.key.toLowerCase() !== "t" || event.metaKey || event.ctrlKey || event.altKey) return;
@@ -79,6 +69,8 @@ export function TransportSection() {
       mono: true,
       label: `Tempo ${bpm} BPM, edit`,
       onEdit: commitBpm,
+      onCaptionClick: pro ? undefined : tap,
+      captionLabel: "Tap tempo",
       onNudge: (delta) => setBpm(clampBpm(bpm + delta)),
     },
     { id: "key", value: key, caption: `KEY · ${beatsPerBar}/4` },
@@ -104,7 +96,7 @@ export function TransportSection() {
         onRecord={transport.toggleRecordArm}
         onLoopChange={transport.toggleLoop}
       />
-      <Readout cells={cells} onClickCapture={onReadoutClickCapture} onKeyDown={onReadoutKeyDown} />
+      <Readout cells={cells} onKeyDown={onReadoutKeyDown} />
       <IconButton
         icon="metronome"
         label="Metronome"

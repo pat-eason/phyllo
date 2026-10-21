@@ -1,6 +1,7 @@
 import type { Track, UiMode } from "@phyllo/model";
 import { Icon } from "@phyllo/ui";
 import { useId, useRef, useState } from "react";
+import { useSampleNames } from "../../../hooks";
 import { SearchPopover } from "./SearchPopover";
 import type { SearchItem } from "./SearchPopover";
 import { filterSounds, soundChoices, soundSlot } from "./inspectorModel";
@@ -19,7 +20,8 @@ export function SoundSection({ track, mode, actions }: SoundSectionProps) {
   const trigger = useRef<HTMLButtonElement | null>(null);
   const headingId = useId();
   const slot = soundSlot(track);
-  const choices = soundChoices(track);
+  const sampleNames = useSampleNames();
+  const choices = soundChoices(track, sampleNames);
   const guided = mode === "guided";
 
   const itemsFor = (query: string): SearchItem[] =>

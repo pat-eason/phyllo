@@ -11,6 +11,8 @@ export interface GrooveGridProps extends GrooveHandlers {
   grooves: GrooveSummary[];
   size: TileSize;
   now: Date;
+  /** Path of the groove being auditioned: its play button shows pause. */
+  previewingPath: string | null;
 }
 
 /** Minimum tile width and gap by tile size step (SPEC §6.7). */
@@ -23,7 +25,7 @@ const TILE_LAYOUT: Record<TileSize, { min: number; gap: number }> = {
 };
 
 /** Auto-filling CSS grid of GrooveCard tiles. */
-export function GrooveGrid({ grooves, size, now, onOpen, onPreview, onFavoriteChange, onContextMenu }: GrooveGridProps) {
+export function GrooveGrid({ grooves, size, now, previewingPath, onOpen, onPreview, onFavoriteChange, onContextMenu }: GrooveGridProps) {
   const { min, gap } = TILE_LAYOUT[size];
   const style = { gridTemplateColumns: `repeat(auto-fill, minmax(min(${min}px, 100%), 1fr))`, gap } satisfies CSSProperties;
 
@@ -35,6 +37,7 @@ export function GrooveGrid({ grooves, size, now, onOpen, onPreview, onFavoriteCh
           groove={toCardData(groove, now)}
           variant="tile"
           size={size}
+          previewing={groove.path === previewingPath}
           onOpen={() => onOpen(groove)}
           onPreview={() => onPreview(groove)}
           onFavoriteChange={(favorite) => onFavoriteChange(groove, favorite)}

@@ -28,6 +28,14 @@
   gap: 10px;
 }
 
+/* MIDI notices: a one-liner with a small dismiss button, accent-tinted so it reads as news, not chrome. */
+.notice {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--ph-accent-text);
+}
+
 /* Clickable status items read as text; they get a hover underline and a focus ring. */
 .link {
   display: inline-flex;
