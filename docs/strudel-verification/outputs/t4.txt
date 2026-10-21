@@ -1,0 +1,7 @@
+cannot use window: not in browser?
+🌀 @strudel/core loaded 🌀
+len=13 identical=true roundtrip=true upstreamDecodesMine=true sample=bm90ZSgiYzMgZTMiKQ%3D%3D
+len=81 identical=true roundtrip=true upstreamDecodesMine=true sample=c2V0Y3BtKDEyMC80KQokOiBzKCJiZCo0IikuYmFuaygiUm9sYW5kVFI5MDki
+len=300000 identical=false roundtrip=true upstreamDecodesMine=n/a sample=eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4 | UPSTREAM THREW: RangeError Maximum call stack size exceeded
+known strudel.cc example "#ImMzIGUzIg%3D%3D" -> "\"c3 e3\""
+{ code: 's("bd")' } { shortId: 'J01s5i1J0200' }

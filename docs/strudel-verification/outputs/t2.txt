@@ -1,0 +1,61 @@
+cannot use window: not in browser?
+🌀 @strudel/core loaded 🌀
+--- arrange([8, silence],[8, s("bd*4")]) onsets per cycle, 0..24
+c0:0 c1:0 c2:0 c3:0 c4:0 c5:0 c6:0 c7:0 c8:4 c9:4 c10:4 c11:4 c12:4 c13:4 c14:4 c15:4 c16:0 c17:0 c18:0 c19:0 c20:0 c21:0 c22:0 c23:0
+--- arrange([2, s("bd")],[1, s("<hh cp>")]) cycles 0..6: does section pattern see local or global cycle?
+ c0 0:s=bd
+ c1 1:s=sd
+ c2 2:s=hh
+ c3 3:s=bd
+ c4 4:s=sd
+ c5 5:s=cp
+ c6 6:s=bd
+ c7 7:s=sd
+ c8 8:s=oh
+--- note("<c d e f>").ribbon(1, 2), cycles 0..6
+ c0 0:note=d
+ c1 1:note=e
+ c2 2:note=d
+ c3 3:note=e
+ c4 4:note=d
+ c5 5:note=e
+--- arrange(...).ribbon(8,4): loop bars 8..12 of the arrangement; cycles 0..8
+ c0 0:s=a
+ c1 1:s=b
+ c2 2:s=c
+ c3 3:s=d
+ c4 4:s=a
+ c5 5:s=b
+ c6 6:s=c
+ c7 7:s=d
+--- ribbon with fractional offset 8.5,1 (half-cycle window start)
+  0:s=c 1/4:s=d 1/2:s=a 3/4:s=b
+--- zoom(0.25,0.75) on s("a b c d") 0:s=b 1/2:s=c
+--- compress(0.25,0.75) 1/4:s=a 3/8:s=b 1/2:s=c 5/8:s=d
+--- linger(0.25) 0:s=a 1/4:s=a 1/2:s=a 3/4:s=a
+--- s("hh*8").swingBy(1/6,4) onsets 0:s=hh 7/48:s=hh 1/4:s=hh 19/48:s=hh 1/2:s=hh 31/48:s=hh 3/4:s=hh 43/48:s=hh
+--- note("c d").lastOf(4, rev) cycles 0..4
+ c0 0:note=c 1/2:note=d
+ c1 1:note=c 3/2:note=d
+ c2 2:note=c 5/2:note=d
+ c3 3:note=d 7/2:note=c
+--- firstOf(4, rev)  c0: 0:note=d 1/2:note=c  c1: 1:note=c 3/2:note=d
+--- lastOf(4, x=>x.fast(2)) c3: 3:s=bd 13/4:s=sd 7/2:s=bd 15/4:s=sd
+--- ply(2) s("bd sd") 0:s=bd 1/4:s=bd 1/2:s=sd 3/4:s=sd
+--- sometimes(x=>x.ply(2)) over 8 cycles, events per cycle c0:8 c1:5 c2:6 c3:6 c4:8 c5:7 c6:4 c7:7
+--- degradeBy(.5) s("hh*16") per cycle c0:5 c1:8 c2:8 c3:8 c4:6 c5:9
+--- chop(4) s("vox") 0:s=vox,begin=0,end=0.25 1/4:s=vox,begin=0.25,end=0.5 1/2:s=vox,begin=0.5,end=0.75 3/4:s=vox,begin=0.75,end=1
+--- control aliases -> canonical keys
+  {"s":"x","roomsize":4,"delayfeedback":0.3,"delaytime":0.25,"resonance":5,"cutoff":800,"hcutoff":100,"orbit":2,"fmi":3,"fmh":2}
+ s("bd:3") -> {"s":"bd","n":3}  lpf("800:10") -> {"s":"x","cutoff":800,"resonance":10}
+ room("0.5:4") -> {"s":"x","room":0.5,"size":4}  delay(".5:.25:.6") -> {"s":"x","delay":0.5,"delaytime":0.25,"delayfeedback":0.6}
+ bank("RolandTR909") -> {"s":"bd","bank":"RolandTR909"}
+ lpf(sine.range(400,1400).slow(8)) at c0.. 900,1400,900,400
+--- silence 0 stack(s("bd"),s("hh*2")) 0:s=bd 0:s=hh 1/2:s=hh
+--- mini parse errors
+ "bd*" -> Error: [mini] parse error at line 1: Expected "<", "[", "{", a letter, a number, "-", "#", ".", "^", "_", or whitespace but "\"" found.
+ "[bd sd" -> Error: [mini] parse error at line 1: Expected "!", "(", "*", ",", ".", "..", "/", ":", "<", "?", "[", "]", "{", "|", [@_], a letter, a number, "-", "#", ".", "^", "_", or whitespace but "\"" found.
+ "bd(3,8" -> Error: [mini] parse error at line 1: Expected "!", "(", ")", "*", ",", "..", "/", ":", "<", "?", "[", "{", [@_], a letter, a number, "-", "#", ".", "^", "_", or whitespace but "\"" found.
+ "bd <sd" -> Error: [mini] parse error at line 1: Expected "!", "(", "*", ",", "..", "/", ":", "<", ">", "?", "[", "{", [@_], a letter, a number, "-", "#", ".", "^", "_", or whitespace but "\"" found.
+ mini2ast raw: [mini] parse error at line 1: Expected "!", "(", "*", ",", ".", "..", "/", ":", "<", "?", "[", "{", "|", ["'], [@_], a letter, a number, "-", "#", ".", "^", "_", or whitespace but "]" found.
+ krill parse raw: uu SyntaxError {"start":{"offset":4,"line":1,"column":5},"end":{"offset":5,"line":1,"column":6}} Expected "!", "(", "*", ",", ".", "..", "/", ":", "<", "?", "[", "{", "|", ["'], [@_], a letter, a number, "-", "#", ".", "^", "_", or whitespace but "]" found.

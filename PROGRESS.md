@@ -9,3 +9,4 @@
 - T6.1 merged (0d7761b): Rust project IO/library/history/trash/sample folders + NativeApi (tauri + browser impls). Orchestrator re-ran: pnpm check green (ui 83, app 40), cargo test 30 passed.
 - Dispatched T2.2 (buttons/toggles), T2.3 (form atoms), T2.4 (Knob/Fader/Meter/StepCell) in parallel worktrees.
 - Note: Agent worktrees start from `main`; briefs now require `git merge --ff-only phyllo/build` first.
+- Dispatched T6.2 (MIDI/OSC bridge).

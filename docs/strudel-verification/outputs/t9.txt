@@ -1,0 +1,3 @@
+ribbon(4,3).late(38) : c38=b4 c39=b5 c40=b6 c41=b4 c42=b5 c43=b6 c44=b4
+ribbon(4,3) plain    : c36=b4 c37=b5 c38=b6 c39=b4 c40=b5 c41=b6 (phase = cycle mod 3)
+early(6) from c0     : c0=b6 c1=b7 c2=b8

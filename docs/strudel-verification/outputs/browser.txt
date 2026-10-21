@@ -1,0 +1,25 @@
+Chromium (Playwright MCP), page scripts/browser/index.html, import map -> pkgs/node_modules/*/dist (needs window.process shim).
+
+[A] Own offline render: setAudioContext(new OfflineAudioContext) + setSuperdoughAudioController(null) + initAudio + superdough() per hap
+ r1 dry saw 4 cycles @0.5cps: haps 16, failed 0, render 8 s audio in 24 ms, rms .0744, orbits [1]
+ r2 room+delay orbit 2 + limiter inserted on destinationGain: haps 32, failed 0, 8 s in 278 ms, orbits [1,2]
+ r3 square+supersaw+room 8 cycles: haps 96, failed 0, 16 s audio in 828 ms (~19x realtime)
+[B] Tail test (blip at t=0, measure rms 0.4-0.95 s):
+ dry tail 0 | room(.9).roomsize(3) tail 0  <-- reverb SILENT offline (IR generated async)
+ delay(.8) tail .0205 (delay works)
+ room + workaround (await all orbit reverbNode.buffer before startRendering): waited 13 ms, tail .00947 (reverb present)
+[C] webaudio.renderPatternAudio(blip.room(.9).roomsize(3).delay(.8), 1, 0, 1, 44100, 128, false, 'x') from published dist:
+ rendered head 0 tail 0 (silence), download 'x.wav' triggered via <a>.click(),
+ log: "[webaudio] error: Failed to execute 'connect' on 'AudioNode': cannot connect to an AudioNode belonging to a different audio context."
+ live AudioContext state afterwards: "closed"
+[D] Live webaudioRepl + graph insert (destinationGain -> DynamicsCompressor -> Analyser -> destination, + MediaStreamAudioDestination):
+ orbits [1,2]; masterPeak .357; orbit analysers (tap orbit.output) {1:.142, 2:.213}; limiter.reduction -0.17 dB
+ MediaRecorder on capture stream: 22471 bytes audio/webm;codecs=opus in ~1.5 s
+ scheduler.now()=0.722 vs heard-cycle formula 0.697 -> now() is 50.0 ms ahead (latency .1 - clock.duration .05)
+ ctx.baseLatency .0053, outputLatency .024; onToggle [true,false]; now() after stop = 0
+[E] Samples/preview: samples({vox:[...]}, 'https://strudel.b-cdn.net/tidal-drum-machines/machines/') ok;
+ registerSamplesPrefix('phyllo:', handler) + samples('phyllo:folder1') ok (kick2 registered);
+ first superdough({s:'vox'}) on uncached sample: fetch 303 ms -> log "[sampler] loading sound "vox:0" took too long" (skipped, silent);
+ second trigger (cached): peak .751. superdough({s:'nosuchsound'}) throws "sound nosuchsound not found! Is it loaded?"
+ superdough({s:'supersaw', note:48}, t, .3) = ok (preview path)
+ registered synths: sawtooth square triangle sine supersaw saw tri sqr sin pulse white pink brown crackle sbd bytebeat (zzfx needs registerZZFXSounds)

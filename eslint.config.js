@@ -54,7 +54,7 @@ export default tseslint.config(
     rules: { "react-refresh/only-export-components": "off" },
   },
 
-  // @phyllo/engine: the triple-slash reference to strudel-web.d.ts is intentional (see CLAUDE.md).
+  // @phyllo/engine: triple-slash references to src/types/*.d.ts are intentional (see CLAUDE.md).
   {
     files: ["src/packages/engine/src/index.ts"],
     rules: { "@typescript-eslint/triple-slash-reference": "off" },

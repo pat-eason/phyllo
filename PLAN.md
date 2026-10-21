@@ -23,7 +23,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | id | owner | owns | deps | acceptance | status |
 |---|---|---|---|---|---|
 | T0.1 | scaffold agent | root configs, `src/packages/ui` skeleton, `src/shared/model` skeleton, app shell, `src-tauri` config + plugins | — | `pnpm check`, app build with woff2, e2e smoke, stories build, `cargo check` | done |
-| T0.2 | verify agent | scratchpad only → `DECISIONS.md` (orchestrator writes) | — | every SPEC "(verify)" item resolved with source citations | active |
+| T0.2 | verify agent | scratchpad only → `DECISIONS.md` (orchestrator writes) | — | every SPEC "(verify)" item resolved with source citations | done |
 | T0.3 | orchestrator | `types.ts`, engine Strudel deps pinned, CLAUDE.md update | T0.1, T0.2 | types compile; deps pinned exact | done |
 
 ### M1 Engine core (parallel with M2)
@@ -51,7 +51,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | id | owner | owns | deps | acceptance | status |
 |---|---|---|---|---|---|
 | T6.1 | rust-A | `src-tauri/src/**`, `src-tauri/Cargo.toml`, `src/apps/phyllo/src/native/**` | T0.1 | project IO (atomic write), library index of `~/Music/Phyllo`, history snapshots, folder watching (`notify`) + sample folder serving; typed TS bindings; `cargo test` + `cargo clippy` clean | done |
-| T6.2 | rust-B | same | T6.1 | MIDI in/out bridge (`midir`), OSC UDP to SuperDirt; TS bindings | todo |
+| T6.2 | rust-B | same | T6.1 | MIDI in/out bridge (`midir`), OSC UDP to SuperDirt; TS bindings | active |
 | T6.3 | rust-C | same | T6.2 | PCM stream sink + WAV/FLAC/MP3 encoder, normalize post-pass, MIDI file writer | todo |
 | T6.4 | rust-D | same + `tauri.conf.json` | T6.3 | tray/menu-bar transport, media keys, file associations, notifications w/ Reveal, app menu | todo |
 

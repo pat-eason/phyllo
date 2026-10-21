@@ -1,0 +1,5 @@
+cannot use window: not in browser?
+🌀 @strudel/core loaded 🌀
+eval returned pattern? true | onEvalError: [] | haps after bad eval: 0 | state.schedulerError: undefined
+logger lines: ["[query] error: boom at query time"]
+dry-run guard catches it: null

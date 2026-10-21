@@ -1,0 +1,65 @@
+cannot use window: not in browser?
+🌀 @strudel/core loaded 🌀
+=== transpiled output
+setcpm(120 / 4);
+s(m('bd*4', 19)).bank(m('RolandTR909', 32)).gain(0.82).p('$');
+note(m('c2', 66)).p('_$');
+chord(m('<Cm7 Fm7>', 81)).voicing().s(m('gm_epiano1', 106)).p('$');
+return n(m('0 2', 128)).scale(m('C:minor', 141)).p('lead');
+=== miniLocations [[20,22],[23,24],[33,44],[67,69],[83,86],[87,90],[107,117],[129,130],[131,132],[142,143],[144,149]]
+[eval] code updated
+[cyclist] start
+=== after evaluate: cps 0.5 started true toggles [ true ]
+haps by id (from .p label -> value.id): { undefined: 10 }
+sample hap value: {"s":"bd","bank":"RolandTR909","gain":0.82} voicing hap: {"note":"Bb3","s":"gm_epiano1"}
+now()=0.5231 heardCycle(formula)=0.4981 diff(cycles)=0.0250 => 50.0ms; clock.duration=0.05 latency=0.1
+formula vs hap.whole.begin max abs err (cycles): 5.55e-17
+[eval] code updated
+=== solo eval: distinct s values [] ids [] still started true
+[eval] error: [mini] parse error at line 1: Expected "<", "[", "{", a letter, a number, "-", "#", ".", "^", "_", or whitespace but "\"" found.
+Error: [mini] parse error at line 1: Expected "<", "[", "{", a letter, a number, "-", "#", ".", "^", "_", or whitespace but "\"" found.
+    at Au (file:///private/tmp/claude-502/-Users-peason-orca-projects-strudel-daw/a619c5b1-e9a5-4daa-baff-1889f0296536/scratchpad/strudel-verify/pkgs/node_modules/@strudel/mini/dist/index.mjs:1393:11)
+    at Xr (file:///private/tmp/claude-502/-Users-peason-orca-projects-strudel-daw/a619c5b1-e9a5-4daa-baff-1889f0296536/scratchpad/strudel-verify/pkgs/node_modules/@strudel/mini/dist/index.mjs:1396:13)
+    at Yr (file:///private/tmp/claude-502/-Users-peason-orca-projects-strudel-daw/a619c5b1-e9a5-4daa-baff-1889f0296536/scratchpad/strudel-verify/pkgs/node_modules/@strudel/mini/dist/index.mjs:1406:26)
+    at b (file:///private/tmp/claude-502/-Users-peason-orca-projects-strudel-daw/a619c5b1-e9a5-4daa-baff-1889f0296536/scratchpad/strudel-verify/pkgs/node_modules/@strudel/transpiler/dist/index.mjs:30:17)
+    at Object.enter (file:///private/tmp/claude-502/-Users-peason-orca-projects-strudel-daw/a619c5b1-e9a5-4daa-baff-1889f0296536/scratchpad/strudel-verify/pkgs/node_modules/@strudel/transpiler/dist/index.mjs:63:34)
+    at SyncWalker.visit (file:///private/tmp/claude-502/-Users-peason-orca-projects-strudel-daw/a619c5b1-e9a5-4daa-baff-1889f0296536/scratchpad/strudel-verify/pkgs/node_modules/estree-walker/src/sync.js:65:16)
+    at SyncWalker.visit (file:///private/tmp/claude-502/-Users-peason-orca-projects-strudel-daw/a619c5b1-e9a5-4daa-baff-1889f0296536/scratchpad/strudel-verify/pkgs/node_modules/estree-walker/src/sync.js:100:19)
+    at SyncWalker.visit (file:///private/tmp/claude-502/-Users-peason-orca-projects-strudel-daw/a619c5b1-e9a5-4daa-baff-1889f0296536/scratchpad/strudel-verify/pkgs/node_modules/estree-walker/src/sync.js:107:12)
+    at SyncWalker.visit (file:///private/tmp/claude-502/-Users-peason-orca-projects-strudel-daw/a619c5b1-e9a5-4daa-baff-1889f0296536/scratchpad/strudel-verify/pkgs/node_modules/estree-walker/src/sync.js:107:12)
+    at SyncWalker.visit (file:///private/tmp/claude-502/-Users-peason-orca-projects-strudel-daw/a619c5b1-e9a5-4daa-baff-1889f0296536/scratchpad/strudel-verify/pkgs/node_modules/estree-walker/src/sync.js:107:12)
+=== bad mini eval returns undefined | onEvalError got: [
+  'Error: [mini] parse error at line 1: Expected "<", "[", "{", a letter, a number, "-", "#", ".", "^", "_", or whitespace but "\\"" found.'
+]
+state.evalError [mini] parse error at line 1: Expected "<", "[", "{", a letter, a number, "-", "#", ".", "^", "_", or whitespace but "\"" found. | activeCode unchanged (last good keeps playing): true | started true
+[eval] error: s(...).fooBar is not a function
+TypeError: s(...).fooBar is not a function
+    at eval (eval at Bn (file:///private/tmp/claude-502/-Users-peason-orca-projects-strudel-daw/a619c5b1-e9a5-4daa-baff-1889f0296536/scratchpad/strudel-verify/pkgs/node_modules/@strudel/core/dist/index.mjs:549:10), <anonymous>:3:55)
+    at eval (eval at Bn (file:///private/tmp/claude-502/-Users-peason-orca-projects-strudel-daw/a619c5b1-e9a5-4daa-baff-1889f0296536/scratchpad/strudel-verify/pkgs/node_modules/@strudel/core/dist/index.mjs:549:10), <anonymous>:3:73)
+    at Bn (file:///private/tmp/claude-502/-Users-peason-orca-projects-strudel-daw/a619c5b1-e9a5-4daa-baff-1889f0296536/scratchpad/strudel-verify/pkgs/node_modules/@strudel/core/dist/index.mjs:549:21)
+    at On (file:///private/tmp/claude-502/-Users-peason-orca-projects-strudel-daw/a619c5b1-e9a5-4daa-baff-1889f0296536/scratchpad/strudel-verify/pkgs/node_modules/@strudel/core/dist/index.mjs:557:47)
+    at Object.evaluate (file:///private/tmp/claude-502/-Users-peason-orca-projects-strudel-daw/a619c5b1-e9a5-4daa-baff-1889f0296536/scratchpad/strudel-verify/pkgs/node_modules/@strudel/core/dist/index.mjs:3311:44)
+    at async file:///private/tmp/claude-502/-Users-peason-orca-projects-strudel-daw/a619c5b1-e9a5-4daa-baff-1889f0296536/scratchpad/strudel-verify/scripts/t3.mjs:54:14
+=== runtime error: s(...).fooBar is not a function
+[eval] error: Unexpected token (1:9)
+uu [SyntaxError]: Unexpected token (1:9)
+    at new uu (file:///private/tmp/claude-502/-Users-peason-orca-projects-strudel-daw/a619c5b1-e9a5-4daa-baff-1889f0296536/scratchpad/strudel-verify/pkgs/node_modules/@strudel/mini/dist/index.mjs:9:17)
+    at pp$4.raise (file:///private/tmp/claude-502/-Users-peason-orca-projects-strudel-daw/a619c5b1-e9a5-4daa-baff-1889f0296536/scratchpad/strudel-verify/pkgs/node_modules/acorn/dist/acorn.mjs:3835:13)
+    at pp$9.unexpected (file:///private/tmp/claude-502/-Users-peason-orca-projects-strudel-daw/a619c5b1-e9a5-4daa-baff-1889f0296536/scratchpad/strudel-verify/pkgs/node_modules/acorn/dist/acorn.mjs:833:8)
+    at pp$9.expect (file:///private/tmp/claude-502/-Users-peason-orca-projects-strudel-daw/a619c5b1-e9a5-4daa-baff-1889f0296536/scratchpad/strudel-verify/pkgs/node_modules/acorn/dist/acorn.mjs:827:26)
+    at pp$5.parseExprList (file:///private/tmp/claude-502/-Users-peason-orca-projects-strudel-daw/a619c5b1-e9a5-4daa-baff-1889f0296536/scratchpad/strudel-verify/pkgs/node_modules/acorn/dist/acorn.mjs:3691:12)
+    at pp$5.parseSubscript (file:///private/tmp/claude-502/-Users-peason-orca-projects-strudel-daw/a619c5b1-e9a5-4daa-baff-1889f0296536/scratchpad/strudel-verify/pkgs/node_modules/acorn/dist/acorn.mjs:3021:25)
+    at pp$5.parseSubscripts (file:///private/tmp/claude-502/-Users-peason-orca-projects-strudel-daw/a619c5b1-e9a5-4daa-baff-1889f0296536/scratchpad/strudel-verify/pkgs/node_modules/acorn/dist/acorn.mjs:2969:24)
+    at pp$5.parseExprSubscripts (file:///private/tmp/claude-502/-Users-peason-orca-projects-strudel-daw/a619c5b1-e9a5-4daa-baff-1889f0296536/scratchpad/strudel-verify/pkgs/node_modules/acorn/dist/acorn.mjs:2948:21)
+    at pp$5.parseMaybeUnary (file:///private/tmp/claude-502/-Users-peason-orca-projects-strudel-daw/a619c5b1-e9a5-4daa-baff-1889f0296536/scratchpad/strudel-verify/pkgs/node_modules/acorn/dist/acorn.mjs:2897:17)
+    at pp$5.parseExprOps (file:///private/tmp/claude-502/-Users-peason-orca-projects-strudel-daw/a619c5b1-e9a5-4daa-baff-1889f0296536/scratchpad/strudel-verify/pkgs/node_modules/acorn/dist/acorn.mjs:2825:19) {
+  expected: undefined,
+  found: undefined,
+  location: undefined,
+  pos: 9,
+  loc: Position { line: 1, column: 9 },
+  raisedAt: 9
+}
+=== JS syntax error: uu Unexpected token (1:9) {"line":1,"column":9}
+[cyclist] stop
+after stop toggles [ true, false ] now() 0

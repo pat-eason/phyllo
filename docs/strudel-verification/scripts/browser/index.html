@@ -1,0 +1,26 @@
+<!doctype html><meta charset="utf-8"><title>sd test</title>
+<script type="importmap">
+{ "imports": {
+  "@strudel/core": "/pkgs/node_modules/@strudel/core/dist/index.mjs",
+  "@strudel/mini": "/pkgs/node_modules/@strudel/mini/dist/index.mjs",
+  "@strudel/webaudio": "/pkgs/node_modules/@strudel/webaudio/dist/index.mjs",
+  "@strudel/draw": "/pkgs/node_modules/@strudel/draw/dist/index.mjs",
+  "superdough": "/pkgs/node_modules/superdough/dist/index.mjs",
+  "supradough": "/pkgs/node_modules/supradough/dist/index.mjs",
+  "fraction.js": "/pkgs/node_modules/fraction.js/dist/fraction.mjs",
+  "@kabelsalat/web": "/pkgs/node_modules/@kabelsalat/web/dist/index.mjs",
+  "@kabelsalat/core": "/pkgs/node_modules/@kabelsalat/core/dist/index.mjs",
+  "@kabelsalat/lib": "/pkgs/node_modules/@kabelsalat/lib/src/index.js",
+  "nanostores": "/pkgs/node_modules/nanostores/index.js"
+} }
+</script>
+<script>window.process={env:{NODE_ENV:"production"}};</script><button id="go">go</button>
+<script type="module">
+window.mods = {
+  core: await import('@strudel/core'),
+  mini: await import('@strudel/mini'),
+  webaudio: await import('@strudel/webaudio'),
+  sd: await import('superdough'),
+};
+window.ready = true;
+</script>
