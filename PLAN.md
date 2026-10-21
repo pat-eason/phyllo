@@ -110,7 +110,6 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | id | owner | owns | deps | acceptance | status |
 |---|---|---|---|---|---|
 | T7.5a | build agent | self-test mode + `pnpm tauri build` | T3.7 | built app runs the DoD flow in WKWebView (open, play starter, edit, save, reopen from library, export WAV) and writes a pass report | done |
-
 | T7.1 | shell agent (in T3.7) | shortcuts SPEC §7 | T3.7 | table-driven, input isolation; verified 20/20 by T3.V | done |
 | T7.2 | F4/F6/F7/F8/F10 | a11y pass SPEC §8 | T2.V, T3.V | axe 0 violations on all screens × 2 themes (F10) | done |
 | T7.3 | F7/F8/F10 | screenshot parity fixes | T3.V | 0 S1/S2 visual defects; S3 fixed or recorded | done |
