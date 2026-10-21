@@ -29,3 +29,10 @@ One line each: decision — reason — where. Strudel verification results are i
 - D20 Kbd builds a spoken default `aria-label` ("Command K"); word keys join with "+" — screen readers can't read ⌘ — atoms/Kbd.
 - D21 Swatch is `role="radio"` + `aria-checked`; roving focus belongs to the parent radiogroup (AccentPicker) — atoms/Swatch.
 - D22 Keep `forwardRef` on focusable atoms despite React 19 — design-system §3 convention; harmless in 19 — atoms/*.
+
+## Native (M6)
+- D23 All file IO goes through app Rust commands; the JS `fs` plugin stays at `fs:default` (supersedes D15's widening) — least privilege, one validated path — src-tauri/src/commands.rs.
+- D24 `NativeApi` has a Tauri impl and an in-memory/localStorage browser impl chosen by `isTauri()` — Vite dev, Playwright and Storybook run without Tauri — src/apps/phyllo/src/native/.
+- D25 Library scan reads only `*.phyllo` directly in `~/Music/Phyllo/` (no subfolders); opened timestamps in sidecar `.phyllo-index.json`; env `PHYLLO_HOME` overrides the root — keeps the index fast and testable — src-tauri/src/library.rs.
+- D26 History snapshot ids are monotonic UTC ms timestamps (`20261021T124100123Z`), newest 50 kept in `.history/<id>/` — sortable and prune-safe — src-tauri/src/history.rs.
+- D27 Asset protocol enabled (`$HOME/Music/Phyllo/**`); each linked sample folder is added to the scope at scan time — user folders live anywhere — tauri.conf.json, samples.rs.
