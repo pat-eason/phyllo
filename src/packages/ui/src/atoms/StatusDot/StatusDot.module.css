@@ -1,0 +1,89 @@
+.statusDot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: var(--ph-text-small);
+  color: var(--ph-text);
+}
+
+.dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ph-muted);
+}
+
+.label {
+  white-space: nowrap;
+}
+
+/* ---- tones ---- */
+.statusDot[data-status="ok"] .dot,
+.statusDot[data-status="busy"] .dot {
+  background: var(--ph-accent);
+}
+
+.statusDot[data-status="warn"] .dot {
+  background: var(--ph-solo);
+}
+
+.statusDot[data-status="error"] .dot {
+  background: var(--ph-rec);
+}
+
+.statusDot[data-status="off"] .dot {
+  background: var(--ph-muted);
+}
+
+.statusDot[data-status="ok"] .label,
+.statusDot[data-status="busy"] .label {
+  color: var(--ph-accent); /* == --ph-accent-text, but that token is resolved at :root and ignores nested data-theme */
+  font-weight: 600;
+}
+
+.statusDot[data-status="warn"] .label {
+  font-weight: 600;
+}
+
+.statusDot[data-status="error"] .label {
+  color: var(--ph-rec);
+  font-weight: 600;
+}
+
+.statusDot[data-status="off"] .label {
+  color: var(--ph-muted);
+}
+
+/* ---- badge ---- */
+.statusDot[data-badge] {
+  padding: 4px 10px;
+  border-radius: var(--ph-r-md);
+  background: var(--ph-sel);
+}
+
+.statusDot[data-badge] .label {
+  color: var(--ph-accent); /* == --ph-accent-text, but that token is resolved at :root and ignores nested data-theme */
+  font-weight: 600;
+}
+
+/* ---- pulse (busy only) ---- */
+.dot[data-pulse] {
+  animation: pulse 1.4s var(--ph-ease) infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--ph-accent) 55%, transparent);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot[data-pulse] {
+    animation: none;
+  }
+}
