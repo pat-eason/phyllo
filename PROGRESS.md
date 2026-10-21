@@ -33,3 +33,4 @@
 - Dispatched M4/M5 organisms in parallel with M3: T4.1 StepSequencer/PatternTools, T4.2 ChannelStrip/MixerStrips, T5.1 GrooveBrowser, T5.2 StarterPicker, T5.3 SettingsLayout/AccentPicker. T5.4 Export waits for F3 (engine runtime).
 - F2 merged (588d216): code/replace matching/clips/names, tempo, serialize clamp, NaN guards, analyze/hush/silence/sound fixes; verifier fuzz passes except documented losses. pnpm check green (model 553, engine 2043). Told T3.5 to keep Edit-code in song scope.
 - T3.4 merged (cc67c63): LibraryPanel (tabs, search, banks/sounds/synths/instruments with preview + drag, folders, starters/snippets); app 253 tests. Backlog B1–B5 added to PLAN.
+- T5.2 merged (abf2372): StarterPicker (recent, link import, starter cards, live code preview, tempo/tap, key transpose, preview audition, continue/skip/open) + StarterPickerHeaderActions.

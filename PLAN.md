@@ -88,7 +88,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | id | owner | owns | deps | acceptance | status |
 |---|---|---|---|---|---|
 | T5.1 | organism agent | GrooveBrowser | T3.1, M2 | SPEC §6.7 | active |
-| T5.2 | organism agent | StarterPicker | T3.1, M2 | SPEC §6.2 | active |
+| T5.2 | organism agent | StarterPicker | T3.1, M2 | SPEC §6.2 | done |
 | T5.3 | organism agent | SettingsLayout, AccentPicker | T3.1, M2 | SPEC §6.6, offline sounds download | active |
 | T5.4 | organism agent | ExportDialog + export pipeline + engine note query | F3, T6.3 | SPEC §6.5 all tabs, notification | todo |
 | T5.5 | agent | version history UI, screens Library/GuidedStart/Settings window, routing | T5.1–T5.3 | screens.md | todo |
