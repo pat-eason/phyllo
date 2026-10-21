@@ -201,8 +201,13 @@ export function projectReducer(project: Project, action: ProjectAction): Project
     case "master/set":
       return setMaster(project, action.patch);
 
-    case "code/replace":
-      return replaceFromCode(project, action.tracks, action.prelude, action.tempo);
+    case "code/replace": {
+      const sized = action.lengthBars === undefined ? project : setLength(project, action.lengthBars);
+      const replaced = replaceFromCode(sized, action.tracks, action.prelude, action.tempo);
+      const buses = action.buses ?? replaced.buses;
+      const master = action.master ? { ...replaced.master, ...action.master } : replaced.master;
+      return buses === replaced.buses && master === replaced.master ? replaced : { ...replaced, buses, master };
+    }
 
     case "ui/select": {
       const id = action.trackId !== null && project.tracks.some((t) => t.id === action.trackId) ? action.trackId : null;

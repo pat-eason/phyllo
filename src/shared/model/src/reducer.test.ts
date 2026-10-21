@@ -766,3 +766,20 @@ describe("code/replace", () => {
     expect(out.tracks.slice(7).map((t) => t.color)).toEqual([TRACK_COLORS[0], TRACK_COLORS[1]]);
   });
 });
+
+describe("code/replace with buses, master and length", () => {
+  it("applies parsed buses, merges master and resizes the song", () => {
+    const project = deepFreeze(createProject());
+    const next = projectReducer(project, {
+      type: "code/replace",
+      tracks: [],
+      prelude: [],
+      buses: [{ orbit: 1, roomsize: 4 }],
+      master: { postgain: 0.9 },
+      lengthBars: 16,
+    });
+    expect(next.buses).toEqual([{ orbit: 1, roomsize: 4 }]);
+    expect(next.master).toEqual({ ...project.master, postgain: 0.9 });
+    expect(next.lengthBars).toBe(16);
+  });
+});

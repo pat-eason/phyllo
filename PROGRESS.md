@@ -20,3 +20,4 @@
 - T6.3 merged (2f059ac): binary-IPC export sessions, WAV/FLAC/MP3 encoders, normalize, SMF writer, streamAudioBuffer + browser fallback. Orchestrator re-ran: cargo test 92 passed, clippy clean, app 101 tests. Live Tauri binary-IPC path untested — flagged for T5.V.
 - T1.4 merged (d143821): 7 original starters + transpose, tips, suggestions, 50 verified modifiers, sound catalogs, feel tools, cheat sheet, explainPattern, tags; model 533 tests. Fixed barrel clash (feel's formatNumber kept internal).
 - T2.7 merged (5b7ac12): TipCard, StarterCard, GrooveCard (tile + row), SettingRow, shared Punchcard; ui 380 tests.
+- T1.2 merged (8bca6ce): generate (both scopes, arrange, wrap, LineMap, instrument), modulatedParams/modulationRange, acorn-based parse with Code-track fallback, mini error columns, share codec; engine 1868 tests total. Orchestrator added ParseResult ok/error/buses and code/replace buses/master/lengthBars (+ reducer + test). pnpm check green.

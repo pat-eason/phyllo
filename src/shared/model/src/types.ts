@@ -166,7 +166,15 @@ export type ProjectAction =
   | { type: 'bus/set'; orbit: number; patch: Partial<Omit<Bus, 'orbit'>> }
   | { type: 'master/set'; patch: Partial<Master> }
   /** Replace all tracks + prelude from parsed code (code drawer edit, strudel.cc import). */
-  | { type: 'code/replace'; tracks: Track[]; prelude: string[]; tempo?: { bpm: number; beatsPerBar: number } }
+  | {
+      type: 'code/replace';
+      tracks: Track[];
+      prelude: string[];
+      tempo?: { bpm: number; beatsPerBar: number };
+      buses?: Bus[];
+      master?: Partial<Master>;
+      lengthBars?: number;
+    }
   | { type: 'ui/select'; trackId: string | null }
   | { type: 'ui/setZoom'; zoom: number };
 
@@ -204,6 +212,11 @@ export interface ParseResult {
   master?: Partial<Master>;
   /** Song length implied by `arrange()` totals, when present. */
   lengthBars?: number;
+  /** Orbit bus settings inferred from tracks (parse option `inferBuses`). */
+  buses?: Bus[];
+  /** false when the code has a syntax error; tracks are then empty and the caller keeps its last good model. */
+  ok: boolean;
+  error?: { message: string; line: number; column: number };
   warnings: ParseWarning[];
 }
 
