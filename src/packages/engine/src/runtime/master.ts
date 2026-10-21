@@ -1,9 +1,13 @@
 /**
  * Master chain and meters (DECISIONS V9, V10).
  *
- *   superdough destinationGain → input → [limiter] → output → destination
- *                                                    output → L/R analysers (master meter)
- *                                                    output → capture taps
+ *   superdough destinationGain → input → gate → [compressor → clipper] → output → destination
+ *                                                                        output → L/R analysers (master meter)
+ *                                                                        output → capture taps
+ *
+ * `gate` is the transport gate (closed on stop/pause so scheduled voices and tails are silent at once); the
+ * limiter is a fast DynamicsCompressor followed by a hard clip at `LIMITER.ceiling`, which catches the
+ * compressor's attack overshoot.
  *
  * Strudel has no master limiter; the chain is re-attached whenever superdough's controller rebuilds
  * its output (controller reset) or is replaced.
@@ -72,15 +76,47 @@ export interface MasterChain {
   /** True if `controller`'s current destinationGain is wired into this chain. */
   isAttached(controller: SuperdoughAudioController): boolean;
   setLimiter(on: boolean): void;
+  /** Ramps the transport gate open (1) or closed (0) over `rampSec` from now. */
+  setGate(open: boolean, rampSec?: number): void;
   readMaster(): MeterLevel;
   dispose(): void;
 }
 
-/** Limiter settings: brickwall-ish DynamicsCompressor just below 0 dBFS. */
-export const LIMITER = { threshold: -1, knee: 0, ratio: 20, attack: 0.002, release: 0.12 } as const;
+/**
+ * Limiter settings: fast DynamicsCompressor (threshold −1 dB, ratio 20, hard knee) followed by a hard clip at
+ * `ceiling` (−0.3 dBFS, linear).
+ */
+export const LIMITER = {
+  threshold: -1,
+  knee: 0,
+  ratio: 20,
+  attack: 0.001,
+  release: 0.1,
+  ceilingDb: -0.3,
+  ceiling: 10 ** (-0.3 / 20),
+} as const;
+
+/** Transport gate ramp (s) on stop/pause. */
+export const GATE_RAMP_SEC = 0.02;
+
+/**
+ * WaveShaper curve for a hard clip at ±`ceiling`: the identity over [-1, 1] clamped to the ceiling. Inputs
+ * beyond ±1 map to the end points, so the output never exceeds the ceiling. Odd length keeps 0 → 0.
+ */
+export function clipCurve(ceiling: number, points = 8193): Float32Array<ArrayBuffer> {
+  const n = Math.max(3, points | 1);
+  const c = Math.min(1, Math.max(0, ceiling));
+  const curve = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const x = (2 * i) / (n - 1) - 1;
+    curve[i] = Math.max(-c, Math.min(c, x));
+  }
+  return curve;
+}
 
 export function createMasterChain(ctx: BaseAudioContext, limiterOn: boolean): MasterChain {
   const input = ctx.createGain();
+  const gate = ctx.createGain();
   const output = ctx.createGain();
   const limiter = ctx.createDynamicsCompressor();
   limiter.threshold.value = LIMITER.threshold;
@@ -88,14 +124,19 @@ export function createMasterChain(ctx: BaseAudioContext, limiterOn: boolean): Ma
   limiter.ratio.value = LIMITER.ratio;
   limiter.attack.value = LIMITER.attack;
   limiter.release.value = LIMITER.release;
-  limiter.connect(output);
+  const clipper = ctx.createWaveShaper();
+  clipper.curve = clipCurve(LIMITER.ceiling);
+  clipper.oversample = "none"; // oversampling filters would ring past the ceiling
+  input.connect(gate);
+  limiter.connect(clipper);
+  clipper.connect(output);
   output.connect(ctx.destination);
   const meter = createStereoMeter(ctx, output);
 
   let on = limiterOn;
   const route = () => {
-    input.disconnect();
-    input.connect(on ? limiter : output);
+    gate.disconnect();
+    gate.connect(on ? limiter : output);
   };
   route();
 
@@ -133,11 +174,25 @@ export function createMasterChain(ctx: BaseAudioContext, limiterOn: boolean): Ma
       on = next;
       route();
     },
+    setGate(open, rampSec = GATE_RAMP_SEC) {
+      const g = gate.gain;
+      const now = ctx.currentTime;
+      const target = open ? 1 : 0;
+      g.cancelScheduledValues(now);
+      if (rampSec <= 0) {
+        g.setValueAtTime(target, now);
+        return;
+      }
+      g.setValueAtTime(g.value, now);
+      g.linearRampToValueAtTime(target, now + rampSec);
+    },
     readMaster: () => meter.read(),
     dispose() {
       meter.disconnect();
       input.disconnect();
+      gate.disconnect();
       limiter.disconnect();
+      clipper.disconnect();
       output.disconnect();
     },
   };

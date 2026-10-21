@@ -1,4 +1,6 @@
-// Browser harness for the runtime: exposes the engine on window for Playwright (runtime.spec.ts).
+// Browser harness for the runtime: exposes the engine on window for Playwright (runtime.spec.ts, fixes.spec.ts).
+import { buildStarterProject } from "@phyllo/model";
+import { generate } from "../src/codegen";
 import { createEngine } from "../src/runtime";
 import type { MidiOutMessage, OscOutMessage } from "../src/runtime";
 
@@ -17,7 +19,13 @@ const engine = createEngine({
   },
 });
 
-const harness = { engine, logs, midi, osc, initError: null as string | null };
+/** The evaluated (instrumented) song program of a starter project. */
+const starterProgram = (id: string) => {
+  const project = buildStarterProject(id);
+  return { program: generate(project, { scope: "song", instrument: true }), loop: project.loop, lengthBars: project.lengthBars };
+};
+
+const harness = { engine, logs, midi, osc, starterProgram, initError: null as string | null };
 (window as unknown as { harness: typeof harness }).harness = harness;
 
 document.getElementById("init")?.addEventListener("click", () => {
