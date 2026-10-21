@@ -110,7 +110,7 @@ export function attributeHapError(err: unknown, ctx: AttributionContext, locatio
   const message = cleanMessage(err instanceof Error ? err.message : String(err));
   const first = locations?.[0];
   const line = first ? lineAtOffset(ctx.code, first.start) : undefined;
-  return withTrack({ kind: "query", message, line }, ctx);
+  return withTrack({ kind: "runtime", message, line }, ctx);
 }
 
 function withTrack(e: EngineError, ctx: AttributionContext): EngineError {

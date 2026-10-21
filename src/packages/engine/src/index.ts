@@ -6,3 +6,4 @@ export * from "./codegen";
 export * from "./parse";
 export * from "./share";
 export * from "./mini";
+export * from "./runtime";

@@ -221,8 +221,8 @@ export interface ParseResult {
 }
 
 export interface EngineError {
-  /** `eval`: JS/transpile error; `pattern`: mini-notation parse error; `query`: thrown while querying haps. */
-  kind?: 'eval' | 'pattern' | 'query';
+  /** `eval`: JS/transpile error; `pattern`: mini-notation parse error; `query`: thrown while querying haps; `runtime`: error while playing a hap (e.g. sound not found). */
+  kind?: 'eval' | 'pattern' | 'query' | 'runtime';
   message: string;
   trackId?: string;
   line?: number;

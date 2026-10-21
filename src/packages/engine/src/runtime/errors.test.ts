@@ -171,6 +171,6 @@ describe("attributeHapError", () => {
     const e = attributeHapError(new Error("sound nosuchsound not found! Is it loaded?"), { code, lines: LINES }, [
       { start: offset },
     ]);
-    expect(e).toEqual({ kind: "query", message: "sound nosuchsound not found! Is it loaded?", line: 4, trackId: "bass" });
+    expect(e).toEqual({ kind: "runtime", message: "sound nosuchsound not found! Is it loaded?", line: 4, trackId: "bass" });
   });
 });
