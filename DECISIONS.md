@@ -221,3 +221,9 @@ setcpm / setcps (V2), arrange + silence (V2, V5), ribbon (V2, V6 — not used in
 - D165 Timeline virtualizes lanes past 40 tracks (visible + overscan + focused lane, fixed 57 px rows); ↑/↓ on a track header selects/focuses the neighbouring track — B15.
 - D166 Accessible names start with the visible text (WCAG 2.5.3): e.g. "Groove 9–16, section", "120 BPM, edit tempo", "Kick bd"; axe reports 0 violations on all 10 screens in both themes; `onBlockedChange` also fires at a bound while modulated; StepRow roving tabindex + label preview button — B7/B13/B17.
 - D167 CodeDrawer applies Settings › Code editor prefs (font size, line numbers) live; export default names de-duplicate (`autoName`); Rec output takes use `exportUniquePath`; Settings › Audio shows "Applies after restart" when the chosen sample rate differs from the running engine's (also shown before audio starts) — B9, B12.
+
+## Deferred / accepted at end of build
+- D168 Tag recolor is deferred: tag colours derive from the name (`tagColor`) because the `.phyllo` format has no tag-colour field and tags must travel with the file; adding one is a format change for a later version — SPEC §6.7 Manage.
+- D169 Pro knob value text keeps Strudel's code style (`.78`, `.3`) rather than the mockup's `0.78`/`0.30` — the same digits the user sees in the code drawer — accepted deviation.
+- D170 Multi-cycle step patterns (2/4-cycle Length) and a Euclid rotation control are deferred (both "proposed"); the editor is fixed at 1 cycle / 16 steps and shows "can't be shown as steps" for longer patterns, which remain editable as text.
+- D171 Licensing: Phyllo depends on AGPL-3.0-or-later Strudel packages (D7) and statically links LGPL LAME (D56). No LICENSE file was chosen or added during the build — picking the project's license and any distribution/signing are left to the owner.

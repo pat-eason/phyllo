@@ -114,22 +114,22 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 T7.1 shortcuts (SPEC §7) · T7.2 a11y pass (SPEC §8) · T7.3 screenshot parity fixes · T7.4 performance (no React re-render for playhead/meters) · T7.5 `pnpm tauri build` packaging + end-to-end smoke (open, play starter, edit, save, reopen, export WAV) · T7.V final verifier against SPEC §6 + DoD.
 
 ### Follow-ups backlog (not yet assigned)
-- B1 Sample folders: call `native.sampleFoldersWatch(all)` + `sampleFolderScan` → `engine.registerSamples({name: [convertFileSrc(path)]})` with collision suffixes; rescan on `onSamplesChanged` (state layer) — from T3.4/T6.1.
-- B2 `engine.preview` has no stop → add `stopPreview()` (engine runtime) — from T3.4.
+- ~~B1~~ done (T6.5, D133): Sample folders: call `native.sampleFoldersWatch(all)` + `sampleFolderScan` → `engine.registerSamples({name: [convertFileSrc(path)]})` with collision suffixes; rescan on `onSamplesChanged` (state layer) — from T3.4/T6.1.
+- ~~B2~~ done (T6.5, D136): `engine.preview` has no stop → add `stopPreview()` (engine runtime) — from T3.4.
 - ~~B3~~ done (D139).
-- B4 MIDI input → selected track notes / CC map → inspector knobs (state layer, uses T6.2 events) — from T3.1.
-- B5 Tag manage: rename/merge/delete across files; recolor needs a model field — from T3.1/T5.1.
+- ~~B4~~ done (T6.5, D134): MIDI input → selected track notes / CC map → inspector knobs (state layer, uses T6.2 events) — from T3.1.
+- B5 (partly done — rename/merge/delete in T5.1; recolor deferred, D168): Tag manage: rename/merge/delete across files; recolor needs a model field — from T3.1/T5.1.
 - ~~B6~~ done (F5): Audition another program without replacing the open project (GrooveBrowser tile play, StarterPicker preview): generalize StarterPicker's `useAudition` (load as non-dirty, restore on stop) into a shared hook, or add an engine audition slot; then enable GrooveCard play (needs a `disabled`/`previewing` prop) — from T5.1/T5.2.
 - ~~B7~~ done (F4/F10): Molecule gaps: GrooveCard `selected` row + play `disabled`; Readout caption action + cell popover (key menu); StatusDot `tone="plain"`; SegmentedControl compact padding; Chip code `selected`; IconButton/TextField/Select 40 px size — from T3.2/T3.4/T5.1/T5.2.
 - ~~B8~~ done (D161): Engine should honour `settings.audio.sampleRate` (AudioContext sampleRate on init) — from T5.3.
 - ~~B9~~ done (D167): CodeDrawer should consume `useCodeEditorPrefs()` (font size, line numbers) — from T5.3.
 - ~~B10~~ done (F5): ParamKnob: `aria-valuetext`/`aria-label` + caption slot props (Inspector writes the attribute after render as a workaround); Knob double-click "unset" callback — from T3.6.
-- B11 Pro value text `.78` vs mockup `0.78` — decide in T7.3 parity pass (model `PARAM_SPECS.format`) — from T2.6/T3.6.
+- ~~B11~~ decided (D169): Pro value text `.78` vs mockup `0.78` — decide in T7.3 parity pass (model `PARAM_SPECS.format`) — from T2.6/T3.6.
 - ~~B12~~ done (D162; UI wiring in F10): Rec output / export naming: avoid overwriting earlier takes after relaunch (native "unique export path" like `project_new_path` for Exports/) — from T4.2.
 - ~~B13~~ done (F10): TrackHeader attribute passthrough for Mute/Solo (tip anchors), SectionChip imperative `current`, SegmentedControl per-option attrs — from T3.3.
 - ~~B14~~ done (D164): App-level toast queue (Mixer/CodeDrawer/Library each render their own) — from T4.2/T3.5.
 - ~~B15~~ done (D165): Timeline lane virtualization past ~40 tracks; ↑/↓ track navigation — from T3.3.
-- B16 Multi-cycle step patterns (2/4 cycles) in `miniToRows`/`rowsToMini` + StepSequencer length control; Euclid rotation control — from T4.1.
+- B16 (deferred, D170): Multi-cycle step patterns (2/4 cycles) in `miniToRows`/`rowsToMini` + StepSequencer length control; Euclid rotation control — from T4.1.
 - ~~B17~~ done (F10): StepRow roving tabindex + `onPreview` on the row label; Slider fluid width — from T4.1.
 - ~~B18~~ done (F5): UI for T6.5: show recorder `lastTake` + `midiInput.hint` (status bar/toast), list `useSampleNames()` in Inspector sound picker (sample tracks) and Library Samples tab; LibraryPanel/Inspector preview toggles call `stopPreview()` — from T6.5.
 - ~~B19~~ done (D163): Offline render logs "Source and destination nodes belong to different audio contexts" once per render, and engine log lines are double-prefixed `[phyllo] [phyllo]` — from T7.5a.
