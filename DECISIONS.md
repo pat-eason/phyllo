@@ -66,3 +66,7 @@ One line each: decision — reason — where. Strudel verification results are i
 - D35 MIDI output is scheduled on a dedicated Rust thread (sleep until ~2 ms before due, then spin); `atMs` relative to command arrival, clamped 0–60 s; close/panic drop queued messages and send all-notes-off — JS hands over haps with look-ahead — midi.rs.
 - D36 OSC numbers: integral values within int32 → int32, else float32; `atMs` present → bundle timetagged now+atMs, else plain message; disabled by default (`127.0.0.1:57120`) — SuperDirt accepts both — src-tauri/src/osc.rs.
 - D37 Browser `NativeApi` uses Web MIDI when available (Chromium dev) — lets MIDI be exercised outside Tauri — src/native/webmidi.ts.
+- D38 Knob emits normalized 0–1 only; ⌥-click/Enter call `onRequestEdit` so the organism (which knows units) shows the typed-value input; `onChangeStart/End` bracket drags for undo grouping and the "replace modulation?" prompt — atoms/Knob.
+- D39 Fader value is dB; marks evenly spaced along the throw with piecewise-linear dB between them; bottom = −∞ (−60) — SPEC §6.4 — atoms/Fader/faderScale.ts.
+- D40 Meter can be driven by `level` prop, a ref handle (`set(l,r)`/`reset()`), or a `subscribe` prop, all writing to the DOM directly with 20 dB/s release + peak hold — playhead/meters must not re-render React (design-system §5) — atoms/Meter.
+- D41 `gainToDb`/`dbToGain` exist in both `@phyllo/ui` (Fader) and `@phyllo/model` (params) — ui must stay model-free; two one-line functions, tested in both — accepted duplication.
