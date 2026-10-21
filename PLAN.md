@@ -80,7 +80,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 ### M4 Pattern editor and Mixer
 | id | owner | owns | deps | acceptance | status |
 |---|---|---|---|---|---|
-| T4.1 | organism agent | StepSequencer, PatternTools | T3.1, M2 | SPEC §4.3, §6.3; steps/velocity/live code/Euclid/feel/piano roll | active |
+| T4.1 | organism agent | StepSequencer, PatternTools | T3.1, M2 | SPEC §4.3, §6.3; steps/velocity/live code/Euclid/feel/piano roll | done |
 | T4.2 | organism agent | ChannelStrip, MixerStrips | T3.1, M2 | SPEC §6.4; track/bus/master strips, Rec output | done |
 | T4.3 | screen agent | PatternEditorScreen, MixerScreen | T4.1, T4.2, T3.2 | screens.md layouts | todo |
 | T4.V | verifier | read-only | T4.3 | png 04/05 parity, §6.3/§6.4 | todo |
@@ -117,3 +117,5 @@ T7.1 shortcuts (SPEC §7) · T7.2 a11y pass (SPEC §8) · T7.3 screenshot parity
 - B13 TrackHeader attribute passthrough for Mute/Solo (tip anchors), SectionChip imperative `current`, SegmentedControl per-option attrs — from T3.3.
 - B14 App-level toast queue (Mixer/CodeDrawer/Library each render their own) — from T4.2/T3.5.
 - B15 Timeline lane virtualization past ~40 tracks; ↑/↓ track navigation — from T3.3.
+- B16 Multi-cycle step patterns (2/4 cycles) in `miniToRows`/`rowsToMini` + StepSequencer length control; Euclid rotation control — from T4.1.
+- B17 StepRow roving tabindex + `onPreview` on the row label; Slider fluid width — from T4.1.
