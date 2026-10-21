@@ -1,8 +1,9 @@
-import { DEFAULT_ORBIT, createClip, isGenericTrackName, nextTrackColor } from "./factories";
+import { DEFAULT_ORBIT, createClip, defaultTrackName, nextTrackColor } from "./factories";
 import { newId } from "./ids";
 import { PARAM_SPECS, coerceParamValue } from "./params";
 import { clampInt, clampRange, placeRange, sanitizeRanges, trimRangesToLength } from "./ranges";
-import type { Bus, Clip, Master, Modifier, Project, ProjectAction, Track } from "./types";
+import { isAudible } from "./selectors";
+import type { Bus, Clip, Master, Modifier, Project, ProjectAction, Track, TrackSource } from "./types";
 
 /** Reducer limits. Deliberately wide for tempo/orbit: code the user wrote is never silently rewritten. */
 export const LIMITS = {
@@ -24,7 +25,8 @@ export const LIMITS = {
  *   derived `<id>~2` id, if it strictly contains the new range). Adjacent ranges are fine.
  * - `clip/split` at `atBar` cuts so the right clip *starts* at `atBar`; valid when `startBar < atBar <= endBar`.
  * - `track/setParam` clamps and rounds to the param spec and removes the key for `null`, `""` or the Strudel default.
- * - `code/replace` is the only action that mints ids (via `newId`), and only for tracks with no match.
+ * - `code/replace` is the only action that mints ids (via `newId`): for unmatched tracks and new clips.
+ * - An action carrying a bar number or a length that isn't finite (NaN, ±Infinity) returns the project unchanged.
  * - The reducer never touches `project.modified`; the persistence layer stamps it.
  */
 export function projectReducer(project: Project, action: ProjectAction): Project {
@@ -46,14 +48,17 @@ export function projectReducer(project: Project, action: ProjectAction): Project
     case "tempo/set":
       return setTempo(project, action.bpm, action.beatsPerBar);
     case "loop/set":
+      if (!finite(action.startBar, action.endBar)) return project;
       return setLoop(project, action);
 
     case "section/add": {
+      if (!finite(action.section.startBar, action.section.endBar)) return project;
       if (project.sections.some((s) => s.id === action.section.id)) return project;
       const section = clampRange(action.section, project.lengthBars);
       return { ...project, sections: placeRange(project.sections, section) };
     }
     case "section/update": {
+      if (!finite(action.patch.startBar, action.patch.endBar)) return project;
       const current = project.sections.find((s) => s.id === action.sectionId);
       if (!current) return project;
       const merged = clampRange({ ...current, ...action.patch, id: current.id }, project.lengthBars);
@@ -67,7 +72,7 @@ export function projectReducer(project: Project, action: ProjectAction): Project
     }
 
     case "track/add": {
-      if (project.tracks.some((t) => t.id === action.track.id)) return project;
+      if (project.tracks.some((t) => t.id === action.track.id) || !finiteRanges(action.track.clips)) return project;
       const track = { ...action.track, clips: sanitizeRanges(action.track.clips, project.lengthBars) };
       const tracks = project.tracks.slice();
       const index = action.index === undefined ? tracks.length : clampInt(action.index, 0, tracks.length);
@@ -81,6 +86,7 @@ export function projectReducer(project: Project, action: ProjectAction): Project
       return { ...project, tracks, ui };
     }
     case "track/update":
+      if (action.patch.clips && !finiteRanges(action.patch.clips)) return project;
       return mapTrack(project, action.trackId, (t) => {
         const next: Track = { ...t, ...action.patch, id: t.id };
         if (action.patch.clips) next.clips = sanitizeRanges(action.patch.clips, project.lengthBars);
@@ -117,7 +123,9 @@ export function projectReducer(project: Project, action: ProjectAction): Project
     case "track/setSource":
       return mapTrack(project, action.trackId, (t) => {
         const source = { ...t.source, ...action.source };
-        return shallowEqual(source, t.source) ? t : { ...t, source };
+        if (shallowEqual(source, t.source)) return t;
+        const pattern = patternForSound(t, source);
+        return pattern === t.pattern ? { ...t, source } : { ...t, source, pattern };
       });
     case "track/setMute":
       return mapTrack(project, action.trackId, (t) => (t.mute === action.mute ? t : { ...t, mute: action.mute }));
@@ -167,11 +175,13 @@ export function projectReducer(project: Project, action: ProjectAction): Project
       });
 
     case "clip/add":
+      if (!finite(action.clip.startBar, action.clip.endBar)) return project;
       return mapTrack(project, action.trackId, (t) => {
         if (t.clips.some((c) => c.id === action.clip.id)) return t;
         return { ...t, clips: placeRange(t.clips, clampRange(action.clip, project.lengthBars)) };
       });
     case "clip/update":
+      if (!finite(action.patch.startBar, action.patch.endBar)) return project;
       return mapTrack(project, action.trackId, (t) => {
         const current = t.clips.find((c) => c.id === action.clipId);
         if (!current) return t;
@@ -180,6 +190,7 @@ export function projectReducer(project: Project, action: ProjectAction): Project
         return { ...t, clips: placeRange(t.clips.filter((c) => c.id !== current.id), merged) };
       });
     case "clip/split":
+      if (!finite(action.atBar)) return project;
       return mapTrack(project, action.trackId, (t) => {
         const clip = t.clips.find((c) => c.id === action.clipId);
         const at = Math.round(action.atBar);
@@ -246,6 +257,35 @@ function shallowEqual<T extends object>(a: T, b: T): boolean {
   const bk = Object.keys(b) as (keyof T)[];
   if (ak.length !== bk.length) return false;
   return ak.every((k) => Object.hasOwn(b, k) && Object.is(a[k], b[k]));
+}
+
+/** True when every given value is a finite number; `undefined` (field not given) is fine. */
+function finite(...values: (number | undefined)[]): boolean {
+  return values.every((v) => v === undefined || Number.isFinite(v));
+}
+
+function finiteRanges(items: readonly { startBar: number; endBar: number }[]): boolean {
+  return items.every((c) => Number.isFinite(c.startBar) && Number.isFinite(c.endBar));
+}
+
+/** Mini-notation name tokens (`"vox:2 [~ vox]*2"` → `vox`, `vox`); same rule as the engine's `soundTokens`. */
+const NAME_TOKEN = /[A-Za-z_][A-Za-z0-9_]*/g;
+
+/**
+ * `track/setSource` on a track whose sound *is* its pattern (`sample`, or melodic with `source.type "s"`,
+ * both emitted as `s(pattern)`): the pattern follows the new sound so the code changes too. An empty or
+ * rest-only pattern becomes the sound; one whose every name token is the old sound has them renamed
+ * (`vox*2` → `breaks*2`); any other pattern is the user's and stays.
+ */
+function patternForSound(t: Track, source: TrackSource): string {
+  const soundIsPattern = t.kind === "sample" || (t.kind === "melodic" && source.type === "s");
+  const next = source.sound;
+  if (!soundIsPattern || next === null || next === t.source.sound || !/^[A-Za-z0-9_]+$/.test(next)) return t.pattern;
+  const tokens = t.pattern.match(NAME_TOKEN) ?? [];
+  if (tokens.length === 0) return next;
+  const old = t.source.sound;
+  if (old === null || !tokens.every((tok) => tok === old)) return t.pattern;
+  return t.pattern.replace(NAME_TOKEN, next);
 }
 
 function sameStrings(a: readonly string[], b: readonly string[]): boolean {
@@ -337,14 +377,73 @@ function setMaster(project: Project, patch: Partial<Master>): Project {
   return shallowEqual(next, project.master) ? project : { ...project, master: next };
 }
 
+/** What a track plays, for matching an incoming track to an unchanged existing one. */
+function identityKey(t: Track): string {
+  if (t.kind === "code") return JSON.stringify([t.kind, (t.rawCode ?? "").trim()]);
+  return JSON.stringify([t.kind, t.source.type, t.source.sound, t.source.bank, t.pattern]);
+}
+
+const spansKey = (clips: readonly Clip[]) => clips.map((c) => `${c.startBar}-${c.endBar}`).join(",");
+
 /**
- * Merge parsed tracks (code drawer edit, strudel.cc import) into the project.
- * Matching: by `id` first, then by position with the same `kind`. A matched track takes the incoming
- * content (source, pattern, params, modifiers, mute, rawCode …) but keeps its `id`, `color`, `clips`,
- * `solo` (code cannot express solo), its `name` when the incoming name is generic (`isGenericTrackName`)
- * and its `orbit` when the incoming one is the default (1, i.e. the code had no `.orbit()`).
- * Unmatched incoming tracks get a fresh id, the next free colour and one full-song clip.
- * Tracks missing from the incoming list are removed; order follows the incoming list.
+ * Pair each incoming track with at most one existing track, in passes over what is still unpaired:
+ * (a) same `id`; (b) same `identityKey` (kind + source + pattern, or raw code); (c) an `arrange()`d block
+ * whose clips equal the existing track's, same kind first, then any kind (an edited or re-inferred block
+ * keeps its arrangement); (d) same `kind`, in order; (e) in order regardless of kind, only when as many
+ * incoming as existing tracks remain (an in-place kind change). Deleting or inserting a block therefore
+ * doesn't shift identities onto its neighbours.
+ */
+function matchTracks(existing: readonly Track[], incoming: readonly Track[]): number[] {
+  const match: number[] = incoming.map(() => -1);
+  const used = new Set<number>();
+  const pass = (accept: (inc: Track, e: Track) => boolean) => {
+    incoming.forEach((inc, i) => {
+      if (match[i] !== -1) return;
+      const k = existing.findIndex((e, j) => !used.has(j) && accept(inc, e));
+      if (k < 0) return;
+      match[i] = k;
+      used.add(k);
+    });
+  };
+  pass((inc, e) => inc.id === e.id);
+  const keys = new Map(existing.map((e) => [e, identityKey(e)]));
+  pass((inc, e) => identityKey(inc) === keys.get(e));
+  const sameSpans = (inc: Track, e: Track) => inc.clips.length > 0 && spansKey(inc.clips) === spansKey(e.clips);
+  pass((inc, e) => inc.kind === e.kind && sameSpans(inc, e));
+  pass(sameSpans);
+  pass((inc, e) => inc.kind === e.kind);
+  if (match.filter((m) => m === -1).length === existing.length - used.size) pass(() => true);
+  return match;
+}
+
+/** Incoming clips with valid ranges; an existing clip with the same span keeps its id, others get new ids. */
+function adoptClips(incoming: readonly Clip[], existing: readonly Clip[], lengthBars: number): Clip[] {
+  const valid = incoming.filter((c) => Number.isFinite(c.startBar) && Number.isFinite(c.endBar));
+  const taken = new Set<string>();
+  const withIds = valid.map((c) => {
+    const same = existing.find((e) => e.startBar === c.startBar && e.endBar === c.endBar && !taken.has(e.id));
+    const id = same ? same.id : newId("clip_");
+    taken.add(id);
+    return { id, startBar: c.startBar, endBar: c.endBar };
+  });
+  return sanitizeRanges(withIds, lengthBars);
+}
+
+/**
+ * Merge parsed tracks (code drawer edit, strudel.cc import) into the project. Song-scope code is the truth
+ * for what it can express; the model keeps what code can't express.
+ * - Matching: see `matchTracks`. Order follows the incoming list; unpaired existing tracks are removed.
+ * - A matched track takes the incoming content (source, pattern, params, modifiers, mute, rawCode …) and
+ *   keeps its `id`, `color` and `solo` (code can't express solo); its `name` when the incoming one is `""`
+ *   (an unlabelled block); its `orbit` when the incoming one is the default 1 (no `.orbit()`) and it
+ *   wasn't a code track (whose orbit codegen never writes).
+ * - Clips: non-empty incoming clips (the block was wrapped in `arrange()`) win; empty ones mean "no
+ *   arrangement in the code", so a matched track keeps its clips (a clip-less one whose block now plays,
+ *   `$:`, gets one full-song clip).
+ * - Mute: `_$:` on a track that was only silent because another track is soloed, or because it has no clips
+ *   (codegen writes both as `_$:`), keeps it unmuted.
+ * - Unmatched tracks get a fresh id, the next free colour, `defaultTrackName` when unnamed, and their
+ *   incoming clips or one full-song clip.
  */
 function replaceFromCode(
   project: Project,
@@ -353,35 +452,25 @@ function replaceFromCode(
   tempo: { bpm: number; beatsPerBar: number } | undefined,
 ): Project {
   const existing = project.tracks;
-  const used = new Set<number>();
-  const match: number[] = incoming.map(() => -1);
-
-  incoming.forEach((inc, i) => {
-    const e = existing.findIndex((t, k) => t.id === inc.id && !used.has(k));
-    if (e >= 0) {
-      match[i] = e;
-      used.add(e);
-    }
-  });
-  incoming.forEach((inc, i) => {
-    if (match[i] !== -1) return;
-    const e = existing[i];
-    if (e && !used.has(i) && e.kind === inc.kind) {
-      match[i] = i;
-      used.add(i);
-    }
-  });
+  const length = project.lengthBars;
+  const match = matchTracks(existing, incoming);
 
   const built: (Track | null)[] = incoming.map((inc, i) => {
     const e = existing[match[i] ?? -1];
     if (!e) return null;
+    const hasClips = inc.clips.length > 0;
+    const silentOnlyByCodegen = !e.mute && (!isAudible(e, existing) || (e.clips.length === 0 && !hasClips));
+    // A clip-less track whose block was changed to a playing `$:` plays the whole song, as the code says.
+    const kept = e.clips.length === 0 && !inc.mute ? [createClip(1, length)] : e.clips;
     return {
       ...inc,
       id: e.id,
-      name: isGenericTrackName(inc.name) ? e.name : inc.name,
+      name: inc.name === "" ? e.name : inc.name,
       color: e.color,
-      clips: e.clips,
-      orbit: inc.orbit === DEFAULT_ORBIT ? e.orbit : inc.orbit,
+      clips: hasClips ? adoptClips(inc.clips, e.clips, length) : kept,
+      // A code track's orbit never reaches the code, so only a typed track's orbit is "kept from before".
+      orbit: inc.orbit === DEFAULT_ORBIT && e.kind !== "code" ? e.orbit : inc.orbit,
+      mute: inc.mute && !silentOnlyByCodegen,
       solo: e.solo,
     };
   });
@@ -389,11 +478,13 @@ function replaceFromCode(
   const tracks: Track[] = built.map((t, i) => {
     if (t) return t;
     const inc = incoming[i] as Track;
+    const clips = adoptClips(inc.clips, [], length);
     const fresh: Track = {
       ...inc,
       id: newId("trk_"),
+      name: inc.name === "" ? defaultTrackName(inc.kind, settled) : inc.name,
       color: nextTrackColor(settled),
-      clips: [createClip(1, project.lengthBars)],
+      clips: clips.length > 0 ? clips : [createClip(1, length)],
     };
     settled.push(fresh);
     return fresh;

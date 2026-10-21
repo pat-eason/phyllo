@@ -368,6 +368,48 @@ describe("tracks", () => {
     expect(out.tracks[0]).toBe(p.tracks[0]);
     expect(out.tracks[2]).toBe(p.tracks[2]);
   });
+
+  it.each([
+    ["an s-type melodic pattern equal to the old sound", "melodic", "s", "sawtooth", "sawtooth", "square", "square"],
+    ["an empty sample pattern", "sample", "s", null, "", "vox", "vox"],
+    ["a rest-only sample pattern", "sample", "s", null, "~", "vox", "vox"],
+    ["a sample pattern of only the old sound", "sample", "s", "vox", "vox:2 [~ vox]*2", "breaks", "breaks:2 [~ breaks]*2"],
+    ["a sample pattern with other sounds", "sample", "s", "vox", "vox bd", "breaks", "vox bd"],
+    ["a note melodic track", "melodic", "note", "sawtooth", "c3 e3", "square", "c3 e3"],
+    ["a drum track", "drum", "s", null, "bd*4", "vox", "bd*4"],
+  ] as const)("should update the pattern on track/setSource for %s only when the sound is the pattern", (_label, kind, type, sound, pattern, next, expected) => {
+    // Arrange
+    const p = run(fixture(), { type: "track/add", track: createTrack(kind, { id: "t", pattern, source: { type, sound, bank: null } }) });
+
+    // Act
+    const out = run(p, { type: "track/setSource", trackId: "t", source: { sound: next } });
+
+    // Assert
+    expect(track(out, "t").source.sound).toBe(next);
+    expect(track(out, "t").pattern).toBe(expected);
+  });
+});
+
+describe("non-finite bar numbers and lengths", () => {
+  it.each([NaN, Infinity, -Infinity])("should return the project unchanged for %s", (bad) => {
+    // Arrange
+    const p = fixture();
+    const actions: ProjectAction[] = [
+      { type: "project/setLength", lengthBars: bad },
+      { type: "loop/set", enabled: true, startBar: bad },
+      { type: "loop/set", endBar: bad },
+      { type: "section/add", section: createSection("X", 1, bad, "x") },
+      { type: "section/update", sectionId: "intro", patch: { startBar: bad } },
+      { type: "track/add", track: createTrack("drum", { id: "n", clips: [createClip(bad, 4, "c")] }) },
+      { type: "track/update", trackId: "kick", patch: { clips: [createClip(1, bad, "c")] } },
+      { type: "clip/add", trackId: "kick", clip: createClip(2, bad, "kz") },
+      { type: "clip/update", trackId: "kick", clipId: "k1", patch: { endBar: bad } },
+      { type: "clip/split", trackId: "kick", clipId: "k1", atBar: bad, newClipId: "ks" },
+    ];
+
+    // Act / Assert
+    for (const a of actions) expect(projectReducer(p, a), a.type).toBe(p);
+  });
 });
 
 describe("track/setParam", () => {
@@ -661,26 +703,64 @@ describe("code/replace", () => {
     const p = run(fixture(), { type: "track/setSolo", trackId: "bass", solo: true });
     const inc = incoming("melodic", {
       id: "bass",
-      name: "Track 2",
+      name: "",
       pattern: "c3*4",
       params: { gain: 0.5 },
       mute: true,
       color: "#000000",
-      clips: [createClip(1, 2, "other")],
     });
     const out = run(p, { type: "code/replace", tracks: [inc], prelude: ["samples('x')"] });
     expect(out.tracks).toHaveLength(1);
     expect(out.tracks[0]).toMatchObject({
       id: "bass",
-      name: "Bass", // generic incoming name -> existing one kept
+      name: "Bass", // unlabelled block ("") -> existing name kept
       color: "#F5C25B",
       pattern: "c3*4",
       params: { gain: 0.5 },
       mute: true,
       solo: true,
-      clips: [{ id: "b1", startBar: 9, endBar: 16 }],
+      clips: [{ id: "b1", startBar: 9, endBar: 16 }], // no arrange() in the code -> existing clips kept
     });
     expect(out.prelude).toEqual(["samples('x')"]);
+  });
+
+  it("should let arranged incoming clips win, keeping the ids of clips whose span is unchanged", () => {
+    // Arrange
+    const inc = incoming("drum", { id: "kick", clips: [createClip(9, 16, "p1"), createClip(25, 32, "p2")] });
+
+    // Act
+    const out = run(fixture(), { type: "code/replace", tracks: [inc], prelude: [] });
+
+    // Assert
+    expect(out.tracks[0]?.clips).toEqual([
+      { id: "k1", startBar: 9, endBar: 16 },
+      { id: "clip_1", startBar: 25, endBar: 32 },
+    ]);
+  });
+
+  it("should give an unmatched track its arranged clips, clamped to the song", () => {
+    // Arrange
+    const inc = incoming("sample", { clips: [createClip(5, 8, "p1"), createClip(30, 40, "p2")] });
+
+    // Act
+    const out = run(fixture(), { type: "code/replace", tracks: [inc], prelude: [] });
+
+    // Assert
+    expect(spans(out.tracks[0]?.clips ?? [])).toEqual([
+      [5, 8],
+      [30, 32],
+    ]);
+  });
+
+  it("should name an unlabelled unmatched track with the kind's default name", () => {
+    // Arrange
+    const tracks = [incoming("drum", { id: "kick", name: "" }), incoming("drum", { name: "" }), incoming("drum", { name: "" }), incoming("drum", { name: "" })];
+
+    // Act
+    const out = run(fixture(), { type: "code/replace", tracks, prelude: [] });
+
+    // Assert
+    expect(out.tracks.map((t) => t.name)).toEqual(["Kick", "Drums", "Drums 2", "Drums 3"]);
   });
 
   it("uses a non-generic incoming name", () => {
@@ -692,14 +772,16 @@ describe("code/replace", () => {
     expect(out.tracks[0]?.name).toBe("Four on the floor");
   });
 
-  it("falls back to position + same kind when ids don't match", () => {
+  it("falls back to identical content, then same kind, then an in-place kind change when ids don't match", () => {
     const out = run(fixture(), {
       type: "code/replace",
-      tracks: [incoming("drum", { id: "zzz1", pattern: "hh*8" }), incoming("chord", { id: "zzz2" }), incoming("chord", { id: "zzz3" })],
+      tracks: [incoming("drum", { id: "zzz1", pattern: "hh*8" }), incoming("chord", { id: "zzz2" }), incoming("chord", { id: "zzz3", pattern: "<Dm7 G7>" })],
       prelude: [],
     });
-    // 0: drum<->kick (same kind at same index), 1: chord vs bass (melodic) -> new, 2: chord<->keys
-    expect(out.tracks.map((t) => t.id)).toEqual(["kick", "trk_1", "keys"]);
+    // zzz2 is identical to keys (default chord); zzz1 is the only drum -> kick; zzz3 is left with bass
+    // (one incoming, one existing left -> kind changed in place).
+    expect(out.tracks.map((t) => t.id)).toEqual(["kick", "keys", "bass"]);
+    expect(out.tracks.map((t) => t.kind)).toEqual(["drum", "chord", "chord"]);
     expect(out.tracks[0]?.pattern).toBe("hh*8");
     expect(spans(out.tracks[0]?.clips ?? [])).toEqual([
       [9, 16],
@@ -710,14 +792,80 @@ describe("code/replace", () => {
   it("gives unmatched tracks fresh ids, the next unused colours and a full-song clip", () => {
     const out = run(fixture(), {
       type: "code/replace",
-      tracks: [incoming("drum", { id: "kick" }), incoming("sample", { id: "new1" }), incoming("code", { id: "new2", color: "#123456" })],
+      tracks: [
+        incoming("drum", { id: "kick" }),
+        incoming("sample", { id: "new1" }),
+        incoming("code", { id: "new2", color: "#123456" }),
+        incoming("sample", { id: "new3" }),
+      ],
       prelude: [],
     });
-    expect(out.tracks.map((t) => t.id)).toEqual(["kick", "trk_1", "trk_2"]);
-    // kick keeps green; the next free palette colours are teal then blue.
-    expect(out.tracks.map((t) => t.color)).toEqual(["#7FD98A", "#5ECFC8", "#8AB4FF"]);
+    // 3 incoming vs 2 existing left (bass, keys) with no kind in common: no in-place kind change.
+    expect(out.tracks.map((t) => t.id)).toEqual(["kick", "trk_1", "trk_2", "trk_3"]);
+    // kick keeps green; the next free palette colours are teal, blue, then amber.
+    expect(out.tracks.map((t) => t.color)).toEqual(["#7FD98A", "#5ECFC8", "#8AB4FF", "#F5C25B"]);
     expect(out.tracks[1]?.clips).toEqual([{ id: "clip_1", startBar: 1, endBar: 32 }]);
     expect(out.tracks[2]?.clips).toEqual([{ id: "clip_2", startBar: 1, endBar: 32 }]);
+  });
+
+  it("should not shift identities onto neighbours when the first of two same-kind blocks is deleted", () => {
+    // Arrange: the fixture is kick (drum), bass, keys; add a second drum after kick.
+    const p = run(fixture(), { type: "track/add", track: createTrack("drum", { id: "hats", name: "Hats", pattern: "hh*8", clips: [createClip(1, 8, "h1")] }), index: 1 });
+    const code = p.tracks.slice(1).map((t) => incoming(t.kind, { ...t, id: `x_${t.id}`, name: "", clips: [] }));
+
+    // Act
+    const out = run(p, { type: "code/replace", tracks: code, prelude: [] });
+
+    // Assert
+    expect(out.tracks.map((t) => [t.id, t.name, spans(t.clips)])).toEqual([
+      ["hats", "Hats", [[1, 8]]],
+      ["bass", "Bass", [[9, 16]]],
+      ["keys", "Keys", [[1, 32]]],
+    ]);
+  });
+
+  it("should match an edited arranged block by its unchanged clips before falling back to kind order", () => {
+    // Arrange: two drums; the code edits the second one's pattern and keeps its arrangement.
+    const p = run(fixture(), { type: "track/add", track: createTrack("drum", { id: "hats", pattern: "hh*8", clips: [createClip(1, 8, "h1")] }), index: 1 });
+    const edited = incoming("drum", { pattern: "hh*16", clips: [createClip(1, 8, "p1")] });
+    const kick = incoming("drum", { pattern: "bd*2", clips: [] });
+
+    // Act: the edited hats come first in the incoming list.
+    const out = run(p, { type: "code/replace", tracks: [edited, kick], prelude: [] });
+
+    // Assert
+    expect(out.tracks.map((t) => [t.id, t.pattern])).toEqual([
+      ["hats", "hh*16"],
+      ["kick", "bd*2"],
+    ]);
+  });
+
+  it("should keep a track unmuted when its _$: only came from another track's solo or from having no clips", () => {
+    // Arrange: keys soloed (others are written as _$:), bass has no clips (written as _$:).
+    const p = run(fixture(), { type: "track/setSolo", trackId: "keys", solo: true }, { type: "track/update", trackId: "bass", patch: { clips: [] } });
+    const tracks = p.tracks.map((t) => incoming(t.kind, { ...t, id: `x_${t.id}`, name: "", clips: [], solo: false, mute: t.id !== "keys" }));
+
+    // Act
+    const out = run(p, { type: "code/replace", tracks, prelude: [] });
+
+    // Assert
+    expect(out.tracks.map((t) => [t.id, t.mute, t.solo, t.clips.length])).toEqual([
+      ["kick", false, false, 2],
+      ["bass", false, false, 0],
+      ["keys", false, true, 1],
+    ]);
+  });
+
+  it("should give a clip-less track one full-song clip when its block now plays", () => {
+    // Arrange
+    const p = run(fixture(), { type: "track/update", trackId: "bass", patch: { clips: [] } });
+    const bass = incoming("melodic", { ...track(p, "bass"), id: "x", mute: false, clips: [] });
+
+    // Act
+    const out = run(p, { type: "code/replace", tracks: [bass], prelude: [] });
+
+    // Assert
+    expect(out.tracks[0]?.clips).toEqual([{ id: "clip_1", startBar: 1, endBar: 32 }]);
   });
 
   it("matches each existing track at most once", () => {

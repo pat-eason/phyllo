@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { transpiler } from "@strudel/transpiler";
 import type { Project, Track } from "@phyllo/model";
+import { projectReducer } from "@phyllo/model";
 import { generate } from "../codegen/generate";
 import { isDefaultParam, modulatedParams } from "../codegen/params";
 import { arrangeDemo, project, specExample, track } from "../codegen/fixtures.test-util";
@@ -32,10 +33,15 @@ function kitchenSink(): Project {
   });
 }
 
+/** True when the clips are one clip over the whole song (codegen's plain, un-`arrange()`d form). */
+const isFullSong = (t: Track, lengthBars: number) => t.clips.length === 1 && t.clips[0]?.startBar === 1 && t.clips[0]?.endBar === lengthBars;
+
 /** What the generated code must carry for a track (ids, names, colors, disabled modifiers excluded). */
-function expected(t: Track) {
+function expected(t: Track, lengthBars: number, { parsed }: { parsed: boolean }) {
   const modulated = modulatedParams(t);
   const params = Object.fromEntries(Object.entries(t.params).filter(([k, v]) => !modulated.has(k as never) && !isDefaultParam(k as never, v)));
+  // Parse only sees clips through arrange(): a full-song clip is "no arrangement" (`[]`) until the reducer applies it.
+  const clips = parsed && isFullSong(t, lengthBars) ? [] : t.clips.map((x) => [x.startBar, x.endBar]);
   return {
     kind: t.kind,
     source: t.kind === "drum" ? { ...t.source, sound: null } : t.source,
@@ -44,7 +50,7 @@ function expected(t: Track) {
     modifiers: t.kind === "code" ? [] : t.modifiers.filter((m) => m.enabled).map((m) => m.code.trim()),
     orbit: t.orbit,
     mute: t.mute,
-    clips: t.clips.map((x) => [x.startBar, x.endBar]),
+    clips,
     rawCode: t.rawCode,
   };
 }
@@ -63,17 +69,21 @@ function actual(t: Track) {
   };
 }
 
+/** The code drawer / import path: parse result → `code/replace` into `base`. */
 function apply(base: Project, r: ParseOutcome): Project {
-  return {
-    ...base,
+  return projectReducer(base, {
+    type: "code/replace",
     tracks: r.tracks,
     prelude: r.prelude,
-    tempo: r.tempo ?? base.tempo,
-    master: { ...base.master, ...r.master },
-    lengthBars: r.lengthBars ?? base.lengthBars,
-    buses: r.buses ?? base.buses,
-  };
+    ...(r.tempo ? { tempo: r.tempo } : {}),
+    ...(r.master ? { master: r.master } : {}),
+    ...(r.lengthBars !== undefined ? { lengthBars: r.lengthBars } : {}),
+    ...(r.buses ? { buses: r.buses } : {}),
+  });
 }
+
+/** An empty project of the same length (a fresh import). */
+const blank = (p: Project) => project({ lengthBars: p.lengthBars, tempo: p.tempo });
 
 const FIXTURES: [string, () => Project][] = [
   ["SPEC §4.1 example", specExample],
@@ -88,30 +98,34 @@ describe("round-trips", () => {
     const { code } = generate(p, { scope: "song" });
 
     // Act
-    const r = parse(code, { inferBuses: p.buses.length > 0, lengthBars: p.lengthBars });
+    const r = parse(code, { inferBuses: p.buses.length > 0 });
+    const imported = apply(blank(p), r);
 
     // Assert
     expect(r.ok).toBe(true);
-    expect(r.tracks.map(actual)).toEqual(p.tracks.map(expected));
+    expect(r.tracks.map(actual)).toEqual(p.tracks.map((t) => expected(t, p.lengthBars, { parsed: true })));
+    expect(imported.tracks.map(actual)).toEqual(p.tracks.map((t) => expected(t, p.lengthBars, { parsed: false })));
     expect(r.tempo).toEqual(p.tempo);
     expect(r.prelude).toEqual(p.prelude);
     expect(r.master?.postgain ?? 1).toBe(p.master.postgain);
     expect(r.buses ?? []).toEqual(p.buses);
   });
 
-  it.each(FIXTURES)("should make generated code of the %s a fixed point of parse → generate", (_name, make) => {
+  it.each(FIXTURES)("should make generated code of the %s a fixed point of parse → code/replace → generate", (_name, make) => {
     // Arrange
     const p = make();
     const song = generate(p, { scope: "song" }).code;
     const section = generate(p, { scope: "section", atBar: 12 }).code;
 
     // Act
-    const song2 = generate(apply(p, parse(song, { inferBuses: true, lengthBars: p.lengthBars })), { scope: "song" }).code;
-    const section2 = generate(apply(p, parse(section, { inferBuses: true, lengthBars: p.lengthBars })), { scope: "song" }).code;
+    const intoOriginal = generate(apply(p, parse(song, { inferBuses: true })), { scope: "song" }).code;
+    const intoBlank = generate(apply(blank(p), parse(song, { inferBuses: true })), { scope: "song" }).code;
+    const sectionIntoBlank = generate(apply(blank(p), parse(section, { inferBuses: true })), { scope: "song" }).code;
 
     // Assert
-    expect(song2).toBe(song);
-    expect(section2).toBe(section);
+    expect(intoOriginal).toBe(song);
+    expect(intoBlank).toBe(song);
+    expect(sectionIntoBlank).toBe(section);
   });
 
   it("should stay a fixed point without bus inference (bus values become track params)", () => {
@@ -120,38 +134,73 @@ describe("round-trips", () => {
     const code = generate(p, { scope: "song" }).code;
 
     // Act
-    const r = parse(code, { lengthBars: p.lengthBars });
+    const r = parse(code);
     const again = generate(apply({ ...p, buses: [] }, r), { scope: "song" }).code;
 
     // Assert
-    expect(r.tracks.find((t) => t.name === "Clap")?.params).toEqual({ gain: 0.7, room: 0.25, roomsize: 2 });
+    expect(r.tracks[1]?.params).toEqual({ gain: 0.7, room: 0.25, roomsize: 2 });
     expect(again).toBe(code);
   });
 
-  it("should flatten solo into mute and give clip-less tracks a full clip (documented loss)", () => {
+  it("should keep solo and clip-less tracks in the project but flatten them on a fresh import (documented loss)", () => {
     // Arrange
     const p = project({ tracks: [track({ id: "a", solo: true }), track({ id: "b" }), track({ id: "c", clips: [] })] });
+    const r = parse(generate(p, { scope: "song" }).code);
 
     // Act
-    const r = parse(generate(p, { scope: "song" }).code, { lengthBars: 32 });
+    const intoOriginal = apply(p, r);
+    const intoBlank = apply(blank(p), r);
 
     // Assert
     expect(r.tracks.map((t) => [t.mute, t.solo, t.clips.length])).toEqual([
+      [false, false, 0],
+      [true, false, 0],
+      [true, false, 0],
+    ]);
+    expect(intoOriginal.tracks.map((t) => [t.id, t.mute, t.solo, t.clips.length])).toEqual([
+      ["a", false, true, 1],
+      ["b", false, false, 1],
+      ["c", false, false, 0],
+    ]);
+    expect(intoBlank.tracks.map((t) => [t.mute, t.solo, t.clips.length])).toEqual([
       [false, false, 1],
       [true, false, 1],
       [true, false, 1],
     ]);
   });
 
+  it("should reach a fixed point on the second iteration when static param calls written as modifiers are absorbed", () => {
+    // Arrange: `.gain(.5)` and `.lpf(800)` typed as modifiers become knobs and move to their canonical slots.
+    const p = project({
+      lengthBars: 8,
+      tracks: [
+        track({ id: "a", pattern: "bd*4", modifiers: [{ id: "m1", code: ".gain(.5)", enabled: true }, { id: "m2", code: ".fast(2)", enabled: true }], params: { pan: 0.25 }, clips: [c(3, 8)] }),
+        track({ id: "b", kind: "melodic", source: { type: "note", sound: "sine", bank: null }, pattern: "c3 e3", modifiers: [{ id: "m3", code: ".lpf(800)", enabled: true }, { id: "m4", code: ".rev()", enabled: true }], params: { gain: 0.6 } }),
+      ],
+    });
+    const g1 = generate(p, { scope: "song" }).code;
+
+    // Act
+    const p2 = apply(p, parse(g1));
+    const g2 = generate(p2, { scope: "song" }).code;
+    const g3 = generate(apply(p2, parse(g2)), { scope: "song" }).code;
+
+    // Assert
+    expect(g1).toContain(".gain(.5).fast(2).pan(.25)");
+    expect(g2).toContain(".fast(2).gain(.5).pan(.25)");
+    expect(g3).toBe(g2);
+  });
+
   it.each(Object.entries(STARTERS))("should regenerate the %s starter stably and equivalently", (_name, lines) => {
     // Arrange
     const base = project({ lengthBars: 8 });
-    const first = parse(lines.join("\n"), { lengthBars: 8 });
+    const first = parse(lines.join("\n"));
 
     // Act
-    const code1 = generate(apply(base, first), { scope: "song" }).code;
-    const second = parse(code1, { lengthBars: 8 });
-    const code2 = generate(apply(base, second), { scope: "song" }).code;
+    const p1 = apply(base, first);
+    const code1 = generate(p1, { scope: "song" }).code;
+    const second = parse(code1);
+    const code2 = generate(apply(p1, second), { scope: "song" }).code;
 
     // Assert
     expect(second.tracks.map(actual)).toEqual(first.tracks.map(actual));

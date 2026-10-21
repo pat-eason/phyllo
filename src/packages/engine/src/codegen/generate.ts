@@ -74,7 +74,9 @@ function usesSend(track: Track, send: "room" | "delay", modulated: ReadonlySet<s
  */
 function busValue(project: Project, track: Track, param: ParamName, modulated: ReadonlySet<string>): number | undefined {
   const send = param === "roomsize" ? "room" : param === "delaytime" || param === "delayfeedback" ? "delay" : null;
-  if (send === null || !usesSend(track, send, modulated)) return undefined;
+  // A modulated orbit (`.orbit("<1 2>")`) hides the static one, so no bus is written onto the track (parse
+  // likewise leaves such tracks out of bus inference): this keeps generate → parse a fixed point.
+  if (send === null || modulated.has("orbit") || !usesSend(track, send, modulated)) return undefined;
   return busFor(project, track.orbit)?.[param as "roomsize" | "delaytime" | "delayfeedback"];
 }
 
@@ -136,7 +138,8 @@ function arrangedBlock(prefix: string, chain: Chain, entries: readonly ArrangeEn
  * Model → Strudel program (SPEC §4.1). Pure and deterministic.
  *
  * Layout: `setcpm(bpm/beatsPerBar)`, the prelude verbatim, a blank line, one block per track in project
- * order, then `all(x => x.postgain(v))` when the master postgain isn't 1 (the limiter is runtime-only).
+ * order (a plain `silence` line when no track is included, so the program always ends in an expression),
+ * then `all(x => x.postgain(v))` when the master postgain isn't 1 (the limiter is runtime-only).
  * A block is `$: <source><modifiers><params incl. bus FX><.orbit(n)>`; `_$:` when the track isn't audible
  * (mute, or another track is soloed — DECISIONS V3).
  *
@@ -155,7 +158,10 @@ export function generate(project: Project, options: GenerateOptions): GeneratedP
     : project.tracks;
 
   const postgain = project.master.postgain;
-  if (included.length > 0 || postgain !== 1) lines.push("");
+  lines.push("");
+  // A program needs a body expression: one that ends in a declaration (a prelude `const`) otherwise fails
+  // to transpile. A bare `silence` plays nothing and parses back to no track.
+  if (included.length === 0) lines.push("silence");
 
   const map: LineMap = {};
   for (const track of included) {
@@ -180,8 +186,7 @@ export function generate(project: Project, options: GenerateOptions): GeneratedP
   }
 
   if (postgain !== 1) {
-    if (included.length > 0) lines.push("");
-    lines.push(`all(x => x.postgain(${formatNumber(postgain)}))`);
+    lines.push("", `all(x => x.postgain(${formatNumber(postgain)}))`);
   }
 
   return { code: lines.join("\n"), lines: map, scope: options.scope };
