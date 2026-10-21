@@ -12,3 +12,5 @@
 - Dispatched T6.2 (MIDI/OSC bridge).
 - T0.2 done: Strudel verification — report + proof scripts in docs/strudel-verification/; decisions V1–V18. T0.3 done: Strudel packages pinned in engine, @strudel/web dropped, ambient types at engine/src/types/strudel.d.ts, Vitest inlines Strudel deps (smoke test passes), acorn + playwright added to engine.
 - T2.3 merged (a8b8440): TextField, Select, Slider, Chip. T2.2 merged (fda8e16): Button, IconButton, TransportKey, ToggleButton, SegmentedControl, Switch, Checkbox. ui: 226 tests green after merge.
+- Dispatched M1 in parallel worktrees: T1.1 (model reducer/params/serialize), T1.2 (codegen/parse/share), T1.3 (mini↔grid, bjorklund, viz data), T1.4 (content), T1.5 (Strudel runtime + browser harness).
+- T6.2 merged (63802f1): midir MIDI in/out with scheduled output thread + hot-plug poller, rosc OSC sender, NativeApi + Web MIDI browser fallback. Orchestrator re-ran: cargo test 64 passed (1 ignored hw smoke), clippy clean, app 66 tests. Real-device MIDI untested (no ports on this machine) — flagged for T6.V.

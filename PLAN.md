@@ -29,11 +29,11 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 ### M1 Engine core (parallel with M2)
 | id | owner | owns | deps | acceptance | status |
 |---|---|---|---|---|---|
-| T1.1 | model agent | `src/shared/model/src/**` except `types.ts`, `content/` | T0.3 | reducer covers every action in types; param specs + value mapping (SPEC §6.1); effective mute/solo; `.phyllo` (de)serialize + validate; unit tests | todo |
-| T1.2 | codegen agent | `src/packages/engine/src/codegen/**`, `src/packages/engine/src/parse/**`, `src/packages/engine/src/share/**` | T0.3 | SPEC §4.1 rules, both scopes, loop window, line map; §4.2 parser with Code-track fallback + prelude; strudel.cc encode/decode; round-trip tests model→code→model | todo |
-| T1.3 | mini agent | `src/packages/engine/src/mini/**` | T0.3 | SPEC §4.3 toMini/fromMini, bjorklund, `(k,n)` form, unfit-pattern detection; tests with spec examples | todo |
-| T1.4 | content agent | `src/shared/model/src/content/**` | T0.3 | 7 original starters, tips curriculum, Try-one suggestions, modifier catalog, sound catalog (friendly names), Feel tools | todo |
-| T1.5 | runtime agent | `src/packages/engine/src/runtime/**` | T0.3, T1.2 | init on gesture, evaluate + hot-swap, keep last good on error + attribution, cycle clock, loop, preview, master limiter/postgain, meters, capture tap, sample registration; unit tests with mocks + browser smoke | todo |
+| T1.1 | model agent | `src/shared/model/src/**` except `types.ts`, `content/` | T0.3 | reducer covers every action in types; param specs + value mapping (SPEC §6.1); effective mute/solo; `.phyllo` (de)serialize + validate; unit tests | active |
+| T1.2 | codegen agent | `src/packages/engine/src/codegen/**`, `src/packages/engine/src/parse/**`, `src/packages/engine/src/share/**` | T0.3 | SPEC §4.1 rules, both scopes, loop window, line map; §4.2 parser with Code-track fallback + prelude; strudel.cc encode/decode; round-trip tests model→code→model | active |
+| T1.3 | mini agent | `src/packages/engine/src/mini/**` | T0.3 | SPEC §4.3 toMini/fromMini, bjorklund, `(k,n)` form, unfit-pattern detection; tests with spec examples | active |
+| T1.4 | content agent | `src/shared/model/src/content/**` | T0.3 | 7 original starters, tips curriculum, Try-one suggestions, modifier catalog, sound catalog (friendly names), Feel tools | active |
+| T1.5 | runtime agent | `src/packages/engine/src/runtime/**` | T0.3, T1.2 | init on gesture, evaluate + hot-swap, keep last good on error + attribution, cycle clock, loop, preview, master limiter/postgain, meters, capture tap, sample registration; unit tests with mocks + browser smoke | active |
 
 ### M2 Atoms, then molecules
 | id | owner | owns | deps | acceptance | status |
@@ -51,8 +51,8 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | id | owner | owns | deps | acceptance | status |
 |---|---|---|---|---|---|
 | T6.1 | rust-A | `src-tauri/src/**`, `src-tauri/Cargo.toml`, `src/apps/phyllo/src/native/**` | T0.1 | project IO (atomic write), library index of `~/Music/Phyllo`, history snapshots, folder watching (`notify`) + sample folder serving; typed TS bindings; `cargo test` + `cargo clippy` clean | done |
-| T6.2 | rust-B | same | T6.1 | MIDI in/out bridge (`midir`), OSC UDP to SuperDirt; TS bindings | active |
-| T6.3 | rust-C | same | T6.2 | PCM stream sink + WAV/FLAC/MP3 encoder, normalize post-pass, MIDI file writer | todo |
+| T6.2 | rust-B | same | T6.1 | MIDI in/out bridge (`midir`), OSC UDP to SuperDirt; TS bindings | done |
+| T6.3 | rust-C | same | T6.2 | PCM stream sink + WAV/FLAC/MP3 encoder, normalize post-pass, MIDI file writer | active |
 | T6.4 | rust-D | same + `tauri.conf.json` | T6.3 | tray/menu-bar transport, media keys, file associations, notifications w/ Reveal, app menu | todo |
 
 ### M3 Arrange screen

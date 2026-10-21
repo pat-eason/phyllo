@@ -62,3 +62,7 @@ One line each: decision — reason — where. Strudel verification results are i
 - D31 Form atoms (TextField, Select, Slider) put `className` on the wrapper and `ref`/native props on the inner control — wrapper carries label/description, consumers need the input — atoms/TextField, Select, Slider.
 - D32 Removable Chip's accessible name is "Remove <text>" (override via `removeLabel`) — generic, reads naturally — atoms/Chip.
 - D33 Literal radii 9 px (fields) / 7 px (chips) / 12 px (plates) where tokens.css has no matching radius — Kit values; tokens unchanged — atoms.
+- D34 MIDI port ids are `<in|out>:<name>:<index among same-name ports>`; incoming channels are 1-based (Strudel `midichan`), note-on vel 0 → `noteoff`, pitch bend 14-bit in `data1`, clock/sensing/SysEx dropped, CC/bend bursts coalesced ≤1/ms — stable ids across rescans, matches Strudel conventions — src-tauri/src/midi.rs.
+- D35 MIDI output is scheduled on a dedicated Rust thread (sleep until ~2 ms before due, then spin); `atMs` relative to command arrival, clamped 0–60 s; close/panic drop queued messages and send all-notes-off — JS hands over haps with look-ahead — midi.rs.
+- D36 OSC numbers: integral values within int32 → int32, else float32; `atMs` present → bundle timetagged now+atMs, else plain message; disabled by default (`127.0.0.1:57120`) — SuperDirt accepts both — src-tauri/src/osc.rs.
+- D37 Browser `NativeApi` uses Web MIDI when available (Chromium dev) — lets MIDI be exercised outside Tauri — src/native/webmidi.ts.
