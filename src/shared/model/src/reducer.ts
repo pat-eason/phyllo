@@ -435,8 +435,9 @@ function adoptClips(incoming: readonly Clip[], existing: readonly Clip[], length
  * - Matching: see `matchTracks`. Order follows the incoming list; unpaired existing tracks are removed.
  * - A matched track takes the incoming content (source, pattern, params, modifiers, mute, rawCode …) and
  *   keeps its `id`, `color` and `solo` (code can't express solo); its `name` when the incoming one is `""`
- *   (an unlabelled block); its `orbit` when the incoming one is the default 1 (no `.orbit()`) and it
- *   wasn't a code track (whose orbit codegen never writes).
+ *   (an unlabelled block). Orbit comes from the code (codegen always writes a non-default `.orbit()`,
+ *   so a missing call means orbit 1), except that an incoming code track keeps the matched track's orbit
+ *   (a code track's orbit lives inside its raw code, never in `track.orbit`).
  * - Clips: non-empty incoming clips (the block was wrapped in `arrange()`) win; empty ones mean "no
  *   arrangement in the code", so a matched track keeps its clips (a clip-less one whose block now plays,
  *   `$:`, gets one full-song clip).
@@ -468,8 +469,7 @@ function replaceFromCode(
       name: inc.name === "" ? e.name : inc.name,
       color: e.color,
       clips: hasClips ? adoptClips(inc.clips, e.clips, length) : kept,
-      // A code track's orbit never reaches the code, so only a typed track's orbit is "kept from before".
-      orbit: inc.orbit === DEFAULT_ORBIT && e.kind !== "code" ? e.orbit : inc.orbit,
+      orbit: inc.kind === "code" ? e.orbit : inc.orbit,
       mute: inc.mute && !silentOnlyByCodegen,
       solo: e.solo,
     };

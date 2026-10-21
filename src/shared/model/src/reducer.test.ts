@@ -879,12 +879,18 @@ describe("code/replace", () => {
     expect(new Set(out.tracks.map((t) => t.id)).size).toBe(2);
   });
 
-  it("keeps the existing orbit unless the incoming code set one", () => {
+  it("takes the orbit from the code, so deleting .orbit() returns a track to orbit 1", () => {
     const p = run(fixture(), { type: "track/setOrbit", trackId: "kick", orbit: 4 });
-    const kept = run(p, { type: "code/replace", tracks: [incoming("drum", { id: "kick", orbit: 1 })], prelude: [] });
-    expect(kept.tracks[0]?.orbit).toBe(4);
+    const removed = run(p, { type: "code/replace", tracks: [incoming("drum", { id: "kick", orbit: 1 })], prelude: [] });
+    expect(removed.tracks[0]?.orbit).toBe(1);
     const set = run(p, { type: "code/replace", tracks: [incoming("drum", { id: "kick", orbit: 2 })], prelude: [] });
     expect(set.tracks[0]?.orbit).toBe(2);
+  });
+
+  it("keeps the matched track's orbit when the incoming block is a code track", () => {
+    const p = run(fixture(), { type: "track/setOrbit", trackId: "kick", orbit: 4 });
+    const asCode = run(p, { type: "code/replace", tracks: [incoming("code", { id: "kick", orbit: 1 })], prelude: [] });
+    expect(asCode.tracks[0]?.orbit).toBe(4);
   });
 
   it("applies tempo when given, leaves it alone otherwise", () => {
