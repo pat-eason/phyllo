@@ -1,0 +1,88 @@
+.patternField {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.labelRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--ph-s-3);
+  min-width: 0;
+  margin-bottom: var(--ph-s-3);
+}
+
+.label {
+  font: var(--ph-text-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ph-legend);
+}
+
+.patternField[data-label-tone="muted"] .label {
+  color: var(--ph-muted);
+}
+
+.trailing {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--ph-muted);
+  white-space: nowrap;
+}
+
+.synced {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font: var(--ph-text-small);
+  color: var(--ph-muted);
+}
+
+.syncedDot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ph-accent);
+}
+
+/* Pattern editor "Live code" bar: icon + sentence-case title. */
+.patternField[data-variant="live"] .labelRow {
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.patternField[data-variant="live"] .label {
+  font: var(--ph-text-subheading);
+  font-size: 14px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ph-text);
+}
+
+.labelIcon {
+  flex: none;
+  align-self: center;
+  color: var(--ph-accent-text);
+}
+
+.patternField[data-variant="live"] .labelRow > .labelIcon + .label {
+  margin-left: -2px;
+}
+
+/* Always mounted so error text added later is announced; spacing only when it has content. */
+.error {
+  font: var(--ph-text-small);
+  color: var(--ph-rec);
+}
+
+.error:not(:empty) {
+  margin-top: 6px;
+}
+
+.hint {
+  margin: 6px 0 0;
+  font: var(--ph-text-small);
+  color: var(--ph-muted);
+}
