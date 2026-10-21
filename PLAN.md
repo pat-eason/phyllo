@@ -45,6 +45,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | F6 | fix agent | @phyllo/ui | T3.V | Fader keys/scale, Meter stop reset + peak, theme-switch transitions, Punchcard rows, Slider valueText | done |
 | F7 | fix agent | Arrange/Mixer/Pattern organisms | T3.V | ruler seek under loop band, chips, clip pitch scale, drawer scope/header/text, inspector modulated keys, ⌘K Enter, contrast, meters stopped | done |
 | F8 | fix agent | screens/shell, Library/Export organisms, state libraryQuery, model params, engine pattern validation, browser export | T3.V | library search/header, export backdrop/estimate/download, pattern validation, delaytime precision, landmarks/h1 | done |
+| F10 | fix agent | @phyllo/ui + src/ui | F7 | B9, B14 toast host, molecule gaps (B7/B13/B17), B15 virtualization, label-name a11y | active |
 | F9 | fix agent | engine runtime, src-tauri, native, selftest | F8 | B8 sample rate, B12 unique export names, B19, CSP, single-instance; selftest 13/13 with CSP | active |
 | F3 | fix agent | engine runtime | T1.V, T6.6 | T1.V #10 unknown chord → error, #11 stop releases voices, #12 limiter default on + ceiling, #19 offline error flood, #20 pattern error column | done |
 

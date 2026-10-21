@@ -68,3 +68,4 @@
 - F8 merged (7bcacca): library search, no-project Library header + shortcut guard, export backdrop/estimate/browser .strudel download, engine validatePattern, delaytime precision, landmarks/h1, look-ahead select. pnpm check + e2e green. Asked F7 to adopt validatePattern + F6 props.
 - Dispatched F9 (sample rate, unique export names, offline-render warning, CSP, single-instance, selftest re-run).
 - F7 merged (a72b00f): ruler seek under loop band, chips, clip pitch scale, drawer scope/header/text, lane sound line, inspector modulated keys, ⌘K Enter, meters stopped, roving lists, contrast; adopted validatePattern + F6 props. pnpm check + e2e green.
+- Dispatched F10 (UI backlog: editor prefs, toast host, molecule gaps, lane virtualization, a11y names).
