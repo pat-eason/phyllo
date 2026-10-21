@@ -43,5 +43,6 @@ catalog:
   "@strudel/tonal": 1.2.6
   "@strudel/webaudio": 1.3.0
   "@strudel/soundfonts": 1.3.0
+  acorn: 8.19.0
   # State
   zustand: 5.0.15

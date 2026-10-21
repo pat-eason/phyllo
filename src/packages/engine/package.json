@@ -14,15 +14,17 @@
     "@phyllo/model": "workspace:*",
     "@strudel/core": "catalog:",
     "@strudel/mini": "catalog:",
-    "@strudel/transpiler": "catalog:",
+    "@strudel/soundfonts": "catalog:",
     "@strudel/tonal": "catalog:",
+    "@strudel/transpiler": "catalog:",
     "@strudel/webaudio": "catalog:",
-    "@strudel/soundfonts": "catalog:"
+    "acorn": "catalog:"
   },
   "devDependencies": {
+    "@playwright/test": "catalog:",
     "@types/node": "catalog:",
+    "jsdom": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:",
-    "jsdom": "catalog:"
+    "vitest": "catalog:"
   }
 }
