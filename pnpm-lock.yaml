@@ -8,9 +8,9 @@ importers:
 
   .: {}
 
-  src/apps/phylo:
+  src/apps/phyllo:
     dependencies:
-      '@phylo/engine':
+      '@phyllo/engine':
         specifier: workspace:*
         version: link:../../packages/engine
       '@tauri-apps/api':

@@ -2479,7 +2479,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "phylo"
+name = "phyllo"
 version = "0.1.0"
 dependencies = [
  "serde",

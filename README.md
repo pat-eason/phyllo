@@ -1,8 +1,8 @@
-# Phylo
+# Phyllo
 
 A desktop DAW-style interface built around [Strudel](https://strudel.cc), the JavaScript port of TidalCycles for live-coding music.
 
-Phylo is a [Tauri](https://tauri.app) v2 app with a React frontend. Audio runs in the webview via Strudel and Web Audio.
+Phyllo is a [Tauri](https://tauri.app) v2 app with a React frontend. Audio runs in the webview via Strudel and Web Audio.
 
 > Early scaffold: the app currently has a single Play/Stop button that plays a demo pattern.
 
@@ -16,7 +16,7 @@ Phylo is a [Tauri](https://tauri.app) v2 app with a React frontend. Audio runs i
 
 ```bash
 pnpm install
-pnpm --filter phylo tauri dev
+pnpm --filter phyllo tauri dev
 ```
 
 The first run compiles the Rust side, which takes a minute.
@@ -27,8 +27,8 @@ pnpm monorepo; all source lives under `src/`.
 
 | Path | Description |
 | --- | --- |
-| `src/apps/phylo` | Tauri v2 desktop app (React + Vite, Rust in `src-tauri/`) |
-| `src/packages/engine` | `@phylo/engine`: thin wrapper over `@strudel/web` (`init`, `play`, `stop`) |
+| `src/apps/phyllo` | Tauri v2 desktop app (React + Vite, Rust in `src-tauri/`) |
+| `src/packages/engine` | `@phyllo/engine`: thin wrapper over `@strudel/web` (`init`, `play`, `stop`) |
 | `src/shared` | Code shared between apps and packages (empty for now) |
 
 ## Scripts
