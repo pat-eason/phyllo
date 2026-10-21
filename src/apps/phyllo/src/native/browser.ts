@@ -69,10 +69,6 @@ export interface BrowserApiOptions {
   download?: Download;
   /** Media keys via `navigator.mediaSession`; defaults to the real one when the browser has it. */
   mediaSession?: MediaSessionBridge;
-  /** Opens the Settings popup; defaults to `window.open`. Returning `null` (blocked) falls back to `navigateTo`. */
-  openWindow?: (url: string, target: string, features: string) => unknown;
-  /** Defaults to setting `location.hash`. */
-  navigateTo?: (hash: string) => void;
   /**
    * Cross-tab transport for `broadcast`; defaults to a `BroadcastChannel` when available, `null` for none.
    * Messages a channel posts never come back to the same channel object.
@@ -85,29 +81,12 @@ export interface BrowserApiOptions {
 export type BroadcastChannelLike = Pick<BroadcastChannel, 'postMessage' | 'addEventListener' | 'removeEventListener'>;
 
 export const BROADCAST_CHANNEL_NAME = 'phyllo.native.broadcast';
-export const SETTINGS_HASH = '#/settings';
 
 function defaultBroadcastChannel(): BroadcastChannelLike | null {
   try {
     return typeof BroadcastChannel === 'function' ? new BroadcastChannel(BROADCAST_CHANNEL_NAME) : null;
   } catch {
     return null;
-  }
-}
-
-function defaultOpenWindow(url: string, target: string, features: string): unknown {
-  try {
-    return globalThis.window?.open(url, target, features) ?? null;
-  } catch {
-    return null;
-  }
-}
-
-function defaultNavigateTo(hash: string): void {
-  try {
-    globalThis.location.hash = hash;
-  } catch {
-    /* no location (tests, workers) */
   }
 }
 
@@ -259,8 +238,6 @@ export function createBrowserApi(options: BrowserApiOptions = {}): NativeApi {
   let exportCounter = 0;
 
   const media = options.mediaSession ?? createMediaSessionBridge(defaultMediaSession(), defaultMediaMetadata());
-  const openWindow = options.openWindow ?? defaultOpenWindow;
-  const navigateTo = options.navigateTo ?? defaultNavigateTo;
   let channel: BroadcastChannelLike | null | undefined = options.broadcastChannel;
   // Created on first use so merely loading the module opens no channel.
   const broadcastChannel = () => {
@@ -431,10 +408,6 @@ export function createBrowserApi(options: BrowserApiOptions = {}): NativeApi {
     menuSetState: async () => {},
     menuSetRecent: async () => {},
 
-    openSettingsWindow: async () => {
-      const popup = openWindow(SETTINGS_HASH, 'phyllo-settings', 'popup,width=1100,height=800');
-      if (popup === null || popup === undefined) navigateTo(SETTINGS_HASH);
-    },
     broadcast: async (name, payload) => {
       const event = broadcastEventName(name);
       broadcastChannel()?.postMessage({ event, payload });

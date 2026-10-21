@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { type BroadcastChannelLike, SETTINGS_HASH, createBrowserApi } from './browser';
+import { type BroadcastChannelLike, createBrowserApi } from './browser';
 import { isNativeError } from './errors';
 import type { MediaSessionBridge } from './mediaSession';
 
@@ -24,30 +24,6 @@ const browserApi = (options: Parameters<typeof createBrowserApi>[0] = {}) =>
   createBrowserApi({ storage: null, log: () => undefined, broadcastChannel: null, ...options });
 
 describe('browser native: system integration', () => {
-  it('should open Settings as a #/settings popup', async () => {
-    // Arrange
-    const openWindow = vi.fn(() => ({}));
-    const navigateTo = vi.fn();
-
-    // Act
-    await browserApi({ openWindow, navigateTo }).openSettingsWindow();
-
-    // Assert
-    expect(openWindow).toHaveBeenCalledWith('#/settings', 'phyllo-settings', expect.stringContaining('width=1100'));
-    expect(navigateTo).not.toHaveBeenCalled();
-  });
-
-  it('should route the current tab to #/settings when the popup is blocked', async () => {
-    // Arrange
-    const navigateTo = vi.fn();
-
-    // Act
-    await browserApi({ openWindow: () => null, navigateTo }).openSettingsWindow();
-
-    // Assert
-    expect(navigateTo).toHaveBeenCalledWith(SETTINGS_HASH);
-  });
-
   it('should carry broadcasts to the other tab on the same channel only', async () => {
     // Arrange
     const [a, b] = channelPair();

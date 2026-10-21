@@ -346,13 +346,6 @@ pub fn menu_set_recent(
     state.set_recent(&app, items)
 }
 
-/// Focus the Settings window, creating it if needed. Async: creating a window from a sync command deadlocks on
-/// Windows (WebView2), see `WebviewWindowBuilder::new`.
-#[tauri::command]
-pub async fn open_settings_window(app: AppHandle) -> Result<()> {
-    windows::open_settings(&app)
-}
-
 /// Create or remove the menu-bar tray icon; resolves whether one exists now.
 #[tauri::command]
 pub async fn tray_set_enabled(app: AppHandle, enabled: bool) -> Result<bool> {

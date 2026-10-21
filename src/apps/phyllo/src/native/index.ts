@@ -8,7 +8,7 @@ import { createTauriApi } from './tauri';
 export const native: NativeApi = isTauri() ? createTauriApi() : createBrowserApi();
 
 export type { NativeApi, SettingsStore } from './api';
-export { BROADCAST_CHANNEL_NAME, SETTINGS_HASH, createBrowserApi } from './browser';
+export { BROADCAST_CHANNEL_NAME, createBrowserApi } from './browser';
 export type { BroadcastChannelLike, BrowserApiOptions } from './browser';
 export { broadcastEventName } from './broadcast';
 export { NativeError, isNativeError, toNativeError } from './errors';

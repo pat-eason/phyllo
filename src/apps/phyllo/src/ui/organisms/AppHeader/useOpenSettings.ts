@@ -1,11 +1,6 @@
-import { useNative } from "../../../hooks";
+import { navigate } from "../../shell/router";
 
-/** Opens the Settings window; where the native layer can't, falls back to the `#/settings` route. */
+/** Opens Settings: the `#/settings` screen inside the app window. */
 export function useOpenSettings(): () => void {
-  const native = useNative();
-  return () => {
-    native.openSettingsWindow().catch(() => {
-      window.location.hash = "#/settings";
-    });
-  };
+  return () => navigate({ screen: "settings" });
 }

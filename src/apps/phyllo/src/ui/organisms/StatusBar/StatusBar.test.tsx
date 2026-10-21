@@ -121,14 +121,13 @@ describe("StatusBar", () => {
   it("should show the system output with its rate and open Settings on click", async () => {
     // Arrange
     const user = userEvent.setup();
-    const target = renderBar({}, { initialSettings: { audio: { sampleRate: 48000 } } });
-    const open = vi.spyOn(target.native, "openSettingsWindow").mockResolvedValue();
+    renderBar({}, { initialSettings: { audio: { sampleRate: 48000 } } });
 
     // Act
     await user.click(screen.getByRole("button", { name: "System default · 48 kHz" }));
 
     // Assert
-    expect(open).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(window.location.hash).toBe("#/settings"));
   });
 
   it("should name a chosen output device and a 44.1 kHz rate", () => {

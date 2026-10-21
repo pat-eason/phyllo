@@ -281,7 +281,7 @@ export interface MidiFileResult {
  * Transport items have no accelerator on purpose: Space / Enter / L / R are JS-handled with focus checks (SPEC §7).
  */
 export const MENU_ACTIONS = {
-  'app.settings': { accelerator: 'CmdOrCtrl+,', native: true },
+  'app.settings': { accelerator: 'CmdOrCtrl+,', native: false },
   'app.quit': { accelerator: 'CmdOrCtrl+Q', native: true },
   'file.new': { accelerator: 'CmdOrCtrl+N', native: false },
   'file.open': { accelerator: 'CmdOrCtrl+O', native: false },
@@ -422,7 +422,6 @@ export const COMMANDS = {
   midiFileWrite: 'midi_file_write',
   menuSetState: 'menu_set_state',
   menuSetRecent: 'menu_set_recent',
-  openSettingsWindow: 'open_settings_window',
   traySetEnabled: 'tray_set_enabled',
   traySetPlaying: 'tray_set_playing',
   appSetKeepRunning: 'app_set_keep_running',

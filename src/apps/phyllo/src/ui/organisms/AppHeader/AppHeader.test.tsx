@@ -246,24 +246,10 @@ describe("AppHeader", () => {
     expect(stores.settings.getState().settings.appearance.mode).toBe(showing === "dark" ? "light" : "dark");
   });
 
-  it("should open the settings window", async () => {
+  it("should open the settings screen in the app window", async () => {
     // Arrange
     const user = userEvent.setup();
-    const { stores } = renderHeader();
-    const open = vi.spyOn(stores.native, "openSettingsWindow").mockResolvedValue();
-
-    // Act
-    await user.click(screen.getByRole("button", { name: "Settings" }));
-
-    // Assert
-    expect(open).toHaveBeenCalledTimes(1);
-  });
-
-  it("should fall back to the settings route when the window can't open", async () => {
-    // Arrange
-    const user = userEvent.setup();
-    const { stores } = renderHeader();
-    vi.spyOn(stores.native, "openSettingsWindow").mockRejectedValue(new Error("no windows"));
+    renderHeader();
 
     // Act
     await user.click(screen.getByRole("button", { name: "Settings" }));

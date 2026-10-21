@@ -152,11 +152,6 @@ export interface NativeApi {
 
   // Windows
   /**
-   * Focus or open Settings: a second desktop window (1100×800, `#/settings`); in the browser a popup on
-   * `#/settings`, or the current tab's hash when popups are blocked.
-   */
-  openSettingsWindow(): Promise<void>;
-  /**
    * Send `payload` to every *other* Phyllo window on `channel` (letters, digits, `-`, `_`), e.g. settings changes
    * between main and Settings. Desktop: a global Tauri event; browser: `BroadcastChannel` between tabs.
    */

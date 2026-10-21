@@ -5,7 +5,7 @@ import type { MediaCommand, MenuActionEvent } from "../../native/types";
 import type { AppStores } from "../../state/createAppStores";
 import { isRunnableMenuId } from "./actions";
 import type { RunAction } from "./actions";
-import { SHELL_CHANNEL, isShellMessage, mediaAction, menuStates, recentItems } from "./bridgeModel";
+import { mediaAction, menuStates, recentItems } from "./bridgeModel";
 
 const ignore = () => undefined;
 
@@ -27,8 +27,6 @@ function listen(subscribe: Promise<() => void>): () => void {
 export interface NativeBridgeProps {
   stores: AppStores;
   run: RunAction;
-  /** History dialog requested by the Settings window. */
-  onOpenHistory(): void;
   recentClearedAt: number;
 }
 
@@ -36,7 +34,7 @@ export interface NativeBridgeProps {
  * Glue between the shell and the OS (main window only): menu actions run through the shared action table; menu
  * labels/checks, Open Recent, media-key Now Playing and the tray's play state follow the stores. Renders nothing.
  */
-export function NativeBridge({ stores, run, onOpenHistory, recentClearedAt }: NativeBridgeProps) {
+export function NativeBridge({ stores, run, recentClearedAt }: NativeBridgeProps) {
   const native: NativeApi = stores.native;
   const playing = useStore(stores.transport, (s) => s.playing);
   const loop = useStore(stores.transport, (s) => s.loop.enabled);
@@ -54,13 +52,9 @@ export function NativeBridge({ stores, run, onOpenHistory, recentClearedAt }: Na
     const action = mediaAction(command, stores.transport.getState().playing);
     if (action) run(action);
   });
-  const onShellMessage = useEffectEvent((payload: unknown) => {
-    if (isShellMessage(payload)) onOpenHistory();
-  });
 
   useEffect(() => listen(native.onMenuAction((event) => onMenu(event))), [native]);
   useEffect(() => listen(native.onMediaCommand((event) => onMedia(event.command))), [native]);
-  useEffect(() => listen(native.onBroadcast(SHELL_CHANNEL, (payload) => onShellMessage(payload))), [native]);
 
   useEffect(() => {
     for (const state of menuStates({ playing, loop, recordArmed, uiMode, themeMode })) {

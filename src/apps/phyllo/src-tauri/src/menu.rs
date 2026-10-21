@@ -2,7 +2,7 @@
 //!
 //! Every custom item is listed once in [`ACTIONS`]; the menu is assembled from that table. A click (or its
 //! accelerator) emits `menu://action` `{ id }` to the main window, where the stores live; the few app-level items
-//! (`app.settings`, `app.quit`, `window.main`, the tray's `tray.*`) are handled here in Rust. JS keeps labels and
+//! (`app.quit`, `window.main`, the tray's `tray.*`) are handled here in Rust. JS keeps labels and
 //! check marks in sync through `menu_set_state` and fills File › Open Recent through `menu_set_recent`.
 //!
 //! Text editing: Edit uses the *predefined* Undo/Redo/Cut/Copy/Paste/Select All items. On macOS those send the
@@ -104,7 +104,7 @@ use Route::{Main, MainReveal, Native};
 /// Every custom menu item. Mirrored by `MENU_ACTIONS` in `src/native/types.ts` (a test keeps the two in sync).
 pub const ACTIONS: &[Action] = &[
     // App
-    item(APP_SETTINGS, "Settings…", Some("CmdOrCtrl+,"), Native),
+    item(APP_SETTINGS, "Settings…", Some("CmdOrCtrl+,"), MainReveal),
     item(APP_QUIT, "Quit Phyllo", Some("CmdOrCtrl+Q"), Native),
     // File
     item("file.new", "New Groove", Some("CmdOrCtrl+N"), MainReveal),
@@ -501,12 +501,6 @@ fn emit_action(app: &AppHandle, event: MenuActionEvent) {
 /// Global menu-event handler for the menu bar and the tray menu.
 pub fn handle_event(app: &AppHandle, id: &str) {
     match id {
-        APP_SETTINGS => {
-            if let Err(e) = windows::open_settings(app) {
-                eprintln!("phyllo: settings window: {e}");
-            }
-            return;
-        }
         APP_QUIT | TRAY_QUIT => {
             app.exit(0);
             return;
@@ -649,7 +643,7 @@ mod tests {
             .filter(|a| a.route == Route::Native)
             .map(|a| a.id)
             .collect();
-        assert_eq!(native, HashSet::from([APP_SETTINGS, APP_QUIT, WINDOW_MAIN]));
+        assert_eq!(native, HashSet::from([APP_QUIT, WINDOW_MAIN]));
     }
 
     #[test]
