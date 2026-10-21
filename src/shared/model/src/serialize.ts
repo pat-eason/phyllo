@@ -13,7 +13,7 @@ import {
   nextTrackColor,
 } from "./factories";
 import { newId } from "./ids";
-import { canonicalParam } from "./params";
+import { PARAM_SPECS, canonicalParam, coerceParamValue } from "./params";
 import { clampInt, sanitizeRanges } from "./ranges";
 import { LIMITS } from "./reducer";
 import { PARAM_ORDER } from "./types";
@@ -424,12 +424,27 @@ function parseParams(v: unknown, label: string, warn: (m: string) => void): Part
     } else if (value === null || value === undefined) {
       continue;
     } else if (isNum(value) || (isStr(value) && value.trim() !== "")) {
-      out[name] = value;
+      const v = loadParamValue(name, value);
+      if (v !== value) warn(`${label}: param "${key}" ${JSON.stringify(value)} is out of range; using ${JSON.stringify(v)}.`);
+      out[name] = v;
     } else {
       warn(`${label}: dropped invalid value for param "${key}".`);
     }
   }
   return orderedParams(out);
+}
+
+/**
+ * A loaded param value through `coerceParamValue`, keeping only its range clamp: a value equal to the
+ * Strudel default stays (codegen omits it anyway) and in-range values keep their precision (code-parsed
+ * `.pan(.333)` must load as written), so a file saved by Phyllo loads byte-identical. Strings pass through.
+ */
+function loadParamValue(name: ParamName, value: ParamValue): ParamValue {
+  if (typeof value === "string") return value;
+  const spec = PARAM_SPECS[name];
+  if (value >= spec.min && value <= spec.max) return value;
+  const coerced = coerceParamValue(name, value);
+  return typeof coerced === "number" ? coerced : value < spec.min ? spec.min : spec.max;
 }
 
 function parseModifiers(v: unknown, trackId: string, label: string, warn: (m: string) => void): Modifier[] {

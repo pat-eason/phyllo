@@ -425,6 +425,15 @@ describe("generate", () => {
     );
   });
 
+  it("should not write bus settings onto a track whose orbit is modulated", () => {
+    // Arrange
+    const buses = [{ orbit: 2, roomsize: 4 }];
+    const tracks = [track({ id: "mod", orbit: 2, params: { room: 0.4 }, modifiers: [{ id: "m", code: '.orbit("<1 2>")', enabled: true }] })];
+
+    // Act / Assert
+    expect(body(song(tracks, { buses }))).toBe('$: s("bd*4").orbit("<1 2>").room(.4)');
+  });
+
   it("should omit .orbit(1) and emit other orbits last", () => {
     // Arrange
     const tracks = [track({ id: "a", orbit: 1 }), track({ id: "b", orbit: 3, params: { gain: 0.5 } })];
@@ -445,7 +454,7 @@ describe("generate", () => {
     // Assert
     expect(unity).toBe('setcpm(120/4)\n\n$: s("bd*4")');
     expect(quieter).toBe('setcpm(120/4)\n\n$: s("bd*4")\n\nall(x => x.postgain(.9))');
-    expect(empty).toBe("setcpm(120/4)\n\nall(x => x.postgain(1.25))");
+    expect(empty).toBe("setcpm(120/4)\n\nsilence\n\nall(x => x.postgain(1.25))");
   });
 
   it("should write setcpm from tempo and the prelude verbatim before the tracks", () => {
@@ -466,12 +475,27 @@ describe("generate", () => {
     expect(lines.a).toEqual({ start: 7, end: 7 });
   });
 
-  it("should emit only setcpm and the prelude for a project without tracks", () => {
+  it("should end a project without tracks in a plain silence expression after the prelude", () => {
     // Arrange
     const p = project({ prelude: ["// add a track from the library to begin"] });
 
     // Act / Assert
-    expect(generate(p, { scope: "song" }).code).toBe("setcpm(120/4)\n// add a track from the library to begin");
+    expect(generate(p, { scope: "song" }).code).toBe("setcpm(120/4)\n// add a track from the library to begin\n\nsilence");
+  });
+
+  it("should give a program whose prelude ends in a declaration a body Strudel can transpile", () => {
+    // Arrange
+    const p = project({ prelude: ["const lead = 'c4'"], tracks: [track({ id: "a" })], sections: [{ id: "s", name: "S", startBar: 1, endBar: 4 }] });
+    const offSection = { ...p, tracks: [track({ id: "a", clips: [{ id: "x", startBar: 9, endBar: 12 }] })] };
+
+    // Act
+    const empty = generate(project({ prelude: ["const lead = 'c4'"] }), { scope: "song" }).code;
+    const section = generate(offSection, { scope: "section", atBar: 1 }).code;
+
+    // Assert
+    expect(empty).toBe("setcpm(120/4)\nconst lead = 'c4'\n\nsilence");
+    expect(section).toBe("setcpm(120/4)\nconst lead = 'c4'\n\nsilence");
+    expect(() => transpiler(empty)).not.toThrow();
   });
 
   it("should be deterministic", () => {

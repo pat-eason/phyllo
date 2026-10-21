@@ -21,8 +21,9 @@ function shape(t: Track) {
   };
 }
 
-const drum = (name: string, pattern: string, bank: string | null, extra: Partial<ReturnType<typeof shape>> = {}) => ({
-  name,
+// Unlabelled blocks parse with `name: ""` and, without `arrange()`, `clips: []` (the reducer decides both).
+const drum = (pattern: string, bank: string | null, extra: Partial<ReturnType<typeof shape>> = {}) => ({
+  name: "",
   kind: "drum",
   source: { type: "s", sound: null, bank },
   pattern,
@@ -31,13 +32,13 @@ const drum = (name: string, pattern: string, bank: string | null, extra: Partial
   orbit: 1,
   mute: false,
   solo: false,
-  clips: [[1, 8]],
+  clips: [],
   rawCode: null,
   ...extra,
 });
 
 const melodic = (sound: string | null, pattern: string, extra: Partial<ReturnType<typeof shape>> = {}) => ({
-  name: sound ?? "Melody",
+  name: "",
   kind: "melodic",
   source: { type: "note", sound, bank: null },
   pattern,
@@ -46,7 +47,7 @@ const melodic = (sound: string | null, pattern: string, extra: Partial<ReturnTyp
   orbit: 1,
   mute: false,
   solo: false,
-  clips: [[1, 8]],
+  clips: [],
   rawCode: null,
   ...extra,
 });
@@ -69,9 +70,9 @@ describe("parse", () => {
     expect(r.prelude).toEqual([]);
     expect(r.warnings).toEqual([]);
     expect(r.tracks.map(shape)).toEqual([
-      drum("Kick", "bd*4", "RolandTR909"),
-      drum("Clap", "~ cp", "RolandTR909", { params: { room: 0.2 } }),
-      drum("Hats", "hh*8", "RolandTR909", { params: { gain: "[.4 .7]*4" } }),
+      drum("bd*4", "RolandTR909"),
+      drum("~ cp", "RolandTR909", { params: { room: 0.2 } }),
+      drum("hh*8", "RolandTR909", { params: { gain: "[.4 .7]*4" } }),
       melodic("sawtooth", "<a1 a1 c2 g1>*2", { params: { lpf: 900 } }),
     ]);
   });
@@ -83,9 +84,9 @@ describe("parse", () => {
     // Assert
     expect(r.tempo).toEqual({ bpm: 82, beatsPerBar: 4 });
     expect(r.tracks.map(shape)).toEqual([
-      drum("Drums", "bd ~ ~ bd, ~ sd", "LinnDrum", { params: { lpf: 3000 } }),
+      drum("bd ~ ~ bd, ~ sd", "LinnDrum", { params: { lpf: 3000 } }),
       {
-        name: "Chords",
+        name: "",
         kind: "chord",
         source: { type: "chord", sound: "gm_epiano1", bank: null },
         pattern: "<Fmaj7 Em7 Dm7 C^7>",
@@ -94,10 +95,10 @@ describe("parse", () => {
         orbit: 1,
         mute: false,
         solo: false,
-        clips: [[1, 8]],
+        clips: [],
         rawCode: null,
       },
-      drum("Hats", "hh*8", null, { params: { gain: 0.3 }, modifiers: [".degradeBy(.3)"] }),
+      drum("hh*8", null, { params: { gain: 0.3 }, modifiers: [".degradeBy(.3)"] }),
     ]);
   });
 
@@ -107,8 +108,8 @@ describe("parse", () => {
 
     // Assert
     expect(r.tracks.map(shape)).toEqual([
-      drum("Drums", "bd ~ ~ bd ~ ~ bd ~, ~ sd ~ [~ sd]", "AkaiMPC60"),
-      drum("Hats", "hh*8", null, { params: { gain: "[.5 .3]*4" } }),
+      drum("bd ~ ~ bd ~ ~ bd ~, ~ sd ~ [~ sd]", "AkaiMPC60"),
+      drum("hh*8", null, { params: { gain: "[.5 .3]*4" } }),
       melodic("sine", "<e1 g1>", { params: { shape: 0.4 } }),
     ]);
   });
@@ -119,7 +120,7 @@ describe("parse", () => {
 
     // Assert
     expect(r.tracks.map(shape)).toEqual([
-      drum("Drums", "bd ~ [~ bd] ~, ~ sd ~ sd, hh*8", "RolandTR909"),
+      drum("bd ~ [~ bd] ~, ~ sd ~ sd, hh*8", "RolandTR909"),
       melodic("sine", "<[c2 c3]*4 [ab1 ab2]*4 [bb1 bb2]*4 [g1 g2]*4>", { modifiers: [".fmi(3)", ".fmh(2)", ".decay(.15)", ".sustain(0)"] }),
       melodic("square", "c5 eb5 g5 [bb5 g5] f5 ~ eb5 d5", { params: { lpf: 3500, delay: 0.2 } }),
     ]);
@@ -143,9 +144,9 @@ describe("parse", () => {
     // Assert
     expect(r.tempo).toEqual({ bpm: 110, beatsPerBar: 4 });
     expect(r.tracks.map(shape)).toEqual([
-      drum("Kick", "bd(3,8)", "RolandTR808"),
-      drum("Clap", "cp(2,8,2)", "RolandTR808"),
-      drum("Hats", "hh(5,8)", "RolandTR808"),
+      drum("bd(3,8)", "RolandTR808"),
+      drum("cp(2,8,2)", "RolandTR808"),
+      drum("hh(5,8)", "RolandTR808"),
     ]);
   });
 
@@ -195,19 +196,19 @@ describe("parse", () => {
     expect(t.source).toEqual(source);
   });
 
-  it("should turn arrange() into clips and the song length", () => {
+  it("should turn arrange() into clips and the song length, leaving unarranged tracks without clips", () => {
     // Act
     const r = run([
       "setcpm(120/4)",
-      '$: arrange([8, silence], [8, s("bd*4").gain(.5)], [4, silence], [12, s("bd*4").gain(.5)]).analyze("kick")',
+      '$: arrange([8, silence], [8, s("bd*4").gain(.5)], [4, silence], [12, s("bd*4").gain(.5)])',
       '$: s("hh*8")',
     ]);
 
     // Assert
     expect(r.lengthBars).toBe(32);
     expect(r.tracks.map(shape)).toEqual([
-      drum("Kick", "bd*4", null, { params: { gain: 0.5 }, clips: [[9, 16], [21, 32]] }),
-      drum("Hats", "hh*8", null, { clips: [[1, 32]] }),
+      drum("bd*4", null, { params: { gain: 0.5 }, clips: [[9, 16], [21, 32]] }),
+      drum("hh*8", null, { clips: [] }),
     ]);
   });
 
@@ -221,11 +222,19 @@ describe("parse", () => {
 
     // Assert
     expect(r.tracks.map((t) => [t.kind, t.rawCode, t.clips.map((c) => [c.startBar, c.endBar])])).toEqual([
-      ["code", 'arrange([4, s("bd")], [4, s("hh")])', [[1, 8]]],
-      ["code", 'arrange([1.5, s("bd")], [2, silence])', [[1, 8]]],
-      ["code", "arrange(...parts)", [[1, 8]]],
+      ["code", 'arrange([4, s("bd")], [4, s("hh")])', []],
+      ["code", 'arrange([1.5, s("bd")], [2, silence])', []],
+      ["code", "arrange(...parts)", []],
     ]);
     expect(r.warnings).toHaveLength(3);
+  });
+
+  it("should unwrap an arrange() of silence only into a silence Code track with one clip per entry", () => {
+    // Act
+    const t = only(run("$: arrange([2, silence], [2, silence], [4, silence])"));
+
+    // Assert
+    expect(shape(t)).toMatchObject({ kind: "code", rawCode: "silence", clips: [[1, 2], [3, 4], [5, 8]] });
   });
 
   it("should keep an arranged unrecognized pattern as a Code track with clips", () => {
@@ -245,12 +254,13 @@ describe("parse", () => {
     expect(r.warnings.map((w) => w.message)).toEqual([expect.stringContaining("arrange() totals differ")]);
   });
 
-  it("should use the given song length for tracks without arrange()", () => {
+  it("should give tracks without arrange() no clips even when a song length is passed", () => {
     // Act
-    const t = only(run('$: s("bd")', { lengthBars: 24 }));
+    const r = run(['$: s("bd")', '_$: s("hh")'], { lengthBars: 24 });
 
     // Assert
-    expect(t.clips.map((c) => [c.startBar, c.endBar])).toEqual([[1, 24]]);
+    expect(r.tracks.map((t) => t.clips)).toEqual([[], []]);
+    expect(r.lengthBars).toBeUndefined();
   });
 
   it("should preserve unknown top-level statements and comments verbatim and in order", () => {
@@ -330,7 +340,30 @@ describe("parse", () => {
     // Assert
     expect(r.tempo).toBeUndefined();
     expect(r.prelude).toEqual(["const bpm = 128", "setcpm(bpm/4)"]);
-    expect(r.warnings).toEqual([{ message: expect.stringContaining("computed value"), line: 2 }]);
+    expect(r.warnings).toEqual([{ message: expect.stringContaining("computed"), line: 2 }]);
+  });
+
+  it.each([
+    ["setcpm(120)", { bpm: 360, beatsPerBar: 3 }],
+    ["setcpm(150)", { bpm: 300, beatsPerBar: 2 }],
+    ["setcpm(300)", { bpm: 300, beatsPerBar: 1 }],
+    ["setcps(2)", { bpm: 360, beatsPerBar: 3 }],
+    ["setcpm(400/3)", { bpm: 400, beatsPerBar: 3 }],
+    ["setcpm(500/4)", { bpm: 375, beatsPerBar: 3 }],
+    ["setcpm(120/2.5)", { bpm: 192, beatsPerBar: 4 }],
+  ])("should pick beats per bar so %s regenerates as the same cycles per minute", (stmt, tempo) => {
+    // Act / Assert
+    expect(run(stmt).tempo).toEqual(tempo);
+  });
+
+  it.each(["setcpm(1000)", "setcpm(3)", "setcps(0)", "setcpm(-30)"])("should keep %s, which no BPM in range can show, in the prelude", (stmt) => {
+    // Act
+    const r = run(stmt);
+
+    // Assert
+    expect(r.tempo).toBeUndefined();
+    expect(r.prelude).toEqual([stmt]);
+    expect(r.warnings).toEqual([{ message: expect.stringContaining("outside the BPM range"), line: 1 }]);
   });
 
   it("should read the master postgain and keep other all() calls verbatim", () => {
@@ -352,9 +385,9 @@ describe("parse", () => {
       ["bass", false, false],
       ["lead", true, false],
       ["pad", true, false],
-      ["Kick", false, true],
-      ["Hats", true, false],
-      ["Clap", false, false],
+      ["", false, true],
+      ["", true, false],
+      ["", false, false],
     ]);
   });
 
@@ -370,12 +403,45 @@ describe("parse", () => {
     expect(r.warnings).toEqual([{ message: expect.stringContaining("Duplicate block name"), line: 1 }]);
   });
 
-  it("should derive unique names", () => {
+  it("should leave unlabelled blocks unnamed and keep label names unique", () => {
     // Act
-    const r = run(['$: s("bd")', '$: s("bd sd")', '$: s("hh sd")', '$: chord("C").voicing()', '$: note("c")', "$: stack()", "$: stack()"]);
+    const r = run(['$: s("bd")', "drums: s(\"bd sd\")", '$: chord("C").voicing()', 'drums: s("hh")', "$: stack()"]);
 
     // Assert
-    expect(r.tracks.map((t) => t.name)).toEqual(["Kick", "Drums", "Drums 2", "Chords", "Melody", "Code 1", "Code 2"]);
+    expect(r.tracks.map((t) => t.name)).toEqual(["", "drums", "", "drums 2", ""]);
+  });
+
+  it("should mute the blocks above a top-level hush() and drop the call", () => {
+    // Act
+    const r = run(['$: s("bd")', '_$: s("cp")', "hush()", '$: s("hh")']);
+
+    // Assert
+    expect(r.tracks.map((t) => [t.pattern, t.mute])).toEqual([
+      ["bd", true],
+      ["cp", true],
+      ["hh", false],
+    ]);
+    expect(r.prelude).toEqual([]);
+    expect(r.warnings).toEqual([{ message: expect.stringContaining("hush()"), line: 3 }]);
+  });
+
+  it("should drop a bare silence statement, which plays nothing", () => {
+    // Act
+    const r = run(["setcpm(120/4)", "const lead = 'c4'", "", "silence"]);
+
+    // Assert
+    expect(r.tracks).toEqual([]);
+    expect(r.prelude).toEqual(["const lead = 'c4'"]);
+    expect(r.warnings).toEqual([]);
+  });
+
+  it("should keep a user's .analyze() call as a modifier", () => {
+    // Act
+    const t = only(run('$: s("bd*4").gain(.5).analyze("kick")'));
+
+    // Assert
+    expect(t.modifiers.map((m) => m.code)).toEqual(['.analyze("kick")']);
+    expect(t.params).toEqual({ gain: 0.5 });
   });
 
   it.each([
@@ -482,13 +548,13 @@ describe("parse", () => {
     const newId = () => `id-${++n}`;
 
     // Act
-    const r = run(['$: s("bd").fast(2)', '$: s("hh")', '$: s("cp")'], { newId, palette: ["#111111", "#222222"] });
+    const r = run(['$: arrange([2, s("bd").fast(2)], [2, silence])', '$: s("hh")', '$: s("cp")'], { newId, palette: ["#111111", "#222222"] });
 
     // Assert
     expect(r.tracks.map((t) => [t.id, t.color, t.clips.map((c) => c.id), t.modifiers.map((m) => m.id)])).toEqual([
       ["id-1", "#111111", ["id-2"], ["id-3"]],
-      ["id-4", "#222222", ["id-5"], []],
-      ["id-6", "#111111", ["id-7"], []],
+      ["id-4", "#222222", [], []],
+      ["id-5", "#111111", [], []],
     ]);
   });
 
@@ -525,6 +591,15 @@ describe("parse", () => {
       { roomsize: 9 },
       { room: 0.2 },
     ]);
+  });
+
+  it("should leave a track with a modulated orbit out of bus inference", () => {
+    // Act
+    const r = run(['$: s("bd").room(.3).roomsize(2)', '$: s("hh").orbit("<1 2>").room(.5).roomsize(4)'], { inferBuses: true });
+
+    // Assert
+    expect(r.buses).toEqual([{ orbit: 1, roomsize: 2 }]);
+    expect(r.tracks.map((t) => t.params)).toEqual([{ room: 0.3 }, { room: 0.5, roomsize: 4 }]);
   });
 
   it("should leave bus params on tracks by default", () => {

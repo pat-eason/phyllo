@@ -334,6 +334,41 @@ describe("parseProjectFile: defaults and coercion", () => {
     );
     expect(project.tracks[0]?.params).toEqual({ gain: "[.45 .7]*4" });
   });
+
+  it("should clamp out-of-range param values into the spec range and warn per value", () => {
+    // Arrange
+    const file = JSON.stringify({
+      format: "phyllo/1",
+      id: "x",
+      tracks: [{ id: "k", kind: "drum", color: "#8AB4FF", params: { gain: 1e9, pan: 7, lpf: -50, shape: -1, delayfeedback: 5 } }],
+    });
+
+    // Act
+    const { project, warnings } = parseOk(file);
+
+    // Assert
+    expect(project.tracks[0]?.params).toEqual({ gain: 2, pan: 1, lpf: 20, shape: 0, delayfeedback: 0.98 });
+    expect(warnings).toEqual([
+      'track #1: param "gain" 1000000000 is out of range; using 2.',
+      'track #1: param "pan" 7 is out of range; using 1.',
+      'track #1: param "lpf" -50 is out of range; using 20.',
+      'track #1: param "shape" -1 is out of range; using 0.',
+      'track #1: param "delayfeedback" 5 is out of range; using 0.98.',
+    ]);
+  });
+
+  it("should load in-range values as written, including defaults and extra precision", () => {
+    // Arrange
+    const params = { gain: 0.8, pan: 0.333, delaytime: 0.1234 };
+    const file = JSON.stringify({ format: "phyllo/1", id: "x", tracks: [{ id: "k", kind: "drum", color: "#8AB4FF", params }] });
+
+    // Act
+    const { project, warnings } = parseOk(file);
+
+    // Assert
+    expect(project.tracks[0]?.params).toEqual({ gain: 0.8, pan: 0.333, delaytime: 0.1234 });
+    expect(warnings).toEqual([]);
+  });
 });
 
 describe("migrate", () => {
