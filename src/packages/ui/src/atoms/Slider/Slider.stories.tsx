@@ -13,7 +13,7 @@ function Controlled(args: Omit<SliderProps, "onChange">) {
     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
       <Slider {...args} value={value} onChange={setValue} />
       <span style={{ font: "var(--ph-text-small)", color: "var(--ph-muted)", fontVariantNumeric: "tabular-nums" }}>
-        {args.valueText ? args.valueText(value) : value}
+        {typeof args.valueText === "function" ? args.valueText(value) : (args.valueText ?? value)}
       </span>
     </div>
   );

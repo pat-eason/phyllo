@@ -26,8 +26,18 @@ export interface KnobProps
   valueText: string;
   /** 56 inspector (skirt + cap + pointer), 34 mixer sends (flat ring only). Default 56. */
   size?: KnobSize;
-  /** A modifier drives this parameter: ring turns amber. Input still works; the parent decides what a drag means. */
+  /**
+   * A modifier drives this parameter: ring turns amber. Input still works (`onChange` fires for drag, wheel and
+   * keys alike); the parent decides what a change means. To intercept it instead, pass `onBlockedChange`.
+   */
   modulated?: boolean;
+  /**
+   * Only used while `modulated`. When given, keyboard steps, wheel and double-click reset do not call `onChange`;
+   * they call this with the direction (+1 up, −1 down) and the value they would have set, so the parent can show its
+   * "replace the modifier?" confirm and apply the value if accepted. Drags are unaffected (`onChangeStart` fires).
+   * Nothing is reported when the step would not change the value (already at a bound).
+   */
+  onBlockedChange?: (direction: 1 | -1, value: number) => void;
   /** Ring grows from 12 o'clock (pan). */
   bipolar?: boolean;
   disabled?: boolean;
@@ -77,6 +87,7 @@ export const Knob = forwardRef<HTMLDivElement, KnobProps>(function Knob(
     valueText,
     size = 56,
     modulated = false,
+    onBlockedChange,
     bipolar = false,
     disabled = false,
     color,
@@ -102,7 +113,9 @@ export const Knob = forwardRef<HTMLDivElement, KnobProps>(function Knob(
 
   const commit = (next: number) => {
     const clamped = clamp01(next);
-    if (clamped !== v) onChange(clamped);
+    if (clamped === v) return;
+    if (modulated && onBlockedChange) onBlockedChange(clamped > v ? 1 : -1, clamped);
+    else onChange(clamped);
   };
 
   const drag = useVerticalDrag({

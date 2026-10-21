@@ -31,6 +31,16 @@ describe("TrackHeader", () => {
     expect(screen.getByText('s("bd").bank("RolandTR909")')).toBeInTheDocument();
   });
 
+  it("should forward the meter hold and stopped flags to the meter", () => {
+    // Arrange / Act
+    setup({ level: 0.7, meterHold: true, meterStopped: true });
+
+    // Assert: stopped reads 0 and a hold tick is drawn
+    const bar = document.querySelector<HTMLElement>('[data-part="bar"]');
+    expect(Number(bar?.style.getPropertyValue("--meter-level") || 0)).toBe(0);
+    expect(bar?.children).toHaveLength(2);
+  });
+
   it("should expose the name area as a toggle button named by the track name and described by its sound", () => {
     // Arrange / Act
     setup({ selected: true });
