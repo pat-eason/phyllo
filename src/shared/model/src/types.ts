@@ -188,14 +188,28 @@ export interface ParseWarning {
   line?: number;
 }
 
+export interface GenerateOptions {
+  scope: CodeScope;
+  /** For scope `section`: the bar whose section is rendered (the playhead's bar). Defaults to the loop start or bar 1. */
+  atBar?: number;
+  /** Append `.analyze("<trackId>")` to each track for per-track meters. Evaluated code only; never shown (DECISIONS V9). */
+  instrument?: boolean;
+}
+
 export interface ParseResult {
   tracks: Track[];
   prelude: string[];
   tempo?: { bpm: number; beatsPerBar: number };
+  /** From a top-level `all(x => x.postgain(v))`. */
+  master?: Partial<Master>;
+  /** Song length implied by `arrange()` totals, when present. */
+  lengthBars?: number;
   warnings: ParseWarning[];
 }
 
 export interface EngineError {
+  /** `eval`: JS/transpile error; `pattern`: mini-notation parse error; `query`: thrown while querying haps. */
+  kind?: 'eval' | 'pattern' | 'query';
   message: string;
   trackId?: string;
   line?: number;
