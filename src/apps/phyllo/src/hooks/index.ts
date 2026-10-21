@@ -14,4 +14,5 @@ export type { UseTips } from "./useTips";
 export { useLibrary } from "./useLibrary";
 export type { UseLibrary } from "./useLibrary";
 export { useNative } from "./useNative";
+export { createRealtimeCapture, useExport, type ExportJobState, type UseExport, type UseExportOptions } from "./useExport";
 export { useAppStores } from "../state/context";
