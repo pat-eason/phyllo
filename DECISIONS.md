@@ -131,3 +131,15 @@ One line each: decision — reason — where. Strudel verification results are i
 - D94 Cross-window sync via `broadcast(channel, payload)` / `onBroadcast` (global Tauri events tagged with sender label; BroadcastChannel in browser) — Settings window ↔ main — native/broadcast.ts.
 - D95 Settings toggle "Open .phyllo and .strudel files with Phyllo" can't change OS associations at runtime (fixed at install via `bundle.fileAssociations`); the toggle controls whether open-file events are honoured — SPEC §6.6 — T5.3.
 - D96 Single-instance handling on Windows/Linux (tauri-plugin-single-instance) deferred — macOS is the primary target; recorded for M7 — follow-up.
+
+## App state (M3)
+- D97 Stores are vanilla Zustand created by `createAppStores(deps)` and provided via `<PhylloProvider>` context, so organisms render with mock stores (`createMockStores`) — design-system §5 — src/apps/phyllo/src/state.
+- D98 Live values are pushed, not returned: `useEngine().meters`/`subscribeMeters`/`meterFor(trackId)` and `useTransport().subscribePosition` run off one shared rAF feed that only runs while playing with subscribers; `transport.position` is a snapshot refreshed on play/pause/stop/seek — §5 says playhead/meters must not re-render React — state/feed.ts.
+- D99 Undo history capped at 200 with nested `beginGesture/endGesture` grouping; `ui/*` actions never undoable; undoing back to the saved state clears `dirty`; `ui/setZoom` marks dirty (zoom is saved per project) — state/history.ts.
+- D100 `importCode` (strudel.cc link / .strudel / pasted code) creates a new unsaved project; code-drawer edits use `applyCode` (an undoable `code/replace` on the open project) — SPEC §4.2, §6.2 — state/projectStore.ts.
+- D101 New projects start dirty so autosave files them into `~/Music/Phyllo` within 1.5 s; every save takes a history snapshot while autosave is on; Save As gives the copy a new project id — SPEC §5 autosave — state/projectStore.ts.
+- D102 Engine instance is created on first regeneration (no audio); `init()` only from `ensureAudio()` in a gesture; unchanged instrumented code isn't re-evaluated — state/engineStore.ts.
+- D103 Settings sync between windows uses `native.broadcast/onBroadcast` (orchestrator replaced the agent's raw BroadcastChannel); tray/keep-running/media-keys effects call T6.4's NativeApi directly — D94 — state/settingsStore.ts, createAppStores.ts.
+- D104 Library: settings store `tileSize` 0–4, hook exposes GrooveCard's 1–5; rename changes the name inside the file only (no file rename command); sound-name search matches pattern words only (Rust summary lacks source sound/bank) — state/libraryStore.ts.
+- D105 Tips 1–4 complete from project actions; step 5 completes on export/copy link; finishing step 5 turns tips off — SPEC §6.1 curriculum — state/tipsStore.ts.
+- D106 App Vitest config inlines Strudel deps like the engine's (agent change outside its ownership, accepted) — src/apps/phyllo/vitest.config.ts.

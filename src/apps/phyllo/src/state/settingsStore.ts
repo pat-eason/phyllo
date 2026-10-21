@@ -1,7 +1,7 @@
 import type { Settings, UiMode } from "@phyllo/model";
 import { createStore } from "zustand/vanilla";
 import type { StoreApi } from "zustand/vanilla";
-import type { SettingsStore as NativeSettingsStore } from "../native/api";
+import type { NativeApi, SettingsStore as NativeSettingsStore } from "../native/api";
 import { SETTINGS_KEY } from "../native/browser";
 import type { Unsubscribe } from "./feed";
 import { applySettingsPatch, defaultSettings, mergeSettings } from "./settingsModel";
@@ -34,6 +34,30 @@ export interface SettingsChannel {
 }
 
 const CHANNEL_NAME = "phyllo:settings";
+
+/** Settings sync over `NativeApi.broadcast` (global Tauri events between windows; BroadcastChannel in the browser impl). */
+export function createNativeSettingsChannel(native: Pick<NativeApi, "broadcast" | "onBroadcast">): SettingsChannel {
+  const listeners = new Set<(raw: unknown) => void>();
+  let unlisten: Unsubscribe | null = null;
+  let closed = false;
+  void native.onBroadcast(CHANNEL_NAME, (payload) => {
+    for (const listener of [...listeners]) listener(payload);
+  }).then((off) => {
+    if (closed) off();
+    else unlisten = off;
+  });
+  return {
+    post: (settings) => void native.broadcast(CHANNEL_NAME, settings).catch(() => {}),
+    subscribe(callback) {
+      listeners.add(callback);
+      return () => listeners.delete(callback);
+    },
+    close() {
+      closed = true;
+      unlisten?.();
+    },
+  };
+}
 
 export function createDefaultSettingsChannel(): SettingsChannel | null {
   if (typeof BroadcastChannel === "function") {

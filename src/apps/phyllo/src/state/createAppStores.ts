@@ -15,7 +15,7 @@ import { createLibraryStore } from "./libraryStore";
 import type { LibraryStoreState } from "./libraryStore";
 import { createProjectStore } from "./projectStore";
 import type { ProjectStoreState } from "./projectStore";
-import { createDefaultSettingsChannel, createSettingsStore } from "./settingsStore";
+import { createNativeSettingsChannel, createSettingsStore } from "./settingsStore";
 import type { SettingsChannel, SettingsStoreState } from "./settingsStore";
 import type { SettingsPatch } from "./settingsModel";
 import { createTipsStore } from "./tipsStore";
@@ -79,13 +79,6 @@ export interface AppStores {
   dispose(): void;
 }
 
-/** Optional native capabilities (menu-bar transport, media keys); feature-detected so older NativeApis work. */
-interface OptionalNative {
-  traySetEnabled?: (on: boolean) => Promise<void>;
-  appSetKeepRunning?: (on: boolean) => Promise<void>;
-  mediaKeysSetEnabled?: (on: boolean) => Promise<void>;
-}
-
 const defaultOnError = (message: string, error: unknown) => console.warn(`[phyllo] ${message}`, error);
 
 export function createAppStores(deps: AppDeps): AppStores {
@@ -101,7 +94,7 @@ export function createAppStores(deps: AppDeps): AppStores {
   const settings = createSettingsStore(
     {
       persistence: native.settingsStore,
-      channel: deps.settingsChannel === undefined ? createDefaultSettingsChannel() : deps.settingsChannel,
+      channel: deps.settingsChannel === undefined ? createNativeSettingsChannel(native) : deps.settingsChannel,
       saveDebounceMs: timing.settingsSaveMs,
       onError,
     },
@@ -174,7 +167,6 @@ export function createAppStores(deps: AppDeps): AppStores {
   cleanups.push(() => offSectionWatch?.());
 
   // Settings side effects (only once the persisted settings are in, so OSC isn't configured twice).
-  const optional = native as NativeApi & OptionalNative;
   const applyEffects = (next: Settings, prev: Settings | null) => {
     const changed = <K extends keyof Settings>(key: K) => prev === null || JSON.stringify(next[key]) !== JSON.stringify(prev[key]);
     if (changed("osc")) native.oscConfigure({ ...next.osc }).catch((e: unknown) => onError("OSC configure failed", e));
@@ -183,11 +175,11 @@ export function createAppStores(deps: AppDeps): AppStores {
       void engineHost.peek()?.setOutputDevice(next.audio.outputDevice).catch((e: unknown) => onError("Output device", e));
     }
     if (prev === null || next.system.menuBar !== prev.system.menuBar) {
-      optional.traySetEnabled?.(next.system.menuBar).catch((e: unknown) => onError("Menu bar", e));
-      optional.appSetKeepRunning?.(next.system.menuBar).catch((e: unknown) => onError("Keep running", e));
+      native.traySetEnabled(next.system.menuBar).catch((e: unknown) => onError("Menu bar", e));
+      native.appSetKeepRunning(next.system.menuBar).catch((e: unknown) => onError("Keep running", e));
     }
     if (prev === null || next.system.mediaKeys !== prev.system.mediaKeys) {
-      optional.mediaKeysSetEnabled?.(next.system.mediaKeys).catch((e: unknown) => onError("Media keys", e));
+      native.mediaSetEnabled(next.system.mediaKeys).catch((e: unknown) => onError("Media keys", e));
     }
     if (prev !== null && next.system.autosave !== prev.system.autosave) project.autosaveSettingChanged();
   };

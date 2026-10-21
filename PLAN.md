@@ -67,7 +67,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 ### M3 Arrange screen
 | id | owner | owns | deps | acceptance | status |
 |---|---|---|---|---|---|
-| T3.1 | state agent | `src/apps/phyllo/src/state/**`, `src/apps/phyllo/src/hooks/**` | M1 | all §5 hooks, Zustand stores, mock providers for stories; playhead/meters via subscriptions, not React state | active |
+| T3.1 | state agent | `src/apps/phyllo/src/state/**`, `src/apps/phyllo/src/hooks/**` | M1 | all §5 hooks, Zustand stores, mock providers for stories; playhead/meters via subscriptions, not React state | done |
 | T3.2–T3.6 | organism agents | AppHeader+StatusBar · ViewToolbar+Timeline · LibraryPanel · CodeDrawer+TipCoach · Inspector | T3.1, M2 | organism docs + SPEC §6.1; stories with mocked hooks | todo |
 | T3.7 | screen agent | `screens/ArrangeScreen`, routing/app shell | T3.2–T3.6 | SPEC §6.1 acceptance criteria | todo |
 | T3.V | verifier | read-only | T3.7 | §6.1 checklist + screenshot parity 01/02/accent-* | todo |
