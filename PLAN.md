@@ -70,7 +70,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | T3.1 | state agent | `src/apps/phyllo/src/state/**`, `src/apps/phyllo/src/hooks/**` | M1 | all §5 hooks, Zustand stores, mock providers for stories; playhead/meters via subscriptions, not React state | done |
 | T3.2 | organism agent | AppHeader, StatusBar, ViewTabs | T3.1, M2 | organism docs + SPEC §6.1; stories with mocked hooks | active |
 | T3.3 | organism agent | ViewToolbar, Timeline | T3.1, M2 | same + clip editing, DnD, no re-render while playing | active |
-| T3.4 | organism agent | LibraryPanel | T3.1, M2 | same | active |
+| T3.4 | organism agent | LibraryPanel | T3.1, M2 | same | done |
 | T3.5 | organism agent | CodeDrawer, TipCoach | T3.1, M2 | same + inline pattern edit, Edit code mode | active |
 | T3.6 | organism agent | Inspector | T3.1, M2 | same | active |
 | T3.7 | screen agent | `screens/ArrangeScreen`, routing/app shell | T3.2–T3.6 | SPEC §6.1 acceptance criteria | todo |
@@ -99,3 +99,10 @@ T6.5 wire MIDI/OSC/sample folders/media keys/tray into stores + Settings · T6.V
 
 ### M7 Polish
 T7.1 shortcuts (SPEC §7) · T7.2 a11y pass (SPEC §8) · T7.3 screenshot parity fixes · T7.4 performance (no React re-render for playhead/meters) · T7.5 `pnpm tauri build` packaging + end-to-end smoke (open, play starter, edit, save, reopen, export WAV) · T7.V final verifier against SPEC §6 + DoD.
+
+### Follow-ups backlog (not yet assigned)
+- B1 Sample folders: call `native.sampleFoldersWatch(all)` + `sampleFolderScan` → `engine.registerSamples({name: [convertFileSrc(path)]})` with collision suffixes; rescan on `onSamplesChanged` (state layer) — from T3.4/T6.1.
+- B2 `engine.preview` has no stop → add `stopPreview()` (engine runtime) — from T3.4.
+- B3 Orbit rule in `code/replace`: deleting `.orbit(2)` in code is reverted (incoming default keeps existing orbit) — from F2.
+- B4 MIDI input → selected track notes / CC map → inspector knobs (state layer, uses T6.2 events) — from T3.1.
+- B5 Tag manage: rename/merge/delete across files; recolor needs a model field — from T3.1/T5.1.
