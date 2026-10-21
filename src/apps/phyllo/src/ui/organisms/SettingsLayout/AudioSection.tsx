@@ -1,4 +1,4 @@
-import { Button, Select, SettingRow, Slider } from "@phyllo/ui";
+import { Select, SettingRow } from "@phyllo/ui";
 import type { SelectOption } from "@phyllo/ui";
 import { useId } from "react";
 import { useSettings } from "../../../hooks";
@@ -7,10 +7,9 @@ import { SettingsSection } from "./SettingsSection";
 import { useOutputDevices } from "./useOutputDevices";
 import styles from "./settings.module.css";
 
-export const LOOKAHEAD_MIN_MS = 20;
-export const LOOKAHEAD_MAX_MS = 500;
 export const LOOKAHEAD_DEFAULT_MS = 100;
-const LOOKAHEAD_STEP_MS = 10;
+/** Look-ahead choices (ms), like the mockup's Select; a saved value outside the list is added to it. */
+const LOOKAHEAD_CHOICES_MS = [50, 100, 150, 250] as const;
 
 const SYSTEM_DEFAULT = "";
 
@@ -21,6 +20,14 @@ const SAMPLE_RATE_OPTIONS: SelectOption<SampleRateChoice>[] = [
   { value: "44100", label: "44.1 kHz" },
   { value: "48000", label: "48 kHz" },
 ];
+
+function lookaheadOptions(current: number): SelectOption<string>[] {
+  const values: number[] = [...LOOKAHEAD_CHOICES_MS];
+  if (!values.includes(current)) values.push(current);
+  return values
+    .sort((a, b) => a - b)
+    .map((ms) => ({ value: String(ms), label: ms === LOOKAHEAD_DEFAULT_MS ? `${ms} ms (default)` : `${ms} ms` }));
+}
 
 interface AudioSectionProps {
   /** Replaces the engine's list of built-in sound URLs (stories, tests). */
@@ -95,30 +102,14 @@ export function AudioSection({ listSoundUrls }: AudioSectionProps) {
           help="Higher is steadier, lower feels more immediate."
           divider={false}
           control={
-            <div className={styles["controlRow"]}>
-              <Slider
-                value={lookahead}
-                onChange={(next) => set("audio", { lookaheadMs: next })}
-                min={LOOKAHEAD_MIN_MS}
-                max={LOOKAHEAD_MAX_MS}
-                step={LOOKAHEAD_STEP_MS}
-                label="Scheduling look-ahead"
-                aria-labelledby={lookaheadId}
-                valueText={(value) => `${value} milliseconds`}
-                width={200}
-              />
-              <span className={styles["readout"]} aria-hidden="true">
-                {lookahead} ms
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={lookahead === LOOKAHEAD_DEFAULT_MS}
-                onClick={() => set("audio", { lookaheadMs: LOOKAHEAD_DEFAULT_MS })}
-              >
-                Reset
-              </Button>
-            </div>
+            <Select
+              options={lookaheadOptions(lookahead)}
+              value={String(lookahead)}
+              onChange={(next) => set("audio", { lookaheadMs: Number(next) })}
+              label="Scheduling look-ahead"
+              aria-labelledby={lookaheadId}
+              minWidth={220}
+            />
           }
         />
       </div>

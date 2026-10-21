@@ -129,39 +129,36 @@ describe("SettingsLayout", () => {
     expect(controls.revealed).toEqual(["/Phyllo"]);
   });
 
-  it("should apply the look-ahead from the slider and reset it to 100 ms", async () => {
+  it("should offer the look-ahead as a Select and apply the chosen value", async () => {
     // Arrange
     const user = userEvent.setup();
     const { settings } = renderSettings();
-    const slider = region("Audio").getByRole("slider", { name: "Scheduling look-ahead" });
-    expect(slider).toHaveValue("100");
-    slider.focus();
+    const select = region("Audio").getByRole("combobox", { name: "Scheduling look-ahead" });
+    expect(select).toHaveValue("100");
 
     // Act
-    await user.keyboard("{ArrowRight}{ArrowRight}");
-    const changed = settings().audio.lookaheadMs;
-    await user.click(region("Audio").getByRole("button", { name: "Reset" }));
+    await user.selectOptions(select, "250");
 
     // Assert
-    expect(changed).toBe(120);
-    expect(settings().audio.lookaheadMs).toBe(100);
+    expect(within(select).getAllByRole("option").map((option) => option.textContent)).toEqual([
+      "50 ms",
+      "100 ms (default)",
+      "150 ms",
+      "250 ms",
+    ]);
+    expect(settings().audio.lookaheadMs).toBe(250);
   });
 
-  it("should keep the look-ahead within 20 to 500 ms", async () => {
+  it("should keep a custom saved look-ahead selectable alongside the presets", () => {
     // Arrange
-    const user = userEvent.setup();
-    const { settings } = renderSettings();
-    const slider = region("Audio").getByRole("slider", { name: "Scheduling look-ahead" });
-    slider.focus();
+    renderSettings({ stores: { initialSettings: { audio: { lookaheadMs: 120 } } } });
 
     // Act
-    await user.keyboard("{End}");
-    const max = settings().audio.lookaheadMs;
-    await user.keyboard("{Home}");
+    const select = region("Audio").getByRole("combobox", { name: "Scheduling look-ahead" });
 
     // Assert
-    expect(max).toBe(500);
-    expect(settings().audio.lookaheadMs).toBe(20);
+    expect(select).toHaveValue("120");
+    expect(within(select).getByRole("option", { name: "120 ms" })).toBeInTheDocument();
   });
 
   it("should disable the output device Select and say why when the web view can't switch devices", async () => {

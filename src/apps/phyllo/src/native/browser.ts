@@ -13,6 +13,8 @@ import {
   buildMidiFile,
   defaultDownload,
   downloadName,
+  downloadStrudel,
+  isExportOutputPath,
   validateBegin,
 } from './exportBrowser';
 import { type RequestMidiAccess, createWebMidiBridge, defaultMidiAccess } from './webmidi';
@@ -37,6 +39,7 @@ import { isCacheableSoundUrl } from './soundCache';
  */
 
 export const BROWSER_ROOT = '/Phyllo';
+const BROWSER_EXPORTS = `${BROWSER_ROOT}/Exports`;
 export const STORAGE_KEY = 'phyllo.native.v1';
 export const SETTINGS_KEY = 'phyllo.settings.v1';
 const FORMAT = 'phyllo/1';
@@ -268,7 +271,7 @@ export function createBrowserApi(options: BrowserApiOptions = {}): NativeApi {
   return {
     kind: 'browser',
 
-    getPaths: async (): Promise<PhylloPaths> => ({ root: BROWSER_ROOT, exports: `${BROWSER_ROOT}/Exports` }),
+    getPaths: async (): Promise<PhylloPaths> => ({ root: BROWSER_ROOT, exports: BROWSER_EXPORTS }),
 
     projectRead: async (path) => readFile(path),
     projectWrite: async (path, json) => {
@@ -284,6 +287,8 @@ export function createBrowserApi(options: BrowserApiOptions = {}): NativeApi {
     strudelRead: async (path) => readFile(path),
     strudelWrite: async (path, code) => {
       writeFile(path, code);
+      // Export output reaches the user as a real download, like the WAV does.
+      if (isExportOutputPath(path, BROWSER_EXPORTS)) downloadStrudel(download, path, code);
     },
 
     libraryScan: async (): Promise<LibraryScan> => {

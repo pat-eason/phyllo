@@ -86,13 +86,34 @@ export function inCollection(groove: GrooveSummary, collection: LibraryCollectio
   return true;
 }
 
-/** Case-insensitive match over name, tags, key, BPM and sound names (SPEC §6.7). Every word must match. */
-export function matchesText(item: SearchableGroove, text: string): boolean {
-  const words = text.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  if (words.length === 0) return true;
+/** Lower-cased searchable fields of a groove: name, each tag, key, BPM (twice) and each sound name. */
+function searchFields(item: SearchableGroove): { descriptive: string[]; sounds: string[] } {
   const g = item.groove;
-  const haystack = [g.name, ...g.tags, g.key, String(g.bpm), `${g.bpm} bpm`, ...item.sounds].join("\n").toLowerCase();
-  return words.every((w) => haystack.includes(w));
+  return {
+    descriptive: [g.name, ...g.tags, g.key, String(g.bpm), `${g.bpm} bpm`].map((f) => f.toLowerCase()),
+    sounds: item.sounds.map((f) => f.toLowerCase()),
+  };
+}
+
+const wordsOf = (field: string): string[] => field.split(/[^\p{L}\p{N}#]+/u).filter(Boolean);
+
+/**
+ * Case-insensitive match over name, tags, key, BPM and sound names (SPEC §6.7). A groove matches when the whole
+ * (trimmed) query is a substring of any single field ("c minor" matches key "C minor", "lo-fi" the tag); otherwise
+ * every query word must match the **start of a word** in some field, so "c" doesn't match the "c" inside "sketch".
+ * A one-letter word never matches sound names (it would match `cp`, `c2`, ... in nearly every groove).
+ */
+export function matchesText(item: SearchableGroove, text: string): boolean {
+  const query = text.trim().toLowerCase();
+  if (query === "") return true;
+  const { descriptive, sounds } = searchFields(item);
+  if ([...descriptive, ...sounds].some((f) => f.includes(query))) return true;
+  const descriptiveStarts = descriptive.flatMap(wordsOf);
+  const soundStarts = sounds.flatMap(wordsOf);
+  return query
+    .split(/\s+/)
+    .filter(Boolean)
+    .every((w) => descriptiveStarts.some((s) => s.startsWith(w)) || (w.length > 1 && soundStarts.some((s) => s.startsWith(w))));
 }
 
 const byDateDesc = (a: string, b: string) => (Date.parse(b) || 0) - (Date.parse(a) || 0);

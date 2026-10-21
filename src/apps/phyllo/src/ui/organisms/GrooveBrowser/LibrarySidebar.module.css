@@ -54,6 +54,16 @@
   font-weight: 500;
 }
 
+/* "grooves" after a tag's count for screen readers: the button's name is its visible text plus this. */
+.countUnit {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
 .tagsSection {
   display: flex;
   flex-direction: column;

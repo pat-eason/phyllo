@@ -122,6 +122,12 @@ describe("knob value mapping (SPEC §6.1)", () => {
     expect(PARAM_SPECS.delayfeedback.toKnob(0.98)).toBe(1);
   });
 
+  it("delaytime keeps 4 decimals so 3/16 of a cycle isn't rounded to .188", () => {
+    expect(PARAM_SPECS.delaytime.round).toBe(4);
+    expect(PARAM_SPECS.delaytime.fromKnob(3 / 16)).toBe(0.1875);
+    expect(PARAM_SPECS.delaytime.format(0.1875)).toBe(".1875 s");
+  });
+
   it("hpf: log 20 Hz–8 kHz", () => {
     const hpf = PARAM_SPECS.hpf;
     expect(hpf.fromKnob(0)).toBe(20);
