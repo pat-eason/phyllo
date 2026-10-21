@@ -16,7 +16,7 @@ describe("SuggestionButton", () => {
     const { button } = renderButton();
 
     // Assert
-    expect(button).toHaveAccessibleName("Bouncier, adds .swingBy(1/6, 4)");
+    expect(button).toHaveAccessibleName("Bouncier .swingBy(1/6, 4)");
     expect(button).toHaveAttribute("aria-pressed", "false");
     expect(button).toHaveAttribute("title", ".swingBy(1/6, 4)");
     expect(button).toHaveTextContent(".swingBy(1/6, 4)");

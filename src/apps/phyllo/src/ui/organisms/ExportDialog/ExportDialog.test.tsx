@@ -168,6 +168,39 @@ describe("ExportDialog", () => {
     expect(await screen.findByRole("status")).toHaveTextContent("Export finished");
   });
 
+  it.each([
+    ["mixdown", /Mixdown/, "Export WAV", /\.wav$/],
+    ["MIDI", /MIDI/, "Export MIDI", /\.mid$/],
+    ["code", /Code/, "Save .strudel", /\.strudel$/],
+  ])("should take a free name for the default %s file instead of replacing one", async (_name, tab, button, extension) => {
+    // Arrange
+    const { user, fixture } = renderDialog();
+    const unique = vi.spyOn(fixture.native, "exportUniquePath");
+    await user.click(screen.getByRole("button", { name: tab }));
+
+    // Act
+    await user.click(await screen.findByRole("button", { name: button }));
+    await screen.findByRole("status");
+
+    // Assert
+    expect(unique).toHaveBeenCalledWith(expect.stringMatching(extension));
+  });
+
+  it("should keep a path the user chose as it is", async () => {
+    // Arrange
+    const { user, fixture } = renderDialog();
+    const unique = vi.spyOn(fixture.native, "exportUniquePath");
+    vi.spyOn(fixture.native, "saveDialog").mockResolvedValue("/Users/me/Desktop/Mine.wav");
+    await user.click(screen.getByRole("button", { name: "Choose a file…" }));
+
+    // Act
+    await user.click(await screen.findByRole("button", { name: "Export WAV" }));
+    await screen.findByRole("status");
+
+    // Assert
+    expect(unique).not.toHaveBeenCalled();
+  });
+
   it("should copy a strudel.cc link from the Code tab", async () => {
     // Arrange
     const { user } = renderDialog();

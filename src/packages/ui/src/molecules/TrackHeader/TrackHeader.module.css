@@ -33,12 +33,18 @@
   padding-left: 4px;
 }
 
-.select {
+.stack {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
   min-width: 0;
+}
+
+.select {
+  display: block;
+  max-width: 100%;
   margin: 0;
   padding: 0;
   border: 0;
@@ -50,7 +56,25 @@
   cursor: pointer;
 }
 
+/* Stretched hit area: a click anywhere on the name or the sound line selects. */
+.select::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--ph-r-xs);
+}
+
+.select:focus-visible {
+  outline: none;
+}
+
+.select:focus-visible::after {
+  outline: 2px solid var(--ph-accent);
+  outline-offset: 1px;
+}
+
 .name {
+  display: block;
   max-width: 100%;
   overflow: hidden;
   font: 600 13px/1.3 var(--ph-font-ui);

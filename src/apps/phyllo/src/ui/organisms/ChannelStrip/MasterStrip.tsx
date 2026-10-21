@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { useAppStores, useEngine, useMeters, useNative, useProject, useProjectFile, useProjectSelector, useSettings } from "../../../hooks";
 import { useToasts } from "../../toasts";
 import { useTransportStopped } from "./useTransportStopped";
-import { nextTakeFileName, startOutputRecording } from "./recordOutput";
+import { startOutputRecording, takeFileName } from "./recordOutput";
 import type { OutputRecording } from "./recordOutput";
 import { formatElapsed } from "./stripModel";
 import { useFillHeight } from "./useFillHeight";
@@ -137,9 +137,9 @@ export function MasterStrip() {
   const startRecording = () => {
     busy.current = true;
     setStatus({ kind: "starting" });
-    const fileName = nextTakeFileName(projectName);
     ensureAudio()
-      .then(() => startOutputRecording({ engine: engineHost.get(), native, fileName }))
+      .then(() => native.exportUniquePath(takeFileName(projectName)))
+      .then((fileName) => startOutputRecording({ engine: engineHost.get(), native, fileName }))
       .then((recording) => {
         session.current = recording;
         setStatus({ kind: "recording", startedAt: recording.startedAt });
@@ -249,13 +249,16 @@ export function MasterStrip() {
           size="sm"
           className={styles["rec"]}
           data-recording={recording ? "" : undefined}
-          aria-label={recording ? "Stop recording the master output" : "Record master output to a file"}
+          aria-label={recording ? "Stop, stop recording the master output" : "Rec output, record the master output to a file"}
           loading={status.kind === "starting" || status.kind === "saving"}
           onClick={onRecord}
         >
           {status.kind === "recording" ? (
             <>
-              <span aria-hidden="true">■</span> Stop <Elapsed startedAt={status.startedAt} />
+              <span aria-hidden="true">■</span> Stop{" "}
+              <span aria-hidden="true">
+                <Elapsed startedAt={status.startedAt} />
+              </span>
             </>
           ) : (
             <>

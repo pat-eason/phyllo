@@ -108,7 +108,7 @@ describe("StepRow", () => {
     // Arrange
     const user = userEvent.setup();
     const { onSelect, rerender } = renderRow();
-    const label = screen.getByRole("button", { name: "Kick, bd" });
+    const label = screen.getByRole("button", { name: "Kick bd" });
 
     // Act
     await user.click(label);
@@ -120,7 +120,7 @@ describe("StepRow", () => {
 
     // Assert
     expect(onSelect).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole("button", { name: "Kick, bd" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Kick bd" })).toHaveAttribute("aria-pressed", "true");
   });
 
   it("should toggle a step with a click when paint handlers are absent", async () => {

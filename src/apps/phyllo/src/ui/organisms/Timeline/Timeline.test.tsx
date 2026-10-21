@@ -550,8 +550,8 @@ describe("Timeline", () => {
     act(() => stores?.transport.getState().seek(18));
 
     // Assert
-    expect(screen.getByRole("button", { name: "Break, bars 17 to 20" })).toHaveAttribute("aria-current", "true");
-    expect(screen.getByRole("button", { name: "Intro, bars 1 to 8" })).not.toHaveAttribute("aria-current");
+    expect(screen.getByRole("button", { name: "Break 17–20, section" })).toHaveAttribute("aria-current", "true");
+    expect(screen.getByRole("button", { name: "Intro 1–8, section" })).not.toHaveAttribute("aria-current");
   });
 
   it("should show the engine's error on the failing track and a code badge", async () => {
@@ -608,6 +608,6 @@ describe("Timeline", () => {
     expect(stores.transport.getState().playing).toBe(true);
     expect(commits).toBe(before);
     expect(playhead.style.transform).not.toBe(startTransform);
-    expect(screen.getByRole("button", { name: "Groove, bars 9 to 16" })).toHaveAttribute("aria-current", "true");
+    expect(screen.getByRole("button", { name: "Groove 9–16, section" })).toHaveAttribute("aria-current", "true");
   });
 });

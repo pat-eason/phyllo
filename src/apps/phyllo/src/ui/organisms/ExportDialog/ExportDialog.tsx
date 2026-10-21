@@ -113,7 +113,7 @@ export function ExportDialog({ open, onClose }: ExportDialogProps) {
     problem = pathProblem(midiPath);
     exportLabel = "Export MIDI";
     workLabel = "Reading the notes";
-    options = () => ({ kind: "midi", range: midi.range, layout: midi.layout, path: midiPath.trim() });
+    options = () => ({ kind: "midi", range: midi.range, layout: midi.layout, path: midiPath.trim(), autoName: midi.path === null });
   } else {
     problem = code.action === "file" ? pathProblem(codePath) : null;
     exportLabel = code.action === "file" ? "Save .strudel" : "Copy link";
@@ -124,7 +124,7 @@ export function ExportDialog({ open, onClose }: ExportDialogProps) {
       action: code.action,
       scope: section ? "section" : "song",
       ...(section ? { sectionBar: section.startBar } : {}),
-      ...(code.action === "file" ? { path: codePath.trim() } : {}),
+      ...(code.action === "file" ? { path: codePath.trim(), autoName: code.path === null } : {}),
     });
   }
   if (!exportsDir && problem === null && tab !== "code") problem = "Looking up the exports folder…";

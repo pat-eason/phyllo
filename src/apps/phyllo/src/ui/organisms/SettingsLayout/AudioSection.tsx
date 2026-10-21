@@ -1,7 +1,7 @@
 import { Select, SettingRow } from "@phyllo/ui";
 import type { SelectOption } from "@phyllo/ui";
 import { useId } from "react";
-import { useSettings } from "../../../hooks";
+import { useAppStores, useSettings } from "../../../hooks";
 import { OfflineSounds } from "./OfflineSounds";
 import { SettingsSection } from "./SettingsSection";
 import { useOutputDevices } from "./useOutputDevices";
@@ -37,6 +37,7 @@ interface AudioSectionProps {
 /** Output device, sample rate, scheduling look-ahead and the offline sound cache. */
 export function AudioSection({ listSoundUrls }: AudioSectionProps) {
   const { settings, set } = useSettings();
+  const { engineHost } = useAppStores();
   const { devices, canSwitch } = useOutputDevices();
   const deviceId = useId();
   const rateId = useId();
@@ -53,6 +54,8 @@ export function AudioSection({ listSoundUrls }: AudioSectionProps) {
   const rate = settings.audio.sampleRate;
   const rateChoice: SampleRateChoice = rate === 44100 ? "44100" : rate === 48000 ? "48000" : "match";
   const lookahead = settings.audio.lookaheadMs;
+  // The audio context is created once with its rate; a different choice only takes effect on the next launch.
+  const rateAppliesAfterRestart = rate !== null && rate !== engineHost.peek()?.sampleRate;
 
   return (
     <SettingsSection
@@ -84,7 +87,7 @@ export function AudioSection({ listSoundUrls }: AudioSectionProps) {
         <SettingRow
           id={rateId}
           title="Sample rate"
-          help="Matches the device. Exports can resample."
+          help={rateAppliesAfterRestart ? "Applies after restart. Exports can resample." : "Matches the device. Exports can resample."}
           control={
             <Select
               options={SAMPLE_RATE_OPTIONS}

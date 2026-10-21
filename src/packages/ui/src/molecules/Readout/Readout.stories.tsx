@@ -33,7 +33,7 @@ function EditableTempo() {
       ? {
           ...cell,
           value: String(bpm),
-          label: `Tempo ${bpm} BPM, edit`,
+          label: `${bpm} BPM, edit tempo`,
           onActivate: undefined,
           onEdit: (text) => {
             const next = Number(text);
@@ -52,7 +52,7 @@ export const EditableBpm: Story = { render: () => <EditableTempo /> };
 function TapTempo() {
   const cells: ReadoutCell[] = guided.map((cell) =>
     cell.id === "bpm"
-      ? { ...cell, label: "Tempo 120 BPM, edit", onEdit: () => undefined, onCaptionClick: () => undefined }
+      ? { ...cell, label: "120 BPM, edit tempo", onEdit: () => undefined, onCaptionClick: () => undefined }
       : cell,
   );
   return <Readout cells={cells} />;

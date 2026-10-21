@@ -37,7 +37,6 @@ export const SectionChip = forwardRef<HTMLButtonElement, SectionChipProps>(funct
   const refocus = useRef(false);
   const classes = className ? `${styles["chip"]} ${className}` : styles["chip"];
   const range = startBar === endBar ? String(startBar) : `${startBar}–${endBar}`;
-  const spoken = startBar === endBar ? `bar ${startBar}` : `bars ${startBar} to ${endBar}`;
 
   useEffect(() => {
     if (editing) {
@@ -108,7 +107,7 @@ export const SectionChip = forwardRef<HTMLButtonElement, SectionChipProps>(funct
       type="button"
       className={classes}
       aria-current={current ? "true" : undefined}
-      aria-label={`${name}, ${spoken}`}
+      aria-label={`${name} ${range}, section`}
       data-current={current ? "" : undefined}
       data-drop-range={dropRangeFirst ? "" : undefined}
       onClick={(event) => {
@@ -122,7 +121,7 @@ export const SectionChip = forwardRef<HTMLButtonElement, SectionChipProps>(funct
       onKeyDown={handleKeyDown}
       {...rest}
     >
-      <span className={styles["name"]}>{name}</span>
+      <span className={styles["name"]}>{name}</span>{" "}
       <span className={styles["range"]}>{range}</span>
     </button>
   );

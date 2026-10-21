@@ -26,7 +26,7 @@ describe("PatternTools", () => {
     // Arrange
     const user = userEvent.setup();
     const { stores } = renderWithStores(<Editor />, { initialProject: editorProject() });
-    await user.click(screen.getByRole("button", { name: "Open hat, oh" }));
+    await user.click(screen.getByRole("button", { name: "Open hat oh" }));
 
     // Act
     await user.click(screen.getByRole("button", { name: "Apply to Open hat" }));

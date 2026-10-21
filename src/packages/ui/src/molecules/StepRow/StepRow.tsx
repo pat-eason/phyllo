@@ -161,10 +161,10 @@ const StepRowImpl = forwardRef<StepRowHandle, StepRowProps>(function StepRow(
       onKeyDown={handleKeyDown}
     >
       <div role="gridcell" className={styles["labelCell"]}>
-        <button type="button" className={styles["label"]} aria-label={`${label}, ${sound}`} aria-pressed={selected} onClick={onSelect}>
+        <button type="button" className={styles["label"]} aria-label={`${label} ${sound}`} aria-pressed={selected} onClick={onSelect}>
           <span className={styles["swatch"]} aria-hidden="true" />
           <span className={styles["names"]}>
-            <span className={styles["name"]}>{label}</span>
+            <span className={styles["name"]}>{label}</span>{" "}
             <span className={styles["sound"]}>{sound}</span>
           </span>
         </button>

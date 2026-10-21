@@ -22,11 +22,11 @@ describe("StepSequencer", () => {
     // Assert
     const rows = within(grid).getAllByRole("row");
     expect(rows.map((r) => within(r).getAllByRole("button")[0]?.getAttribute("aria-label"))).toEqual([
-      "Kick, bd",
-      "Clap, cp",
-      "Closed hat, hh",
-      "Open hat, oh",
-      "Rimshot, rim",
+      "Kick bd",
+      "Clap cp",
+      "Closed hat hh",
+      "Open hat oh",
+      "Rimshot rim",
     ]);
     expect(within(grid).getByText("[~ oh]*4")).toBeInTheDocument();
     expect(within(grid).getByText("—")).toBeInTheDocument();
@@ -43,7 +43,7 @@ describe("StepSequencer", () => {
     // Assert
     await waitFor(() => expect(stores.fakeEngine.previews).toHaveLength(1));
     expect(stores.fakeEngine.previews[0]).toMatchObject({ s: "cp" });
-    expect(screen.getByRole("button", { name: "Clap, cp" })).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("button", { name: "Clap cp" })).toHaveAttribute("aria-pressed", "false");
   });
 
   it("should keep the step grid to one tab stop per row and move between rows with ↑/↓ in the same column", async () => {
@@ -176,7 +176,7 @@ describe("StepSequencer", () => {
     // Arrange
     const user = userEvent.setup();
     const { stores } = renderWithStores(<StepSequencer />, { initialProject: editorProject() });
-    await user.click(screen.getByRole("button", { name: "Open hat, oh" }));
+    await user.click(screen.getByRole("button", { name: "Open hat oh" }));
 
     // Act
     screen.getByRole("slider", { name: "Open hat step 3 velocity" }).focus();

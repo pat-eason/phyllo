@@ -165,24 +165,28 @@ export const TrackHeader = forwardRef<HTMLDivElement, TrackHeaderProps>(function
             <span className={styles["sound"]}>{sound}</span>
           </>
         ) : (
-          <button
-            ref={nameButton}
-            type="button"
-            className={styles["select"]}
-            aria-pressed={selected}
-            aria-labelledby={nameId}
-            aria-describedby={error ? `${soundId} ${errorId}` : soundId}
-            onClick={onSelect}
-            onDoubleClick={startEditing}
-            onKeyDown={onNameKeyDown}
-          >
-            <span id={nameId} className={styles["name"]}>
-              {name}
-            </span>
+          // The button holds only the name, so its accessible name is exactly its visible text (WCAG 2.5.3); the sound
+          // line sits under it as the description, and the button's ::after stretches its hit area over both lines.
+          <div className={styles["stack"]}>
+            <button
+              ref={nameButton}
+              type="button"
+              className={styles["select"]}
+              aria-pressed={selected}
+              aria-labelledby={nameId}
+              aria-describedby={error ? `${soundId} ${errorId}` : soundId}
+              onClick={onSelect}
+              onDoubleClick={startEditing}
+              onKeyDown={onNameKeyDown}
+            >
+              <span id={nameId} className={styles["name"]}>
+                {name}
+              </span>
+            </button>
             <span id={soundId} className={styles["sound"]}>
               {sound}
             </span>
-          </button>
+          </div>
         )}
         {error ? (
           <span id={errorId} className={styles["visuallyHidden"]}>
