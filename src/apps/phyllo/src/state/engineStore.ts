@@ -33,6 +33,8 @@ export interface EngineStoreState {
   ensureAudio(): Promise<void>;
   /** Audition a sound (library rows, starter cards). Starts audio first. */
   preview(sound: PreviewSound, durationSec?: number): Promise<void>;
+  /** Fade out any sounding preview voices (library/inspector preview toggles). */
+  stopPreview(): void;
   /** ~30 Hz meter snapshots, pushed outside React. Receives a snapshot immediately on subscribe. */
   subscribeMeters(callback: (meters: MeterSnapshot) => void): Unsubscribe;
   /** Stable per-track subscription for `<Meter subscribe>` / `<TrackHeader meterSubscribe>`. */
@@ -140,6 +142,9 @@ export function createEngineStore(deps: EngineStoreDeps): EngineStoreHandle {
       async preview(sound, durationSec) {
         await get().ensureAudio();
         await host.get().preview(sound, durationSec);
+      },
+      stopPreview() {
+        host.peek()?.stopPreview();
       },
       subscribeMeters: (callback) => meterFeed.subscribe(callback),
       meterFor(trackId) {

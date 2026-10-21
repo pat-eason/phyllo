@@ -22,7 +22,7 @@ export interface TransportStoreState {
   /** Synced from the project; edits go through `setLoop`/`toggleLoop` (undoable `loop/set`). */
   loop: LoopRegion;
   metronome: boolean;
-  /** Record arm flag only; MIDI recording isn't implemented yet (SPEC §6.1 "proposed"). */
+  /** Record arm flag; the recorder store (state/recorder.ts) captures MIDI while armed and playing (SPEC §6.1). */
   recordArmed: boolean;
 
   /** Starts audio (user gesture) and plays. Errors land in `useEngine().audioError`. */

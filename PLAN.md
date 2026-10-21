@@ -98,7 +98,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 ### M6b Native wiring
 | id | owner | owns | deps | acceptance | status |
 |---|---|---|---|---|---|
-| T6.5 | wiring agent | state/sampleFolders, midiInput, recorder; engine stopPreview | T3.1, T6.1–T6.2 | B1, B2, B4 + MIDI record | active |
+| T6.5 | wiring agent | state/sampleFolders, midiInput, recorder; engine stopPreview | T3.1, T6.1–T6.2 | B1, B2, B4 + MIDI record | done |
 | T6.V | verifier | read-only | T6.5, T3.7 | native features in `tauri dev` | todo |
 
 ### M7 Polish
@@ -122,3 +122,4 @@ T7.1 shortcuts (SPEC §7) · T7.2 a11y pass (SPEC §8) · T7.3 screenshot parity
 - B15 Timeline lane virtualization past ~40 tracks; ↑/↓ track navigation — from T3.3.
 - B16 Multi-cycle step patterns (2/4 cycles) in `miniToRows`/`rowsToMini` + StepSequencer length control; Euclid rotation control — from T4.1.
 - B17 StepRow roving tabindex + `onPreview` on the row label; Slider fluid width — from T4.1.
+- B18 UI for T6.5: show recorder `lastTake` + `midiInput.hint` (status bar/toast), list `useSampleNames()` in Inspector sound picker (sample tracks) and Library Samples tab; LibraryPanel/Inspector preview toggles call `stopPreview()` — from T6.5.
