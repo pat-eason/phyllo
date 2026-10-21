@@ -303,6 +303,18 @@ pub fn export_cancel(sessions: State<'_, ExportSessions>, session_id: String) {
     sessions.cancel(&session_id);
 }
 
+/// A file name for a default-named export that doesn't replace an earlier one: `Groove.wav`, else `Groove 2.wav`,
+/// `Groove 3.wav`… A bare name resolves in `Exports/`; an absolute path keeps its folder. Nothing is written.
+#[tauri::command]
+pub async fn export_unique_path(file_name: String) -> Result<String> {
+    blocking(move || {
+        Ok(export::unique_path(&paths::root()?, &file_name)?
+            .display()
+            .to_string())
+    })
+    .await
+}
+
 /// Write a Standard MIDI File (type 1). A bare file name goes to `Exports/`; `.mid` is added if missing.
 #[tauri::command]
 pub async fn midi_file_write(path: String, spec: MidiFileSpec) -> Result<MidiFileResult> {
@@ -393,7 +405,18 @@ pub fn notify_export_finished(app: AppHandle, notification: ExportFinished) -> R
 /// Queue or deliver files the OS handed us (Finder open, command line). Shows the main window when delivering.
 pub fn deliver_open_files(app: &AppHandle, paths: Vec<PathBuf>) {
     let cwd = std::env::current_dir().unwrap_or_default();
-    let paths = open_files::filter_paths(paths, &cwd);
+    deliver_filtered(app, open_files::filter_paths(paths, &cwd));
+}
+
+/// A second launch was folded into this one by tauri-plugin-single-instance (D96): bring the main window forward
+/// and open the files it was given (relative to the second launch's working directory) like any other open.
+pub fn on_second_instance(app: &AppHandle, argv: Vec<String>, cwd: &str) {
+    windows::show_main(app);
+    let fallback = std::env::current_dir().unwrap_or_default();
+    deliver_filtered(app, open_files::second_instance_paths(argv, cwd, &fallback));
+}
+
+fn deliver_filtered(app: &AppHandle, paths: Vec<String>) {
     if let Some(paths) = app.state::<OpenFileQueue>().push(paths) {
         windows::show_main(app);
         let _ = app.emit_to(

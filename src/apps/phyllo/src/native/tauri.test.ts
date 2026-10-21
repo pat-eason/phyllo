@@ -135,6 +135,7 @@ describe('tauri native: command names and arguments', () => {
       'sound_cache_prefetch',
       { urls: ['https://strudel.b-cdn.net/a.wav', 'https://strudel.b-cdn.net/b.wav'] },
     ],
+    ['exportUniquePath', () => api.exportUniquePath('Groove.wav'), 'export_unique_path', { fileName: 'Groove.wav' }],
     [
       'midiFileWrite',
       () =>

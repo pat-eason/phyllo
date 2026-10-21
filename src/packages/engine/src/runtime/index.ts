@@ -3,7 +3,7 @@
 // Strudel runtime (T1.5): audio init, evaluation + hot-swap, transport clock, previews, master chain,
 // meters, offline render / capture, MIDI + OSC outputs.
 
-export { createEngine, DEFAULT_LOOKAHEAD_MS, EngineEvalError } from "./engine";
+export { createEngine, DEFAULT_LOOKAHEAD_MS, EngineEvalError, MAX_SAMPLE_RATE, MIN_SAMPLE_RATE, requestedSampleRate } from "./engine";
 export type {
   EngineLogger,
   EngineOptions,

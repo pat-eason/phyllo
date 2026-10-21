@@ -406,6 +406,8 @@ export function createBrowserApi(options: BrowserApiOptions = {}): NativeApi {
     exportCancel: async (sessionId) => {
       exportSessions.delete(sessionId);
     },
+    // Downloads get the browser's own `name (1).ext` handling.
+    exportUniquePath: async (fileName) => fileName,
     midiFileWrite: async (path, spec) => {
       const name = downloadName(path, 'mid');
       const bytes = buildMidiFile(spec);

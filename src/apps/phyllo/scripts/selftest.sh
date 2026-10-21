@@ -8,7 +8,8 @@
 #
 # Build order: `tauri build --bundles app` (Phyllo.app), then `--no-bundle` (bare release binary) if bundling
 # fails (signing / notarization config), then a debug `--no-bundle` build as the last resort. The window appears
-# while the test runs; audio plays for ~3 s. The user's ~/Music/Phyllo is never touched.
+# while the test runs; audio plays for ~3 s. The user's ~/Music/Phyllo is never touched. Settings (in the app-data
+# folder) are restored by the app; app-data folders the run created from scratch are removed afterwards.
 set -eu
 
 cd "$(dirname "$0")/.."
@@ -22,6 +23,31 @@ for arg in "$@"; do
     *) echo "usage: $0 [--skip-build]" >&2; exit 2 ;;
   esac
 done
+
+# Per-user folders the app (tauri-plugin-store, WKWebView) creates outside PHYLLO_HOME. Each one that doesn't exist
+# before the run is deleted after it, so a machine that never ran Phyllo looks the same afterwards.
+APP_SUPPORT_DIR="$HOME/Library/Application Support/com.phyllo.app"
+WEBKIT_DIR="$HOME/Library/WebKit/com.phyllo.app"
+CACHES_DIR="$HOME/Library/Caches/com.phyllo.app"
+CREATED_APP_SUPPORT=0
+CREATED_WEBKIT=0
+CREATED_CACHES=0
+[ -e "$APP_SUPPORT_DIR" ] || CREATED_APP_SUPPORT=1
+[ -e "$WEBKIT_DIR" ] || CREATED_WEBKIT=1
+[ -e "$CACHES_DIR" ] || CREATED_CACHES=1
+
+remove_if_created() {
+  if [ "$1" -eq 1 ] && [ -e "$2" ]; then
+    rm -rf "$2"
+    echo "==> removed $2 (created by this run)"
+  fi
+}
+
+remove_created_dirs() {
+  remove_if_created "$CREATED_APP_SUPPORT" "$APP_SUPPORT_DIR"
+  remove_if_created "$CREATED_WEBKIT" "$WEBKIT_DIR"
+  remove_if_created "$CREATED_CACHES" "$CACHES_DIR"
+}
 
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/phyllo-selftest.XXXXXX")
 REPORT=${PHYLLO_SELFTEST_REPORT:-$WORK/report.json}
@@ -83,6 +109,7 @@ while kill -0 "$PID" 2>/dev/null; do
   elapsed=$((elapsed + 1))
 done
 wait "$PID" 2>/dev/null || true
+remove_created_dirs
 
 if [ ! -s "$REPORT" ]; then
   echo "==> FAIL: no report written. App log ($LOG):" >&2
@@ -98,7 +125,7 @@ if (!report.complete) console.log("INCOMPLETE: the app stopped before the last s
 const f = report.findings || {};
 const pick = (k) => (f[k] === undefined ? "n/a" : JSON.stringify(f[k]));
 console.log("--- WKWebView findings");
-for (const k of ["audioAutoplay", "audioContext", "captureTap", "dataWorkletOffline", "unconnectedAnalyser", "setSinkId", "offlineRender", "binaryIpcExport", "assetProtocol", "mediaRecorder", "notifications"]) {
+for (const k of ["audioAutoplay", "audioContext", "captureTap", "dataWorkletOffline", "unconnectedAnalyser", "setSinkId", "offlineRender", "binaryIpcExport", "assetProtocol", "mediaRecorder", "notifications", "csp"]) {
   console.log(`${k}: ${pick(k)}`);
 }
 const errors = (report.console || []).filter((c) => c.level !== "warn");

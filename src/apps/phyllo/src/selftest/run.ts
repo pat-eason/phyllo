@@ -29,6 +29,8 @@ import {
   spyAudioContexts,
   waitRunning,
 } from "./probes";
+import { activeCsp, parseCsp, probeCspEnforced } from "./csp";
+import type { CspRecorder } from "./csp";
 import { advancedCycles, createRecorder, errorText, expectedWavBytes, near, withTimeout } from "./report";
 import type { SelftestReport } from "./report";
 
@@ -99,7 +101,15 @@ async function waitFor(condition: () => boolean, ms: number, pollMs = 50): Promi
   return condition();
 }
 
-export async function runSelftest(stores: AppStores, config: SelftestConfig): Promise<SelftestReport> {
+/** Sources the app needs from the policy (tauri.conf.json `app.security.csp`, V18). */
+const REQUIRED_CSP: Record<string, string[]> = {
+  "default-src": ["'self'"],
+  // Strudel's `Function()` / soundfont `eval`; AudioWorklet modules are `data:` URLs and WebKit checks them against script-src
+  "script-src": ["'self'", "'unsafe-eval'", "data:"],
+  "connect-src": ["ipc:", "asset:", "https://strudel.b-cdn.net"],
+};
+
+export async function runSelftest(stores: AppStores, config: SelftestConfig, csp: CspRecorder | null = null): Promise<SelftestReport> {
   const { native } = stores;
   const writeReport = (report: SelftestReport) => invoke<void>("selftest_write_report", { json: JSON.stringify(report) });
   const rec = createRecorder({ onUpdate: writeReport });
@@ -520,7 +530,7 @@ export async function runSelftest(stores: AppStores, config: SelftestConfig): Pr
   });
 
   // ── extra WKWebView probes ──
-  await rec.step("k. web view probes", async ({ detail }) => {
+  await rec.step("k. web view probes", async ({ detail, check }) => {
     detail["dataWorkletOffline"] = await probeDataWorklet();
     const context = ctx();
     detail["unconnectedAnalyser"] = context ? await probeUnconnectedAnalyser(context) : { ok: false, reason: "no context" };
@@ -531,10 +541,38 @@ export async function runSelftest(stores: AppStores, config: SelftestConfig): Pr
       (err: unknown) => errorText(err),
     );
     detail["setOutputDeviceDefault"] = await e.setOutputDevice(null).catch((err: unknown) => errorText(err));
+
+    // Content-Security-Policy (V18): the policy in force, proof it is enforced, and every violation the run caused.
+    const policy = await activeCsp();
+    const enforced = csp ? await probeCspEnforced(csp) : { inlineScriptBlocked: false, error: "no CSP recorder" };
+    const violations = csp?.violations ?? [];
+    const unexpected = violations.filter((v) => !v.expected);
+    const directives = parseCsp(policy.header ?? policy.meta[0] ?? "");
+    const missing = Object.entries(REQUIRED_CSP).flatMap(([name, sources]) =>
+      sources.filter((s) => !(directives[name] ?? []).includes(s)).map((s) => `${name} ${s}`),
+    );
+    detail["csp"] = {
+      header: policy.header,
+      meta: policy.meta,
+      ...(policy.headerError ? { headerError: policy.headerError } : {}),
+      enforced,
+      violations: unexpected,
+      expectedViolations: violations.length - unexpected.length,
+    };
+    check(policy.header !== null || policy.meta.length > 0, `no CSP header or meta${policy.headerError ? ` (${policy.headerError})` : ""}`);
+    check(missing.length === 0, `CSP lacks ${missing.join(", ")}`);
+    check(enforced["inlineScriptBlocked"] === true, `CSP not enforced: ${JSON.stringify(enforced)}`);
+    check(enforced["evalAllowed"] === true, `eval/Function blocked: ${String(enforced["evalAllowed"])}`);
+    check(unexpected.length === 0, `${unexpected.length} CSP violation(s): ${JSON.stringify(unexpected.slice(0, 3))}`);
     Object.assign(f, {
       dataWorkletOffline: detail["dataWorkletOffline"],
       unconnectedAnalyser: detail["unconnectedAnalyser"],
       mediaRecorder: detail["mediaRecorder"],
+      csp: {
+        header: policy.header,
+        enforced: enforced["inlineScriptBlocked"] === true,
+        violations: unexpected.length,
+      },
       setSinkId: {
         onPrototype: (f["environment"] as Record<string, unknown> | undefined)?.["setSinkIdOnPrototype"] ?? null,
         setOutputDeviceDefault: detail["setOutputDeviceDefault"],

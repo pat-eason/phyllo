@@ -41,6 +41,25 @@ function setup(overrides: Partial<ExportDeps> = {}) {
   return { native, engine, deps, renders, downloads, progress };
 }
 
+/**
+ * Native's free-name rule (src-tauri export::unique_path) over a fixed set of existing files: bare names resolve in
+ * `/Exports`, a taken name gets ` 2`, ` 3`… before the extension.
+ */
+function existingFiles(native: ExportDeps["native"], files: string[]) {
+  const taken = new Set(files);
+  const asked: string[] = [];
+  native.exportUniquePath = async (fileName) => {
+    asked.push(fileName);
+    const first = fileName.includes("/") ? fileName : `/Exports/${fileName}`;
+    const dot = first.lastIndexOf(".");
+    const [stem, ext] = dot > first.lastIndexOf("/") ? [first.slice(0, dot), first.slice(dot)] : [first, ""];
+    let candidate = first;
+    for (let n = 2; taken.has(candidate); n++) candidate = `${stem} ${n}${ext}`;
+    return candidate;
+  };
+  return asked;
+}
+
 const mixdown = (patch: Partial<MixdownOptions> = {}): MixdownOptions => ({
   kind: "mixdown",
   range: { kind: "song" },
@@ -300,5 +319,76 @@ describe("exportPipeline", () => {
     await expect(native.strudelRead("/Exports/song.strudel")).resolves.toContain("arrange(");
     expect(copied).toEqual([link.link]);
     expect(link.link).toMatch(/^https:\/\/strudel\.cc\/#/);
+  });
+
+  it("should not replace an earlier export when the mixdown path is the dialog's default (B12)", async () => {
+    // Arrange
+    const { deps, native, downloads } = setup();
+    existingFiles(native, ["/Exports/Untitled Groove.wav", "/Exports/Untitled Groove 2.wav"]);
+
+    // Act
+    const result = await runExport(project(), mixdown({ path: "/Exports/Untitled Groove.wav", autoName: true, saveCode: true }), deps);
+
+    // Assert
+    expect(result.files).toEqual(["Untitled Groove 3.wav", "Untitled Groove 3.strudel"]);
+    expect(downloads).toEqual(["Untitled Groove 3.wav", "Untitled Groove 3.strudel"]);
+  });
+
+  it("should write exactly the path the user chose, even over an existing file", async () => {
+    // Arrange
+    const { deps, native, downloads } = setup();
+    const asked = existingFiles(native, ["/Music/take.wav"]);
+
+    // Act
+    await runExport(project(), mixdown({ path: "/Music/take.wav" }), deps);
+
+    // Assert
+    expect(asked).toEqual([]);
+    expect(downloads).toEqual(["take.wav"]);
+  });
+
+  it("should treat a bare file name as a default name and add the format's extension first", async () => {
+    // Arrange
+    const { deps, native, downloads } = setup();
+    const asked = existingFiles(native, ["/Exports/groove.wav"]);
+
+    // Act
+    await runExport(project(), mixdown({ path: "groove" }), deps);
+
+    // Assert
+    expect(asked).toEqual(["groove.wav"]);
+    expect(downloads).toEqual(["groove 2.wav"]);
+  });
+
+  it("should give every stem and its code file a free name", async () => {
+    // Arrange
+    const { deps, native, downloads } = setup();
+    existingFiles(native, ["/Exports/Untitled Groove - Kick.wav", "/Exports/Untitled Groove.strudel"]);
+
+    // Act
+    const result = await runExport(
+      project(),
+      { ...mixdown({ saveCode: true }), kind: "stems", folder: "/Exports", trackIds: ["kick", "bass"] },
+      deps,
+    );
+
+    // Assert
+    expect(downloads).toEqual(["Untitled Groove - Kick 2.wav", "Untitled Groove - Bass.wav"]);
+    expect(result.files.at(-1)).toBe("/Exports/Untitled Groove 2.strudel");
+  });
+
+  it("should give default-named MIDI and code exports a free name", async () => {
+    // Arrange
+    const { deps, native } = setup();
+    existingFiles(native, ["/Exports/Untitled Groove.mid", "/Exports/Untitled Groove.strudel"]);
+
+    // Act
+    const midi = await runExport(project(), { kind: "midi", range: { kind: "loop" }, layout: "tracks", path: "/Exports/Untitled Groove.mid", autoName: true }, deps);
+    const code = await runExport(project(), { kind: "code", action: "file", scope: "song" }, deps);
+
+    // Assert
+    expect(midi.path).toBe("Untitled Groove 2.mid"); // the browser's download name
+    expect(code.path).toBe("/Exports/Untitled Groove 2.strudel");
+    await expect(native.strudelRead("/Exports/Untitled Groove 2.strudel")).resolves.toContain("arrange(");
   });
 });

@@ -92,6 +92,7 @@ export interface AppStores {
   dispose(): void;
 }
 
+const ENGINE_LOG_TAG = /^\[phyllo\] /;
 const defaultOnError = (message: string, error: unknown) => console.warn(`[phyllo] ${message}`, error);
 
 export function createAppStores(deps: AppDeps): AppStores {
@@ -131,10 +132,14 @@ export function createAppStores(deps: AppDeps): AppStores {
     engineFactory({
       bridge: bridge.bridge,
       lookaheadMs: settingsNow().audio.lookaheadMs,
+      // Read once, when the engine is created: the live AudioContext keeps its rate, so a change applies at the
+      // next launch (B8; compare with `engine.sampleRate`).
+      sampleRate: settingsNow().audio.sampleRate,
       // Built-in sounds go through the Rust cache so they keep working offline (DECISIONS V15, D108).
       resolveUrl: createCachedUrlResolver(native),
       logger: (message, level) => {
-        if (level === "warn" || level === "error") onError(message, null);
+        // engine lines already carry the `[phyllo]` tag that `onError` adds (B19)
+        if (level === "warn" || level === "error") onError(message.replace(ENGINE_LOG_TAG, ""), null);
       },
     }),
   );

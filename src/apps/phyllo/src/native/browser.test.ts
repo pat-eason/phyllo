@@ -106,6 +106,12 @@ describe('browser native: project IO', () => {
     expect(await api.projectNewPath('   ')).toBe('/Phyllo/Untitled Groove.phyllo');
   });
 
+  it('exportUniquePath returns the name unchanged (downloads are named by the browser)', async () => {
+    const api = fresh();
+    expect(await api.exportUniquePath('Groove.wav')).toBe('Groove.wav');
+    expect(await api.exportUniquePath('/Phyllo/Exports/Groove.wav')).toBe('/Phyllo/Exports/Groove.wav');
+  });
+
   it('persists to localStorage and reloads', async () => {
     const storage = memoryStorage();
     const api = fresh(storage);
