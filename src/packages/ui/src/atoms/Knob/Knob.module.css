@@ -1,0 +1,84 @@
+.knob {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: ns-resize;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.svg {
+  display: block;
+  overflow: visible;
+}
+
+.ticks {
+  fill: none;
+  stroke: var(--ph-knob-tick);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+}
+
+.track,
+.ring {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.track {
+  stroke: var(--ph-sunken);
+}
+
+/* The flat 34 px send knob sits straight on a panel, where --ph-sunken would read as a hole. */
+.knob[data-size="34"] .track {
+  stroke: var(--ph-line);
+}
+
+.ring {
+  stroke: var(--knob-color, var(--ph-accent));
+}
+
+.knob[data-modulated] .ring {
+  stroke: var(--ph-modulated);
+}
+
+.drop {
+  fill: rgba(0, 0, 0, 0.4);
+}
+
+.skirtA {
+  stop-color: var(--ph-knob-skirt-a);
+}
+
+.skirtB {
+  stop-color: var(--ph-knob-skirt-b);
+}
+
+.capA {
+  stop-color: var(--ph-knob-cap-a);
+}
+
+.capB {
+  stop-color: var(--ph-knob-cap-b);
+}
+
+.cap {
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 1;
+}
+
+.pointer {
+  stroke: var(--ph-knob-pointer);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+
+.knob[data-disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
