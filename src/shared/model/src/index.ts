@@ -1,2 +1,2 @@
-// Project model, types and pure helpers land here (SPEC §3).
-export {};
+// Project model, types and pure helpers (SPEC §3).
+export * from "./types";
