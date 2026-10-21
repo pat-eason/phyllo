@@ -4,7 +4,7 @@ A desktop DAW-style interface built around [Strudel](https://strudel.cc), the Ja
 
 Phyllo is a [Tauri](https://tauri.app) v2 app with a React frontend. Audio runs in the webview via Strudel and Web Audio.
 
-> Early scaffold: the app currently has a single Play/Stop button that plays a demo pattern.
+> Early scaffold: the app currently renders a themed shell (tokens, fonts, ThemeProvider).
 
 ## Requirements
 
@@ -29,12 +29,15 @@ pnpm monorepo; all source lives under `src/`.
 | --- | --- |
 | `src/apps/phyllo` | Tauri v2 desktop app (React + Vite, Rust in `src-tauri/`) |
 | `src/packages/engine` | `@phyllo/engine`: thin wrapper over `@strudel/web` (`init`, `play`, `stop`) |
-| `src/shared` | Code shared between apps and packages (empty for now) |
+| `src/packages/ui` | `@phyllo/ui`: design tokens, ThemeProvider, fonts, atoms/molecules, Storybook |
+| `src/shared/model` | `@phyllo/model`: project model (skeleton) |
 
 ## Scripts
 
 ```bash
 pnpm build   # build every package
-pnpm lint    # tsc --noEmit across packages
+pnpm check   # typecheck + lint + test across packages
+pnpm e2e     # Playwright smoke test (run `pnpm --filter phyllo exec playwright install chromium` once)
+pnpm stories # Storybook for @phyllo/ui
 pnpm dev     # Vite frontend only, in a browser (use the tauri command above for the desktop app)
 ```

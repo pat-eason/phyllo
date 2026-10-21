@@ -1,9 +1,18 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import App from "./App";
+import "@phyllo/ui/tokens.css";
+import "@phyllo/ui/base.css";
+import "@phyllo/ui/fonts";
+import { ThemeProvider } from "@phyllo/ui";
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { App } from "./App";
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
+const root = document.getElementById("root");
+if (!root) throw new Error("#root not found");
+
+createRoot(root).render(
+  <StrictMode>
+    <ThemeProvider mode="system" accent="green">
+      <App />
+    </ThemeProvider>
+  </StrictMode>,
 );

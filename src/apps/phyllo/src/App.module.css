@@ -1,0 +1,15 @@
+.shell {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ph-bg);
+  color: var(--ph-text);
+}
+
+.wordmark {
+  margin: 0;
+  font: var(--ph-text-wordmark);
+  font-size: 48px;
+  color: var(--ph-text);
+}

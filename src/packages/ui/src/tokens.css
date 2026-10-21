@@ -1,0 +1,185 @@
+/* Phyllo design tokens.
+   Theme:  <html data-theme="dark|light">   (default dark)
+   Accent: <html data-accent="green|red|blue|purple|orange|teal">   (default green)
+   Every component reads these variables; no component hard-codes a color. */
+
+:root {
+  /* Type */
+  --ph-font-ui: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --ph-font-display: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --ph-font-mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+
+  --ph-text-display: 600 60px/1.02 var(--ph-font-display);   /* letter-spacing: -0.025em */
+  --ph-text-title: 600 32px/1.05 var(--ph-font-display);     /* letter-spacing: -0.015em */
+  --ph-text-wordmark: italic 600 26px/1 var(--ph-font-display);
+  --ph-text-heading: 700 18px/1.3 var(--ph-font-ui);
+  --ph-text-subheading: 600 15px/1.35 var(--ph-font-ui);
+  --ph-text-body: 400 13px/1.35 var(--ph-font-ui);
+  --ph-text-body-lg: 400 16px/1.45 var(--ph-font-ui);
+  --ph-text-small: 400 12px/1.35 var(--ph-font-ui);
+  --ph-text-label: 600 11px/1.2 var(--ph-font-ui);           /* uppercase, letter-spacing: 0.08em */
+  --ph-text-legend: 700 10.5px/1.2 var(--ph-font-ui);        /* uppercase, letter-spacing: 0.1em */
+  --ph-text-code: 400 12px/1.75 var(--ph-font-mono);
+  --ph-text-readout: 500 18px/1.1 var(--ph-font-mono);
+
+  /* Space (px) */
+  --ph-s-1: 4px;  --ph-s-2: 6px;  --ph-s-3: 8px;  --ph-s-4: 10px; --ph-s-5: 12px;
+  --ph-s-6: 16px; --ph-s-7: 20px; --ph-s-8: 24px; --ph-s-9: 32px; --ph-s-10: 40px;
+
+  /* Radius */
+  --ph-r-xs: 2px;   /* note dashes, tiny bars */
+  --ph-r-sm: 6px;   /* step cells, clips, M/S, chips */
+  --ph-r-md: 8px;   /* small buttons, rows */
+  --ph-r-lg: 10px;  /* buttons, inputs */
+  --ph-r-xl: 14px;  /* cards, panels, strips */
+  --ph-r-2xl: 18px; /* dialogs, kit panels */
+  --ph-r-full: 9999px;
+
+  /* Sizes */
+  --ph-titlebar-inset: 84px;   /* clears macOS traffic lights (Tauri overlay title bar) */
+  --ph-track-header-w: 208px;
+  --ph-lane-h: 56px;
+  --ph-library-w: 248px;
+  --ph-inspector-w: 320px;
+  --ph-strip-w: 124px;
+
+  /* Track palette (both themes; always dark ink on top) */
+  --ph-track-1: #7FD98A; /* green  */
+  --ph-track-2: #5ECFC8; /* teal   */
+  --ph-track-3: #8AB4FF; /* blue   */
+  --ph-track-4: #F5C25B; /* amber  */
+  --ph-track-5: #B9A2FF; /* violet */
+  --ph-track-6: #F59AC7; /* pink   */
+  --ph-track-7: #FF9C7A; /* coral  */
+  --ph-clip-ink: #10140F;
+  --ph-clip-ink-soft: rgba(16, 20, 15, 0.55);
+  --ph-modulated: #F5C25B; /* knob ring when a modifier drives the parameter */
+  --ph-solo: #F5C25B;
+
+  --ph-wood: linear-gradient(90deg, rgba(0,0,0,0.38), rgba(255,255,255,0.07) 45%, rgba(0,0,0,0.42)),
+             repeating-linear-gradient(90deg, #5B3A22 0px, #6E472A 1px, #57361F 2px, #7A4F2F 3.5px, #4C2F1B 4.5px, #5B3A22 5.5px);
+
+  /* Motion */
+  --ph-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ph-dur-fast: 90ms;
+  --ph-dur: 160ms;
+}
+
+/* ---------- Dark (default) ---------- */
+:root, [data-theme='dark'] {
+  color-scheme: dark;
+  --ph-bg: #0F1210;
+  --ph-chrome: #141916;
+  --ph-panel: #191E1B;
+  --ph-raised: #252B27;
+  --ph-sunken: #0B0E0C;
+  --ph-line: #2C332E;
+  --ph-line-soft: #232925;
+  --ph-text: #E9EEE8;
+  --ph-muted: #A3ADA5;
+  --ph-rec: #FF6B57;
+  --ph-rec-ink: #1A0A07;
+  --ph-star: #F5C25B;
+  --ph-switch-off: #3A423C;
+  --ph-step-off: #1E2420;
+  --ph-step-beat: #262D28;
+  --ph-grid: rgba(233, 238, 232, 0.045);
+  --ph-grid-strong: rgba(233, 238, 232, 0.12);
+  --ph-scrim: rgba(8, 10, 9, 0.62);
+
+  --ph-code-str: #F2C46B;
+  --ph-code-num: #8EC5FF;
+  --ph-code-fn: #C9A7FF;
+  --ph-code-comment: #808B83;
+
+  --ph-panel-grad: linear-gradient(180deg, #1F2421 0%, #161A18 100%);
+  --ph-btn-grad: linear-gradient(180deg, #2D3430 0%, #1E2421 100%);
+  --ph-shadow-btn: inset 0 1px 0 rgba(255,255,255,0.08), 0 1px 2px rgba(0,0,0,0.55);
+  --ph-shadow-key: inset 0 1px 0 rgba(255,255,255,0.45), inset 0 -2px 0 rgba(0,0,0,0.22), 0 2px 4px rgba(0,0,0,0.5);
+  --ph-shadow-inset: inset 0 2px 6px rgba(0,0,0,0.55);
+  --ph-shadow-bevel: inset 0 1px 0 rgba(255,255,255,0.05);
+  --ph-shadow-card: 0 18px 40px rgba(0,0,0,0.45);
+  --ph-shadow-dialog: 0 24px 60px rgba(0,0,0,0.55);
+  --ph-plate: #121614;
+  --ph-shadow-plate: inset 0 2px 5px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.04);
+  --ph-legend: #E7DDC4;
+  --ph-knob-skirt-a: #4A504C;
+  --ph-knob-skirt-b: #121514;
+  --ph-knob-cap-a: #3C423E;
+  --ph-knob-cap-b: #171A18;
+  --ph-knob-pointer: #F4EFE1;
+  --ph-knob-tick: rgba(231, 221, 196, 0.5);
+}
+
+/* ---------- Light ---------- */
+[data-theme='light'] {
+  color-scheme: light;
+  --ph-bg: #EEF0EA;
+  --ph-chrome: #F8F9F5;
+  --ph-panel: #FFFFFF;
+  --ph-raised: #E9ECE5;
+  --ph-sunken: #E3E6DE;
+  --ph-line: #D5D9CF;
+  --ph-line-soft: #E6E9E2;
+  --ph-text: #141815;
+  --ph-muted: #535D56;
+  --ph-rec: #C63A27;
+  --ph-rec-ink: #FFFFFF;
+  --ph-star: #A86A00;
+  --ph-switch-off: #B9BFB5;
+  --ph-step-off: #FFFFFF;
+  --ph-step-beat: #E9ECE5;
+  --ph-grid: rgba(20, 24, 21, 0.045);
+  --ph-grid-strong: rgba(20, 24, 21, 0.14);
+  --ph-scrim: rgba(238, 240, 234, 0.7);
+
+  --ph-code-str: #8A5000;
+  --ph-code-num: #1F5FBF;
+  --ph-code-fn: #7A3FC4;
+  --ph-code-comment: #5F6862;
+
+  --ph-panel-grad: linear-gradient(180deg, #FCFCFA 0%, #ECEEE8 100%);
+  --ph-btn-grad: linear-gradient(180deg, #FFFFFF 0%, #E5E8E0 100%);
+  --ph-shadow-btn: inset 0 1px 0 #FFFFFF, 0 1px 2px rgba(30,40,30,0.18);
+  --ph-shadow-key: inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -2px 0 rgba(0,0,0,0.18), 0 2px 4px rgba(30,40,30,0.25);
+  --ph-shadow-inset: inset 0 2px 5px rgba(30,40,30,0.14);
+  --ph-shadow-bevel: inset 0 1px 0 #FFFFFF;
+  --ph-shadow-card: 0 14px 32px rgba(30,45,30,0.12);
+  --ph-shadow-dialog: 0 24px 60px rgba(30,45,30,0.18);
+  --ph-plate: #E2E5DC;
+  --ph-shadow-plate: inset 0 2px 4px rgba(30,40,30,0.16), 0 1px 0 #FFFFFF;
+  --ph-legend: #3B3529;
+  --ph-knob-skirt-a: #555B57;
+  --ph-knob-skirt-b: #1A1D1B;
+  --ph-knob-cap-a: #464B48;
+  --ph-knob-cap-b: #1C1F1D;
+  --ph-knob-pointer: #FFFFFF;
+  --ph-knob-tick: rgba(59, 53, 41, 0.5);
+}
+
+/* ---------- Accents: dark shade + ink, light shade + ink ---------- */
+:root, [data-accent='green']  { --ph-accent-d: #8FE388; --ph-accent-ink-d: #0E1A0D; --ph-accent-l: #1F7A2E; }
+[data-accent='red']           { --ph-accent-d: #FF7A70; --ph-accent-ink-d: #1F0806; --ph-accent-l: #C0302B; }
+[data-accent='blue']          { --ph-accent-d: #7EB2FF; --ph-accent-ink-d: #08142A; --ph-accent-l: #1F5FCC; }
+[data-accent='purple']        { --ph-accent-d: #B79CFF; --ph-accent-ink-d: #160C2E; --ph-accent-l: #6D3FD0; }
+[data-accent='orange']        { --ph-accent-d: #FFAA5C; --ph-accent-ink-d: #241102; --ph-accent-l: #B04E00; }
+[data-accent='teal']          { --ph-accent-d: #5FD6CC; --ph-accent-ink-d: #04201D; --ph-accent-l: #0B7A72; }
+
+:root, [data-theme='dark'] {
+  --ph-accent: var(--ph-accent-d);
+  --ph-accent-ink: var(--ph-accent-ink-d);
+  --ph-accent-soft: color-mix(in srgb, var(--ph-accent) 14%, transparent);
+  --ph-sel: color-mix(in srgb, var(--ph-accent) 6%, transparent);
+  --ph-hl: color-mix(in srgb, var(--ph-accent) 9%, transparent);
+}
+[data-theme='light'] {
+  --ph-accent: var(--ph-accent-l);
+  --ph-accent-ink: #FFFFFF;
+  --ph-accent-soft: color-mix(in srgb, var(--ph-accent) 10%, transparent);
+  --ph-sel: color-mix(in srgb, var(--ph-accent) 5%, transparent);
+  --ph-hl: color-mix(in srgb, var(--ph-accent) 8%, transparent);
+}
+:root { --ph-accent-text: var(--ph-accent); --ph-code-kw: var(--ph-accent); }
+
+/* Focus ring, used by every interactive atom */
+:where([data-theme]) :focus-visible { outline: 2px solid var(--ph-accent); outline-offset: 2px; }
