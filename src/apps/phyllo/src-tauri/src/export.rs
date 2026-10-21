@@ -110,6 +110,34 @@ pub fn resolve_output(root: &Path, requested: &str, default_ext: &str) -> Result
     Ok(out)
 }
 
+/// Where a default-named export can land without replacing an earlier one (B12). Resolved like
+/// [`resolve_output`] (a bare file name goes to `<root>/Exports/`, created on demand; anything else must be an
+/// absolute path in an existing folder) but without adding an extension; when that file exists, ` 2`, ` 3`… is
+/// appended before the extension, like `project::new_path` (`Groove.wav` → `Groove 2.wav`).
+pub fn unique_path(root: &Path, requested: &str) -> Result<PathBuf> {
+    let first = resolve_output(root, requested, "")?;
+    if !first.exists() {
+        return Ok(first);
+    }
+    let parent = first.parent().map(Path::to_path_buf).unwrap_or_default();
+    let stem = first
+        .file_stem()
+        .map(|s| s.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    let ext = first
+        .extension()
+        .map(|e| format!(".{}", e.to_string_lossy()))
+        .unwrap_or_default();
+    let mut n = 2u32;
+    loop {
+        let candidate = parent.join(format!("{stem} {n}{ext}"));
+        if !candidate.exists() {
+            return Ok(candidate);
+        }
+        n += 1;
+    }
+}
+
 /// Linear gain that puts `peak` at `target_dbfs`; 1.0 for silence.
 pub fn normalize_gain(peak: f32, target_dbfs: f64) -> f32 {
     if peak < SILENCE_PEAK {
@@ -347,6 +375,68 @@ mod tests {
 
     fn scratch_is_empty(r: &Rig) -> bool {
         !r.scratch.exists() || fs::read_dir(&r.scratch).unwrap().next().is_none()
+    }
+
+    #[test]
+    fn unique_path_keeps_a_free_bare_name_in_exports() {
+        let tmp = tempfile::tempdir().unwrap();
+        let p = unique_path(tmp.path(), "Groove.wav").unwrap();
+        assert_eq!(p, tmp.path().join("Exports").join("Groove.wav"));
+        assert!(
+            tmp.path().join("Exports").is_dir(),
+            "Exports/ created on demand"
+        );
+        assert!(!p.exists(), "only a name is picked, nothing is written");
+    }
+
+    #[test]
+    fn unique_path_suffixes_before_the_extension_on_collision() {
+        let tmp = tempfile::tempdir().unwrap();
+        let exports = tmp.path().join("Exports");
+        fs::create_dir_all(&exports).unwrap();
+        fs::write(exports.join("Groove.wav"), b"x").unwrap();
+        assert_eq!(
+            unique_path(tmp.path(), "Groove.wav").unwrap(),
+            exports.join("Groove 2.wav")
+        );
+        fs::write(exports.join("Groove 2.wav"), b"x").unwrap();
+        assert_eq!(
+            unique_path(tmp.path(), "Groove.wav").unwrap(),
+            exports.join("Groove 3.wav")
+        );
+        // other extensions don't collide
+        assert_eq!(
+            unique_path(tmp.path(), "Groove.mid").unwrap(),
+            exports.join("Groove.mid")
+        );
+    }
+
+    #[test]
+    fn unique_path_handles_absolute_paths_and_names_without_extension() {
+        let tmp = tempfile::tempdir().unwrap();
+        let dir = tmp.path().join("stems");
+        fs::create_dir_all(&dir).unwrap();
+        fs::write(dir.join("Song - Drums.flac"), b"x").unwrap();
+        fs::write(dir.join("Song"), b"x").unwrap();
+        let abs = dir.join("Song - Drums.flac").display().to_string();
+        assert_eq!(
+            unique_path(tmp.path(), &abs).unwrap(),
+            dir.join("Song - Drums 2.flac")
+        );
+        let bare = dir.join("Song").display().to_string();
+        assert_eq!(unique_path(tmp.path(), &bare).unwrap(), dir.join("Song 2"));
+    }
+
+    #[test]
+    fn unique_path_rejects_what_exports_reject() {
+        let tmp = tempfile::tempdir().unwrap();
+        for bad in ["", "rel/a.wav", "/no/such/folder/a.wav", "/tmp/../a.wav"] {
+            let err = unique_path(tmp.path(), bad).unwrap_err();
+            assert!(
+                matches!(err.code(), "invalid_argument" | "not_found"),
+                "{bad}: {err:?}"
+            );
+        }
     }
 
     #[test]

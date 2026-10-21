@@ -35,6 +35,7 @@ import { transpiler } from "@strudel/transpiler";
 import * as webaudio from "@strudel/webaudio";
 import {
   analysers,
+  getAudioContext,
   getSuperdoughAudioController,
   initAudio,
   loadBuffer,
@@ -49,6 +50,7 @@ import {
 import type { EngineError, EngineStatus, GeneratedProgram, MeterLevel } from "@phyllo/model";
 import { startCaptureTap } from "./capture";
 import { guardEndedHandlers } from "./ended-guard";
+import { guardNodePool } from "./pool-guard";
 import { attributeEvalError, attributeHapError, attributeLogIssue, attributeQueryError, silencingLog } from "./errors";
 import type { AttributionContext, SilencingLog } from "./errors";
 import { createMasterChain, createOrbitMeters, GATE_RAMP_SEC, readMonoAnalyser, SILENT } from "./master";
@@ -285,6 +287,7 @@ export function createEngine(options: EngineOptions = {}): PhylloEngine {
   /** Set while a query runs whose Strudel log lines must be collected instead of probed live. */
   let logCapture: QueryLogCapture | undefined;
   let uninstallEndedGuard: (() => void) | undefined;
+  let uninstallPoolGuard: (() => void) | undefined;
   let stopCut: ReturnType<typeof setTimeout> | undefined;
   let cutAfterRender = false;
 
@@ -757,12 +760,13 @@ export function createEngine(options: EngineOptions = {}): PhylloEngine {
       return initPromise;
     }
     // create + resume synchronously so it happens inside the user gesture
-    const c = new AudioContext({ latencyHint: "interactive" });
+    const c = createAudioContext(options.sampleRate, (m) => log(m, "warn"));
     ctx = c;
     const resumed = c.resume();
     uninstallEndedGuard = guardEndedHandlers(onCrossContextCleanup);
     initPromise = (async () => {
       setAudioContext(c);
+      uninstallPoolGuard ??= guardNodePool(getAudioContext);
       setSuperdoughAudioController(null);
       await initAudio({});
       await resumed;
@@ -1007,6 +1011,7 @@ export function createEngine(options: EngineOptions = {}): PhylloEngine {
       stopCut = undefined;
       if (crossContextTimer) clearTimeout(crossContextTimer);
       uninstallEndedGuard?.();
+      uninstallPoolGuard?.();
       if (logListener && typeof document !== "undefined") document.removeEventListener("strudel.log", logListener);
       if (crossContextListener && typeof window !== "undefined") window.removeEventListener("error", crossContextListener, true);
       orbitMeters?.dispose();
@@ -1018,6 +1023,36 @@ export function createEngine(options: EngineOptions = {}): PhylloEngine {
     },
   };
   return engine;
+}
+
+/** Rates an AudioContext may be created with (Web Audio guarantees at least 8–96 kHz). */
+export const MIN_SAMPLE_RATE = 8000;
+export const MAX_SAMPLE_RATE = 96000;
+
+/** The `sampleRate` to request, or undefined for the device default (null, missing, or out of range). */
+export function requestedSampleRate(rate: number | null | undefined): number | undefined {
+  if (rate === null || rate === undefined || !Number.isFinite(rate)) return undefined;
+  const r = Math.round(rate);
+  return r >= MIN_SAMPLE_RATE && r <= MAX_SAMPLE_RATE ? r : undefined;
+}
+
+/**
+ * Creates the live context at `rate` (B8). A rate the platform refuses (NotSupportedError) falls back to the device
+ * default with a warning instead of failing init.
+ */
+export function createAudioContext(
+  rate: number | null | undefined,
+  warn: (message: string) => void,
+  Ctor: new (options?: AudioContextOptions) => AudioContext = AudioContext,
+): AudioContext {
+  const sampleRate = requestedSampleRate(rate);
+  if (sampleRate === undefined) return new Ctor({ latencyHint: "interactive" });
+  try {
+    return new Ctor({ latencyHint: "interactive", sampleRate });
+  } catch (err) {
+    warn(`sample rate ${sampleRate} Hz not supported (${err instanceof Error ? err.message : String(err)}); using the device default`);
+    return new Ctor({ latencyHint: "interactive" });
+  }
 }
 
 function clampLookahead(ms: number): number {

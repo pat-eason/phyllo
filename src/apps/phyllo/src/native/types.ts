@@ -418,6 +418,7 @@ export const COMMANDS = {
   exportChunk: 'export_chunk',
   exportFinish: 'export_finish',
   exportCancel: 'export_cancel',
+  exportUniquePath: 'export_unique_path',
   midiFileWrite: 'midi_file_write',
   menuSetState: 'menu_set_state',
   menuSetRecent: 'menu_set_recent',

@@ -144,6 +144,7 @@ export function createTauriApi(options: TauriApiOptions = {}): NativeApi {
       callRaw(COMMANDS.exportChunk, new Uint8Array(frames.buffer, frames.byteOffset, frames.byteLength), sessionId),
     exportFinish: (sessionId) => call<ExportResult>(COMMANDS.exportFinish, { sessionId }),
     exportCancel: (sessionId) => call<void>(COMMANDS.exportCancel, { sessionId }),
+    exportUniquePath: (fileName) => call<string>(COMMANDS.exportUniquePath, { fileName }),
     midiFileWrite: (path, spec) => call<MidiFileResult>(COMMANDS.midiFileWrite, { path, spec }),
 
     openDialog: (options) => guard(async () => (await open(options)) ?? null),

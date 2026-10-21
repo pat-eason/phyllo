@@ -4,24 +4,27 @@
  */
 import { invoke } from "@tauri-apps/api/core";
 import type { AppStores } from "../state";
+import { recordCspViolations } from "./csp";
+import type { CspRecorder } from "./csp";
 import type { SelftestConfig } from "./run";
+
+/** Started at import (before the app renders) so the self-test also sees boot-time CSP violations; stopped below otherwise. */
+const cspRecorder: CspRecorder | null = typeof document === "undefined" ? null : recordCspViolations();
 
 export type { SelftestConfig } from "./run";
 
 /** Runs the self-test when Rust says it's enabled, then quits the app. Desktop main window only. */
 export async function runSelftestIfEnabled(stores: AppStores): Promise<void> {
-  if (stores.native.kind !== "tauri") return;
-  let config: SelftestConfig;
-  try {
-    config = await invoke<SelftestConfig>("selftest_config");
-  } catch {
+  let config: SelftestConfig | undefined;
+  if (stores.native.kind === "tauri") config = await invoke<SelftestConfig>("selftest_config").catch(() => undefined);
+  if (!config?.enabled) {
+    cspRecorder?.stop();
     return;
   }
-  if (!config.enabled) return;
   let code = 0;
   try {
     const { runSelftest } = await import("./run");
-    const report = await runSelftest(stores, config);
+    const report = await runSelftest(stores, config, cspRecorder);
     console.info(`[phyllo selftest]\n${report.summary}`);
   } catch (error) {
     code = 1;
