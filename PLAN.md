@@ -72,7 +72,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | T3.2 | organism agent | AppHeader, StatusBar, ViewTabs | T3.1, M2 | organism docs + SPEC §6.1; stories with mocked hooks | done |
 | T3.3 | organism agent | ViewToolbar, Timeline | T3.1, M2 | same + clip editing, DnD, no re-render while playing | active |
 | T3.4 | organism agent | LibraryPanel | T3.1, M2 | same | done |
-| T3.5 | organism agent | CodeDrawer, TipCoach | T3.1, M2 | same + inline pattern edit, Edit code mode | active |
+| T3.5 | organism agent | CodeDrawer, TipCoach | T3.1, M2 | same + inline pattern edit, Edit code mode | done |
 | T3.6 | organism agent | Inspector | T3.1, M2 | same | done |
 | T3.7 | screen agent | `screens/ArrangeScreen`, routing/app shell | T3.2–T3.6 | SPEC §6.1 acceptance criteria | todo |
 | T3.V | verifier | read-only | T3.7 | §6.1 checklist + screenshot parity 01/02/accent-* | todo |
