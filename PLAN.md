@@ -42,6 +42,9 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | F1 | orchestrator | content/starters | T1.V | lofi chords voice in all keys (T1.V #1) | done |
 | F2 | fix agent | model reducer/serialize, engine parse/codegen | T1.V | T1.V #2–#9, #13–#18; verifier fuzz passes | done |
 | F4 | fix agent | @phyllo/ui atoms/molecules/tokens/stories | T2.V | T2.V defects 1–20; axe clean except documented by-design rules | done |
+| F6 | fix agent | @phyllo/ui | T3.V | Fader keys/scale, Meter stop reset + peak, theme-switch transitions, Punchcard rows, Slider valueText | active |
+| F7 | fix agent | Arrange/Mixer/Pattern organisms | T3.V | ruler seek under loop band, chips, clip pitch scale, drawer scope/header/text, inspector modulated keys, ⌘K Enter, contrast, meters stopped | active |
+| F8 | fix agent | screens/shell, Library/Export organisms, state libraryQuery, model params, engine pattern validation, browser export | T3.V | library search/header, export backdrop/estimate/download, pattern validation, delaytime precision, landmarks/h1 | active |
 | F3 | fix agent | engine runtime | T1.V, T6.6 | T1.V #10 unknown chord → error, #11 stop releases voices, #12 limiter default on + ceiling, #19 offline error flood, #20 pattern error column | done |
 
 ### M2 Atoms, then molecules
@@ -75,7 +78,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | T3.5 | organism agent | CodeDrawer, TipCoach | T3.1, M2 | same + inline pattern edit, Edit code mode | done |
 | T3.6 | organism agent | Inspector | T3.1, M2 | same | done |
 | T3.7 | shell agent | App/main, router, all screens (Arrange, Pattern, Mixer, Library, GuidedStart, Settings), shortcuts, menu/media/open-file glue, unsaved/history dialogs, e2e flows | all organisms | SPEC §6.1 acceptance + §7; e2e flows | done |
-| T3.V | verifier | read-only | T3.7 | SPEC §6 acceptance + screenshot parity for every PNG (covers T4.V/T5.V) | active |
+| T3.V | verifier | read-only | T3.7 | SPEC §6 acceptance + screenshot parity for every PNG (covers T4.V/T5.V) | done |
 
 ### M4 Pattern editor and Mixer
 | id | owner | owns | deps | acceptance | status |
