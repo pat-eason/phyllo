@@ -1,0 +1,30 @@
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ph-text);
+}
+
+.mark {
+  flex: none;
+  display: block;
+}
+
+.dots {
+  fill: var(--ph-accent);
+}
+
+.mark[data-tone="text"] .dots {
+  fill: var(--ph-text);
+}
+
+.tile {
+  fill: var(--ph-panel);
+}
+
+.wordmark {
+  font: var(--ph-text-wordmark);
+  letter-spacing: -0.01em;
+  color: var(--ph-text);
+  white-space: nowrap;
+}

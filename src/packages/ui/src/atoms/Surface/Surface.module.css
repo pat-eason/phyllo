@@ -1,0 +1,126 @@
+/* One class, styled by data attributes so every material/variant is a plain selector. */
+.surface {
+  position: relative;
+  box-sizing: border-box;
+  min-width: 0;
+  color: var(--ph-text);
+}
+
+/* ---- materials ---- */
+.surface[data-material="panel"] {
+  background: var(--ph-panel-grad);
+  box-shadow: var(--ph-shadow-bevel);
+}
+
+.surface[data-material="raised"] {
+  background: var(--ph-btn-grad);
+  box-shadow: var(--ph-shadow-btn);
+  border: 1px solid var(--ph-line);
+  border-radius: var(--ph-r-lg);
+}
+
+.surface[data-material="plate"] {
+  background: var(--ph-plate);
+  box-shadow: var(--ph-shadow-plate);
+  border-radius: 12px;
+}
+
+.surface[data-material="inset"] {
+  background: var(--ph-sunken);
+  box-shadow: var(--ph-shadow-inset);
+  border: 1px solid var(--ph-line);
+  border-radius: 12px;
+}
+
+.surface[data-material="card"] {
+  background: var(--ph-panel);
+  border: 1px solid var(--ph-line);
+  border-radius: var(--ph-r-xl);
+}
+
+.surface[data-material="card"][data-floating] {
+  box-shadow: var(--ph-shadow-card);
+}
+
+.surface[data-material="dialog"] {
+  background: var(--ph-panel);
+  border: 1px solid var(--ph-line);
+  border-radius: var(--ph-r-2xl);
+  box-shadow: var(--ph-shadow-dialog);
+}
+
+.surface[data-material="chrome"] {
+  background: var(--ph-chrome);
+}
+
+.surface[data-material="chrome"][data-edge="bottom"] {
+  border-bottom: 1px solid var(--ph-line);
+}
+
+.surface[data-material="chrome"][data-edge="top"] {
+  border-top: 1px solid var(--ph-line);
+}
+
+/* ---- radius override ---- */
+.surface[data-radius="none"] {
+  border-radius: 0;
+}
+
+.surface[data-radius="lg"] {
+  border-radius: var(--ph-r-lg);
+}
+
+.surface[data-radius="xl"] {
+  border-radius: var(--ph-r-xl);
+}
+
+.surface[data-radius="2xl"] {
+  border-radius: var(--ph-r-2xl);
+}
+
+/* ---- padding ---- */
+.surface[data-padded] {
+  padding: var(--ph-s-6);
+}
+
+.surface[data-material="plate"][data-padded] {
+  padding: var(--ph-s-5);
+}
+
+.surface[data-material="dialog"][data-padded] {
+  padding: var(--ph-s-8);
+}
+
+/* ---- wood cheek (panel only) ---- */
+.cheek {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 16px;
+  background: var(--ph-wood);
+  pointer-events: none;
+}
+
+.surface[data-cheek="left"] {
+  padding-left: calc(16px + var(--ph-surface-pad, 0px));
+  border-right: 1px solid var(--ph-line);
+}
+
+.surface[data-cheek="right"] {
+  padding-right: calc(16px + var(--ph-surface-pad, 0px));
+  border-left: 1px solid var(--ph-line);
+}
+
+.surface[data-cheek][data-padded] {
+  --ph-surface-pad: var(--ph-s-6);
+}
+
+.surface[data-cheek="left"] > .cheek {
+  left: 0;
+  box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.45);
+}
+
+.surface[data-cheek="right"] > .cheek {
+  right: 0;
+  box-shadow: inset 1px 0 0 rgba(0, 0, 0, 0.45);
+}

@@ -1,0 +1,14 @@
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: 22px;
+  padding: 0 6px;
+  border: 1px solid var(--ph-line);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--ph-bg);
+  color: var(--ph-text);
+  font: 400 11px/1 var(--ph-font-mono);
+  white-space: nowrap;
+}
