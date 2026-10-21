@@ -265,7 +265,7 @@
 .engineError {
   margin: 0;
   font: var(--ph-text-small);
-  color: var(--ph-rec);
+  color: var(--ph-rec-text);
 }
 
 /* ---- knobs ---- */

@@ -170,6 +170,8 @@ const ClipImpl = forwardRef<HTMLButtonElement, ClipProps>(function Clip(
 ) {
   const bars = Math.max(1, Math.round(endBar - startBar + 1));
   const kind: ClipKind = toCycles(viz)[0]?.kind ?? "code";
+  // The accessible name must contain everything visible (WCAG 2.5.3): a code clip shows its label followed by the "code" badge.
+  const visibleText = kind === "code" ? `${label} code`.trim() : label;
   const classes = [styles["clip"], className].filter(Boolean).join(" ");
   const rootStyle = { ...style, "--clip-color": color } as CSSProperties;
 
@@ -193,7 +195,7 @@ const ClipImpl = forwardRef<HTMLButtonElement, ClipProps>(function Clip(
       type={type}
       className={classes}
       style={rootStyle}
-      aria-label={ariaLabel ?? `${name}, bars ${startBar} to ${endBar}, ${label}${audible ? "" : ", muted"}`}
+      aria-label={ariaLabel ?? `${name}, bars ${startBar} to ${endBar}, ${visibleText}${audible ? "" : ", muted"}`}
       data-kind={kind}
       data-selected={selected ? "" : undefined}
       data-inaudible={audible ? undefined : ""}
@@ -206,10 +208,14 @@ const ClipImpl = forwardRef<HTMLButtonElement, ClipProps>(function Clip(
     >
       <span className={styles["label"]}>{label}</span>
       {kind === "code" ? (
-        <span className={styles["code"]} aria-hidden="true">
-          <Icon name="code" size={12} />
-          code
-        </span>
+        <>
+          {/* Whitespace keeps the button's text "label code", matching its accessible name (it is invisible in the flex row). */}
+          {" "}
+          <span className={styles["code"]} aria-hidden="true">
+            <Icon name="code" size={12} />
+            code
+          </span>
+        </>
       ) : (
         <MemoViz viz={viz} bars={bars} />
       )}

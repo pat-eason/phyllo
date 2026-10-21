@@ -87,13 +87,14 @@ function Elapsed({ startedAt }: { startedAt: number }) {
   const text = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     const tick = () => {
-      if (text.current) text.current.textContent = formatElapsed(Date.now() - startedAt);
+      if (text.current) text.current.dataset["elapsed"] = formatElapsed(Date.now() - startedAt);
     };
     tick();
     const timer = setInterval(tick, 250);
     return () => clearInterval(timer);
   }, [startedAt]);
-  return <span ref={text}>0:00</span>;
+  // Rendered as ::after content (styles.elapsed) so the ticking digits are not part of the button's text: its visible text stays "Stop" and so does its accessible name (WCAG 2.5.3).
+  return <span ref={text} className={styles["elapsed"]} data-elapsed="0:00" />;
 }
 
 /** The master strip: output device, postgain, limiter, rate, peak, and "● Rec output". */

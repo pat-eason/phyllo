@@ -429,8 +429,12 @@ button.head:hover .name {
 /* ---- master ---- */
 .rec {
   flex: 1;
-  color: var(--ph-rec);
+  color: var(--ph-rec-text);
   font-weight: 700;
+}
+
+.elapsed::after {
+  content: attr(data-elapsed);
 }
 
 .rec[data-recording] {

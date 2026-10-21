@@ -81,7 +81,7 @@
 }
 
 .summaryError {
-  color: var(--ph-rec);
+  color: var(--ph-rec-text);
 }
 
 .tools {
@@ -95,7 +95,7 @@
 .errorBanner {
   margin: 0;
   padding: 0 var(--ph-s-5) var(--ph-s-3);
-  color: var(--ph-rec);
+  color: var(--ph-rec-text);
   font: var(--ph-text-small);
 }
 
@@ -146,7 +146,7 @@
 }
 
 .lineNumber[data-error] {
-  color: var(--ph-rec);
+  color: var(--ph-rec-text);
   font-weight: 600;
 }
 
@@ -191,8 +191,10 @@
   background: var(--ph-hl);
 }
 
-.line[data-muted] {
-  opacity: 0.55;
+.line[data-muted],
+.line[data-muted] :is(.label, .keyword, .fn, .string, .number, .comment, .literal, .punct, .plain) {
+  /* Dimmed by colour, not opacity: opacity pulled every syntax colour under 4.5:1. */
+  color: var(--ph-muted);
 }
 
 .line[data-error] {
@@ -204,7 +206,7 @@
 .errorRow {
   display: block;
   height: var(--code-line, 21px);
-  color: var(--ph-rec);
+  color: var(--ph-rec-text);
   user-select: none;
 }
 
@@ -324,7 +326,7 @@
 }
 
 .editError {
-  color: var(--ph-rec);
+  color: var(--ph-rec-text);
   font: var(--ph-text-small);
 }
 

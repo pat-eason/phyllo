@@ -29,6 +29,14 @@ describe("Clip", () => {
     expect(clip).toHaveTextContent("<c2 eb2 g2 bb1>*2");
   });
 
+  it("should include the visible code badge in the name of a code clip", () => {
+    // Arrange / Act
+    const { clip } = renderClip({ viz: { kind: "code" } });
+
+    // Assert
+    expect(clip).toHaveAccessibleName("Bass, bars 9 to 16, <c2 eb2 g2 bb1>*2 code");
+  });
+
   it("should say muted in the name when not audible", () => {
     // Arrange / Act
     const { clip } = renderClip({ audible: false });

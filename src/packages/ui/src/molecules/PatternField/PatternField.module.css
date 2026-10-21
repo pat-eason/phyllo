@@ -74,7 +74,7 @@
 /* Always mounted so error text added later is announced; spacing only when it has content. */
 .error {
   font: var(--ph-text-small);
-  color: var(--ph-rec);
+  color: var(--ph-rec-text);
 }
 
 .error:not(:empty) {

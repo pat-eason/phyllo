@@ -88,7 +88,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--ph-s-3);
-  color: var(--ph-rec);
+  color: var(--ph-rec-text);
 }
 
 .quiet {

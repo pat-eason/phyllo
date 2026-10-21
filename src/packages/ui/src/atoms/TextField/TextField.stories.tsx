@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState, type ComponentProps } from "react";
 import { ThemePair } from "../../stories/ThemePair";
+import { Button } from "../Button";
 import { Kbd } from "../Kbd";
 import { TextField } from "./TextField";
 
@@ -43,6 +44,36 @@ export const SearchWithKbdHint: Story = {
     placeholder: 'Search sounds, e.g. "warm bass"',
     trailing: <Kbd keys={["⌘", "K"]} />,
   },
+};
+
+/** Trailing Button, as in the Export folder ("Choose…") and strudel.cc import ("Import") rows. */
+export const WithTrailingButton: Story = {
+  args: {
+    size: 40,
+    label: "Folder",
+    labelPosition: "top",
+    value: "~/Music/Phyllo",
+    trailing: (
+      <Button size="sm" variant="secondary">
+        Choose…
+      </Button>
+    ),
+  },
+  render: (args) => (
+    <div style={{ width: 360 }}>
+      <Controlled {...args} />
+    </div>
+  ),
+};
+
+/** On the app background: `--ph-field-bg` set to the panel colour (TextField.md: `--ph-panel` on bg, `--ph-bg` inside panels). */
+export const OnBg: Story = {
+  args: { variant: "search", label: "Search sounds", placeholder: "Search sounds", trailing: <Kbd keys={["⌘", "K"]} /> },
+  decorators: [
+    (Story) => (
+      <div style={{ padding: 24, background: "var(--ph-bg)", ["--ph-field-bg" as string]: "var(--ph-panel)" }}>{Story()}</div>
+    ),
+  ],
 };
 
 /** Monospace, accent border; the inspector pattern input. */

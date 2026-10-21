@@ -79,6 +79,7 @@
   --ph-muted: #A3ADA5;
   --ph-rec: #FF6B57;
   --ph-rec-ink: #1A0A07;
+  --ph-rec-text: var(--ph-rec);
   --ph-star: #F5C25B;
   --ph-switch-off: #3A423C;
   --ph-step-off: #1E2420;
@@ -125,6 +126,8 @@
   --ph-muted: #535D56;
   --ph-rec: #C63A27;
   --ph-rec-ink: #FFFFFF;
+  /* Error/record colour as TEXT (D174): --ph-rec is a fill/dot colour (4.12:1 on --ph-sunken); darken 15% for text, like D137. */
+  --ph-rec-text: color-mix(in srgb, var(--ph-rec) 85%, #000);
   --ph-star: #A86A00;
   --ph-switch-off: #B9BFB5;
   --ph-step-off: #FFFFFF;
@@ -134,7 +137,8 @@
   --ph-scrim: rgba(238, 240, 234, 0.7);
 
   --ph-code-str: #8A5000;
-  --ph-code-num: #1F5FBF;
+  /* D174: was #1F5FBF (4.29:1 on --ph-hl over sunken); #1B58B0 clears 4.8:1 on every accent's highlight. */
+  --ph-code-num: #1B58B0;
   --ph-code-fn: #7A3FC4;
   --ph-code-comment: #5F6862;
 

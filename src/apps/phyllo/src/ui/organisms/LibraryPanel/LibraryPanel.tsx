@@ -173,11 +173,13 @@ export function LibraryPanel({ initialTab = "sounds", className, ref }: LibraryP
             <SnippetsTab query={query} hasSelection={hasSelection} actions={actions} onClearSearch={clearSearch} />
           ) : null}
         </div>
+      </div>
+      <footer className={styles["footer"]}>
         <p className={styles["hint"]}>{hintFor(tab, guided)}</p>
         <p className={styles["notice"]} role="status" aria-live="polite">
           {actions.notice}
         </p>
-      </div>
+      </footer>
     </Surface>
   );
 }

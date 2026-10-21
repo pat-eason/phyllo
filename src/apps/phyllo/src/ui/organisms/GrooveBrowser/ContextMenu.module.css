@@ -40,7 +40,7 @@
 }
 
 .item[data-destructive] {
-  color: var(--ph-rec);
+  color: var(--ph-rec-text);
 }
 
 .item:disabled {

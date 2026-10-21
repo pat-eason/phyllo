@@ -124,7 +124,7 @@
 }
 
 .descriptionInvalid {
-  color: var(--ph-rec);
+  color: var(--ph-rec-text);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -11,19 +11,22 @@ import { StarterPicker } from "./StarterPicker";
 const DAY_MS = 86_400_000;
 const daysAgo = (days: number): string => new Date(Date.now() - days * DAY_MS).toISOString();
 
+// `lead` is each project's first-track colour, which the recent list uses as its swatch (png/03-guided-start.png: amber, violet, teal).
 const grooves = (count: number): Project[] =>
   [
-    { name: "Untitled Groove", modified: daysAgo(0.1), starter: "house" },
-    { name: "Night bus", modified: daysAgo(2), starter: "lofi" },
-    { name: "Euclid study 2", modified: daysAgo(9), starter: "euclid" },
-    { name: "Rainy keys", modified: daysAgo(21), starter: "lofi" },
-    { name: "Stage select", modified: daysAgo(40), starter: "stage" },
-    { name: "Older sketch", modified: daysAgo(120), starter: "ambient" },
+    { name: "Untitled Groove", modified: daysAgo(0.1), starter: "house", lead: "#F5C25B" },
+    { name: "Night bus", modified: daysAgo(2), starter: "lofi", lead: "#B9A2FF" },
+    { name: "Euclid study 2", modified: daysAgo(9), starter: "euclid", lead: "#5ECFC8" },
+    { name: "Rainy keys", modified: daysAgo(21), starter: "lofi", lead: "#8AB4FF" },
+    { name: "Stage select", modified: daysAgo(40), starter: "stage", lead: "#F59AC7" },
+    { name: "Older sketch", modified: daysAgo(120), starter: "ambient", lead: "#FF9C7A" },
   ]
     .slice(0, count)
-    .map(({ name, modified, starter }, i) => ({
+    .map(({ name, modified, starter, lead }, i) => ({
       ...fixtureProject({ id: `prj_story_${i}`, name, modified }),
-      tracks: fixtureProject().tracks.slice(0, starter === "ambient" ? 2 : 4),
+      tracks: fixtureProject()
+        .tracks.slice(0, starter === "ambient" ? 2 : 4)
+        .map((track, index) => (index === 0 ? { ...track, color: lead } : track)),
     }));
 
 /** Writes `projects` into the mock library, then renders the children once it has scanned them. */
