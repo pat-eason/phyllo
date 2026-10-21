@@ -115,7 +115,8 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | T7.3 | F7/F8/F10 | screenshot parity fixes | T3.V | 0 S1/S2 visual defects; S3 fixed or recorded | done |
 | T7.4 | T3.3/T3.1 | performance | — | zero Timeline/Inspector re-renders while playing, 60 fps (T3.V) | done |
 | T7.5 | T7.5a + F9 | `pnpm tauri build` + DoD flow, CSP, single instance | — | selftest 13/13 in release app, CSP enforced | done |
-| T7.V | verifier | read-only | all | whole-project DoD audit | active |
+| T7.V | verifier | read-only | all | whole-project DoD audit | done |
+| F11 | fix agent | ui + src/ui + vite build | T7.V | light error-text contrast (S2), muted/highlight code contrast, a11y names, TextField stories, Settings opens on Appearance, recent swatches, library footnote, chunk warning | active |
 
 ### Follow-ups backlog (not yet assigned)
 - ~~B1~~ done (T6.5, D133): Sample folders: call `native.sampleFoldersWatch(all)` + `sampleFolderScan` → `engine.registerSamples({name: [convertFileSrc(path)]})` with collision suffixes; rescan on `onSamplesChanged` (state layer) — from T3.4/T6.1.
