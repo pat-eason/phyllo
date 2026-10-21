@@ -1,7 +1,12 @@
 import type {
   LibraryScan,
+  MidiMessageEvent,
+  MidiOutMessage,
+  MidiPortInfo,
   NotifyOptions,
   OpenDialogOptions,
+  OscConfig,
+  OscMessageOut,
   PhylloPaths,
   SampleScan,
   SamplesChangedEvent,
@@ -58,6 +63,30 @@ export interface NativeApi {
   /** Replaces the watched set. */
   sampleFoldersWatch(paths: string[]): Promise<void>;
   onSamplesChanged(callback: (event: SamplesChangedEvent) => void): Promise<Unsubscribe>;
+
+  // MIDI (native via midir; Web MIDI where the browser has it)
+  /** Inputs first, then outputs. */
+  midiListPorts(): Promise<MidiPortInfo[]>;
+  /** Re-enumerate now and return the fresh list (hot-plug is also polled every 2 s). */
+  midiRescan(): Promise<MidiPortInfo[]>;
+  /** Idempotent. Messages arrive through `onMidiMessage`. Rejects `not_found` for an unknown id. */
+  midiOpenInput(id: string): Promise<void>;
+  midiCloseInput(id: string): Promise<void>;
+  midiOpenOutput(id: string): Promise<void>;
+  /** Sends all-notes-off, drops queued messages for the port, then disconnects. */
+  midiCloseOutput(id: string): Promise<void>;
+  /** Queue messages; each `atMs` is relative to when the command reaches the native side. Rejects `not_found` if the port is not open. */
+  midiSend(id: string, messages: MidiOutMessage[]): Promise<void>;
+  /** All-notes-off on 16 channels now; drops anything still queued for the port. */
+  midiPanic(id: string): Promise<void>;
+  onMidiMessage(callback: (message: MidiMessageEvent) => void): Promise<Unsubscribe>;
+  /** Fires with the new full port list when it differs from the previous one. Open ports that vanished are closed. */
+  onMidiPortsChanged(callback: (ports: MidiPortInfo[]) => void): Promise<Unsubscribe>;
+
+  // OSC (SuperDirt over UDP; off until configured)
+  oscConfigure(config: OscConfig): Promise<void>;
+  /** A no-op while OSC is disabled. */
+  oscSend(messages: OscMessageOut[]): Promise<void>;
 
   // OS integration
   openDialog(options?: OpenDialogOptions): Promise<string | string[] | null>;

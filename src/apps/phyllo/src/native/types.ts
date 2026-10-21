@@ -13,6 +13,8 @@ export type NativeErrorCode =
   | 'invalid_argument'
   | 'trash'
   | 'watch'
+  | 'midi'
+  | 'osc'
   | 'internal'
   /** The command never reached Rust, or rejected with something that is not `{ code, message }`. */
   | 'unknown';
@@ -134,6 +136,66 @@ export interface NotifyOptions {
   body?: string;
 }
 
+// ── MIDI (SPEC §5, §6.6) ────────────────────────────────────────────────────
+
+export type MidiDirection = 'in' | 'out';
+
+export interface MidiPortInfo {
+  /** `<in|out>:<name>:<index among ports with the same name>`; stable across rescans while the device stays plugged in. */
+  id: string;
+  name: string;
+  direction: MidiDirection;
+}
+
+export type MidiMessageKind = 'noteon' | 'noteoff' | 'cc' | 'pitchbend' | 'other';
+
+/**
+ * One incoming message (`midi://message`). `channel` is 1-based (1..16, like Strudel's `midichan`); 0 for system messages.
+ * `noteon`/`noteoff`: data1 = note, data2 = velocity (note-on with velocity 0 arrives as `noteoff`).
+ * `cc`: data1 = controller, data2 = value. `pitchbend`: data1 = 14-bit value (0..16383, centre 8192), data2 = 0.
+ * `other`: data1/data2 are the raw data bytes (start/continue/stop have none). `status` is always the raw status byte.
+ * Clock, active sensing and SysEx are dropped. Bursts of the same CC or pitch-bend are coalesced to the latest value.
+ */
+export interface MidiMessageEvent {
+  portId: string;
+  kind: MidiMessageKind;
+  channel: number;
+  data1: number;
+  data2: number;
+  status: number;
+  /** Microseconds on a monotonic clock with an arbitrary origin; only differences are meaningful. */
+  timestampUs: number;
+}
+
+export interface MidiOutMessage {
+  /** Raw MIDI bytes starting with a status byte (>= 0x80), at most 1024 bytes. */
+  bytes: number[];
+  /** Delay in ms relative to the moment the command reaches Rust (clamped to 0..60000). Missing means now. */
+  atMs?: number;
+}
+
+// ── OSC ─────────────────────────────────────────────────────────────────────
+
+export interface OscConfig {
+  enabled: boolean;
+  host: string;
+  port: number;
+}
+
+/** Default: off, SuperDirt on loopback. */
+export const DEFAULT_OSC_CONFIG: OscConfig = { enabled: false, host: '127.0.0.1', port: 57120 };
+
+export type OscArg = number | string;
+
+export interface OscMessageOut {
+  /** Must start with `/`, e.g. `/dirt/play` (args are alternating key, value). */
+  address: string;
+  /** Integral numbers that fit int32 go out as int32, other finite numbers as float32, strings as strings. */
+  args: OscArg[];
+  /** With it the message is sent as a bundle timetagged now + atMs; without it as a plain message. */
+  atMs?: number;
+}
+
 // ── Command and event names (single source of truth for tauri.ts and its tests) ──
 
 export const COMMANDS = {
@@ -152,9 +214,21 @@ export const COMMANDS = {
   moveToTrash: 'move_to_trash',
   sampleFolderScan: 'sample_folder_scan',
   sampleFoldersWatch: 'sample_folders_watch',
+  midiListPorts: 'midi_list_ports',
+  midiRescan: 'midi_rescan',
+  midiOpenInput: 'midi_open_input',
+  midiCloseInput: 'midi_close_input',
+  midiOpenOutput: 'midi_open_output',
+  midiCloseOutput: 'midi_close_output',
+  midiSend: 'midi_send',
+  midiPanic: 'midi_panic',
+  oscConfigure: 'osc_configure',
+  oscSend: 'osc_send',
 } as const;
 
 export const EVENTS = {
   libraryChanged: 'library://changed',
   samplesChanged: 'samples://changed',
+  midiMessage: 'midi://message',
+  midiPortsChanged: 'midi://ports-changed',
 } as const;

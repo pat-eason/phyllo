@@ -56,6 +56,31 @@ describe('tauri native: command names and arguments', () => {
     ['moveToTrash', () => api.moveToTrash('/p/a.phyllo'), 'move_to_trash', { path: '/p/a.phyllo' }],
     ['sampleFolderScan', () => api.sampleFolderScan('/s'), 'sample_folder_scan', { path: '/s' }],
     ['sampleFoldersWatch', () => api.sampleFoldersWatch(['/s', '/t']), 'sample_folders_watch', { paths: ['/s', '/t'] }],
+    ['midiListPorts', () => api.midiListPorts(), 'midi_list_ports', undefined],
+    ['midiRescan', () => api.midiRescan(), 'midi_rescan', undefined],
+    ['midiOpenInput', () => api.midiOpenInput('in:Pad:0'), 'midi_open_input', { id: 'in:Pad:0' }],
+    ['midiCloseInput', () => api.midiCloseInput('in:Pad:0'), 'midi_close_input', { id: 'in:Pad:0' }],
+    ['midiOpenOutput', () => api.midiOpenOutput('out:IAC:0'), 'midi_open_output', { id: 'out:IAC:0' }],
+    ['midiCloseOutput', () => api.midiCloseOutput('out:IAC:0'), 'midi_close_output', { id: 'out:IAC:0' }],
+    [
+      'midiSend',
+      () => api.midiSend('out:IAC:0', [{ bytes: [0x90, 60, 100], atMs: 12.5 }, { bytes: [0x80, 60, 0] }]),
+      'midi_send',
+      { id: 'out:IAC:0', messages: [{ bytes: [0x90, 60, 100], atMs: 12.5 }, { bytes: [0x80, 60, 0] }] },
+    ],
+    ['midiPanic', () => api.midiPanic('out:IAC:0'), 'midi_panic', { id: 'out:IAC:0' }],
+    [
+      'oscConfigure',
+      () => api.oscConfigure({ enabled: true, host: '127.0.0.1', port: 57120 }),
+      'osc_configure',
+      { config: { enabled: true, host: '127.0.0.1', port: 57120 } },
+    ],
+    [
+      'oscSend',
+      () => api.oscSend([{ address: '/dirt/play', args: ['s', 'bd', 'n', 3], atMs: 20 }]),
+      'osc_send',
+      { messages: [{ address: '/dirt/play', args: ['s', 'bd', 'n', 3], atMs: 20 }] },
+    ],
   ];
 
   it.each(cases)('%s -> %s', async (_name, run, command, args) => {
@@ -112,6 +137,51 @@ describe('tauri native: events', () => {
     await api.onSamplesChanged(cb);
     expect(mocks.listen).toHaveBeenCalledWith('samples://changed', expect.any(Function));
     expect(cb).toHaveBeenCalledWith({ folder: '/samples' });
+  });
+});
+
+describe('tauri native: MIDI events', () => {
+  it('passes midi://message payloads through', async () => {
+    const message = {
+      portId: 'in:Pad:0',
+      kind: 'noteon',
+      channel: 1,
+      data1: 60,
+      data2: 100,
+      status: 0x90,
+      timestampUs: 5,
+    };
+    mocks.listen.mockImplementation((_event: string, handler: (e: { payload: unknown }) => void) => {
+      handler({ payload: message });
+      return Promise.resolve(() => undefined);
+    });
+    const cb = vi.fn();
+    await api.onMidiMessage(cb);
+    expect(mocks.listen).toHaveBeenCalledWith('midi://message', expect.any(Function));
+    expect(EVENTS.midiMessage).toBe('midi://message');
+    expect(cb).toHaveBeenCalledWith(message);
+  });
+
+  it('passes midi://ports-changed payloads through and unsubscribes', async () => {
+    const unlisten = vi.fn();
+    const ports = [{ id: 'out:IAC:0', name: 'IAC', direction: 'out' }];
+    mocks.listen.mockImplementation((_event: string, handler: (e: { payload: unknown }) => void) => {
+      handler({ payload: ports });
+      return Promise.resolve(unlisten);
+    });
+    const cb = vi.fn();
+    const off = await api.onMidiPortsChanged(cb);
+    expect(mocks.listen).toHaveBeenCalledWith('midi://ports-changed', expect.any(Function));
+    expect(cb).toHaveBeenCalledWith(ports);
+    off();
+    expect(unlisten).toHaveBeenCalled();
+  });
+
+  it('maps midi and osc error codes', async () => {
+    mocks.invoke.mockRejectedValueOnce({ code: 'midi', message: 'MIDI error: boom' });
+    expect(await api.midiOpenInput('x').catch((e: NativeError) => e.code)).toBe('midi');
+    mocks.invoke.mockRejectedValueOnce({ code: 'osc', message: 'OSC error: boom' });
+    expect(await api.oscSend([]).catch((e: NativeError) => e.code)).toBe('osc');
   });
 });
 

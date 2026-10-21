@@ -28,6 +28,10 @@ pub enum Error {
     Trash(String),
     #[error("watcher error: {0}")]
     Watch(String),
+    #[error("MIDI error: {0}")]
+    Midi(String),
+    #[error("OSC error: {0}")]
+    Osc(String),
     #[error("{0}")]
     Internal(String),
 }
@@ -44,6 +48,8 @@ impl Error {
             Error::InvalidArgument(_) => "invalid_argument",
             Error::Trash(_) => "trash",
             Error::Watch(_) => "watch",
+            Error::Midi(_) => "midi",
+            Error::Osc(_) => "osc",
             Error::Internal(_) => "internal",
         }
     }

@@ -1,5 +1,6 @@
 import type { NativeApi } from './api';
 import { NativeError } from './errors';
+import { type RequestMidiAccess, createWebMidiBridge, defaultMidiAccess } from './webmidi';
 import type {
   LibraryEntry,
   LibraryScan,
@@ -37,6 +38,11 @@ export interface BrowserApiOptions {
   storage?: Pick<Storage, 'getItem' | 'setItem'> | null;
   now?: () => Date;
   log?: (...args: unknown[]) => void;
+  /**
+   * Web MIDI entry point. Defaults to `navigator.requestMIDIAccess` when it exists (Chromium); `null` means no
+   * MIDI ports at all.
+   */
+  requestMidiAccess?: RequestMidiAccess | null;
 }
 
 function defaultStorage(): Pick<Storage, 'getItem' | 'setItem'> | null {
@@ -148,6 +154,10 @@ export function createBrowserApi(options: BrowserApiOptions = {}): NativeApi {
       for (const listener of [...libraryListeners]) listener();
     });
   };
+
+  const midi = createWebMidiBridge(
+    options.requestMidiAccess === undefined ? defaultMidiAccess() : options.requestMidiAccess,
+  );
 
   const history = new Map<string, { info: SnapshotInfo; json: string }[]>();
 
@@ -262,6 +272,21 @@ export function createBrowserApi(options: BrowserApiOptions = {}): NativeApi {
         sampleListeners.delete(callback);
       };
     },
+
+    midiListPorts: () => midi.listPorts(),
+    midiRescan: () => midi.rescan(),
+    midiOpenInput: (id) => midi.openInput(id),
+    midiCloseInput: (id) => midi.closeInput(id),
+    midiOpenOutput: (id) => midi.openOutput(id),
+    midiCloseOutput: (id) => midi.closeOutput(id),
+    midiSend: (id, messages) => midi.send(id, messages),
+    midiPanic: (id) => midi.panic(id),
+    onMidiMessage: async (callback) => midi.onMessage(callback),
+    onMidiPortsChanged: async (callback) => midi.onPortsChanged(callback),
+
+    // OSC needs a UDP socket, which a web page cannot open.
+    oscConfigure: async () => {},
+    oscSend: async () => {},
 
     openDialog: async () => null,
     saveDialog: async () => null,

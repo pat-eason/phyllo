@@ -8,6 +8,8 @@ const CODES: ReadonlySet<string> = new Set<NativeErrorCode>([
   'invalid_argument',
   'trash',
   'watch',
+  'midi',
+  'osc',
   'internal',
   'unknown',
 ]);
