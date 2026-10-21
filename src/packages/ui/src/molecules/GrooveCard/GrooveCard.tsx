@@ -11,7 +11,7 @@ export interface GrooveTag {
 }
 
 /** Display data for one saved groove. */
-export interface GrooveSummary {
+export interface GrooveCardData {
   name: string;
   bpm: number;
   /** "F major" */
@@ -29,7 +29,7 @@ export interface GrooveSummary {
 export type GrooveTileSize = 1 | 2 | 3 | 4 | 5;
 
 export interface GrooveCardProps extends Omit<HTMLAttributes<HTMLElement>, "children" | "onSelect"> {
-  groove: GrooveSummary;
+  groove: GrooveCardData;
   /** `tile` renders an `<article>` for the grid; `row` renders a `<tr>` and must sit inside a `<tbody>`. Default `tile`. */
   variant?: "tile" | "row";
   /** Tile size step (tile only). Steps 1 and 2 hide the meta line and tags. Default 3. */
@@ -45,12 +45,12 @@ export interface GrooveCardProps extends Omit<HTMLAttributes<HTMLElement>, "chil
 
 const COVER_CELL_SIZE: Record<GrooveTileSize, PunchcardSize> = { 1: "xs", 2: "sm", 3: "md", 4: "lg", 5: "xl" };
 
-function metaLine({ bpm, key, lengthBars }: GrooveSummary): string {
+function metaLine({ bpm, key, lengthBars }: GrooveCardData): string {
   return `${bpm} BPM · ${key} · ${lengthBars} bars`;
 }
 
 interface FavoriteButtonProps {
-  groove: GrooveSummary;
+  groove: GrooveCardData;
   onFavoriteChange: (favorite: boolean) => void;
 }
 

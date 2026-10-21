@@ -2,9 +2,9 @@ import type { Decorator, Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { ThemePair } from "../../stories/ThemePair";
 import { HOUSE_PREVIEW, NIGHT_BUS_PREVIEW, rowsFromPatterns } from "../_shared/punchcardFixtures";
-import { GrooveCard, type GrooveCardProps, type GrooveSummary, type GrooveTileSize } from "./GrooveCard";
+import { GrooveCard, type GrooveCardProps, type GrooveCardData, type GrooveTileSize } from "./GrooveCard";
 
-const NIGHT_BUS: GrooveSummary = {
+const NIGHT_BUS: GrooveCardData = {
   name: "Night bus",
   bpm: 82,
   key: "F major",
@@ -16,7 +16,7 @@ const NIGHT_BUS: GrooveSummary = {
   preview: NIGHT_BUS_PREVIEW,
 };
 
-const GROOVES: GrooveSummary[] = [
+const GROOVES: GrooveCardData[] = [
   NIGHT_BUS,
   {
     name: "Warehouse 4am",

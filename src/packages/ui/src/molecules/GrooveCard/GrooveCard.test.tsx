@@ -3,9 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { createRef, type ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { NIGHT_BUS_PREVIEW } from "../_shared/punchcardFixtures";
-import { GrooveCard, type GrooveSummary } from "./GrooveCard";
+import { GrooveCard, type GrooveCardData } from "./GrooveCard";
 
-const groove: GrooveSummary = {
+const groove: GrooveCardData = {
   name: "Night bus",
   bpm: 82,
   key: "F major",
