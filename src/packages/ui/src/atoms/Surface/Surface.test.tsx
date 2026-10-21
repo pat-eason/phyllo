@@ -72,6 +72,22 @@ describe("Surface", () => {
     expect(panel.firstElementChild).toHaveClass("cheek");
   });
 
+  it("should carry the inner-edge line of a cheek-less panel only when asked for one", () => {
+    // Arrange / Act
+    render(
+      <>
+        <Surface material="panel" edge="right" data-testid="edge" />
+        <Surface material="panel" data-testid="plain" />
+        <Surface material="panel" cheek="left" edge="right" data-testid="cheek" />
+      </>,
+    );
+
+    // Assert
+    expect(screen.getByTestId("edge")).toHaveAttribute("data-edge", "right");
+    expect(screen.getByTestId("plain")).not.toHaveAttribute("data-edge");
+    expect(screen.getByTestId("cheek")).not.toHaveAttribute("data-edge");
+  });
+
   it("should ignore cheek on materials other than panel", () => {
     // Arrange / Act
     render(<Surface material="card" cheek="left" data-testid="s" />);

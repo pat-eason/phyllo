@@ -97,6 +97,26 @@ describe("TrackHeader", () => {
     expect(screen.getByRole("img", { name: 'Error: Unknown sound "bdd"' })).toBeInTheDocument();
   });
 
+  it("should describe the name button with the error message", () => {
+    // Arrange / Act
+    setup({ error: 'Unknown sound "bdd"' });
+
+    // Assert
+    expect(screen.getByRole("button", { name: "Kick" })).toHaveAccessibleDescription(/Error: Unknown sound "bdd"/);
+  });
+
+  it("should keep the name button reachable by keyboard when there is an error", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    setup({ error: "Unexpected token )" });
+
+    // Act
+    await user.tab();
+
+    // Assert
+    expect(screen.getByRole("button", { name: "Kick" })).toHaveFocus();
+  });
+
   it("should show no error dot without an error", () => {
     // Arrange / Act
     setup();

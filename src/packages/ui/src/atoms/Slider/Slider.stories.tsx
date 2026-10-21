@@ -24,7 +24,7 @@ const meta = {
   component: Slider,
   args: { label: "Amount", value: 0.4, onChange: () => undefined },
   render: (args) => <Controlled {...args} />,
-  decorators: [(Story) => <div style={{ padding: 24 }}>{Story()}</div>],
+  decorators: [(Story) => <div style={{ padding: 24, background: "var(--ph-panel)" }}>{Story()}</div>],
 } satisfies Meta<typeof Slider>;
 
 export default meta;
@@ -63,7 +63,7 @@ export const Disabled: Story = { args: { disabled: true } };
 export const Themes: Story = {
   render: () => (
     <ThemePair>
-      <div style={{ display: "flex", flexDirection: "column", gap: 16, background: "var(--ph-bg)", padding: 16 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16, background: "var(--ph-panel)", padding: 16 }}>
         <Controlled label="Amount" value={0.4} />
         <Controlled label="Amount" value={0} />
         <Controlled

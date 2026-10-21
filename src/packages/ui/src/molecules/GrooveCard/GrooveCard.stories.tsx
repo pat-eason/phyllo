@@ -129,7 +129,7 @@ const headStyle = {
   textAlign: "left",
 } as const;
 
-function RowTable({ args, previewingIndex }: { args: GrooveCardProps; previewingIndex?: number }) {
+function RowTable({ args, previewingIndex, selectedIndex }: { args: GrooveCardProps; previewingIndex?: number; selectedIndex?: number }) {
   return (
     <div style={{ overflowX: "auto", border: "1px solid var(--ph-line)", borderRadius: "var(--ph-r-xl)", background: "var(--ph-panel)" }}>
       <table style={tableStyle}>
@@ -150,7 +150,7 @@ function RowTable({ args, previewingIndex }: { args: GrooveCardProps; previewing
         </thead>
         <tbody>
           {GROOVES.map((groove, index) => (
-            <GrooveCard key={groove.name} {...args} groove={groove} variant="row" previewing={index === previewingIndex} />
+            <GrooveCard key={groove.name} {...args} groove={groove} variant="row" previewing={index === previewingIndex} selected={index === selectedIndex} />
           ))}
         </tbody>
       </table>
@@ -163,19 +163,30 @@ export const Row: Story = {
   render: (args) => <RowTable args={args} previewingIndex={1} />,
 };
 
+/** Multi-select highlight on a list row: accent-soft background and `aria-selected`. */
+export const RowSelected: Story = {
+  render: (args) => <RowTable args={args} previewingIndex={1} selectedIndex={0} />,
+};
+
+/** Tile selected: accent border. */
+export const Selected: Story = { args: { selected: true }, decorators: narrow };
+
+/** Preview unavailable: the play button is disabled. */
+export const PreviewDisabled: Story = { args: { previewDisabled: true }, decorators: narrow };
+
 export const Themes: Story = {
   render: (args) => (
     <ThemePair padding={16}>
       <div style={{ display: "flex", flexDirection: "column", gap: 16, background: "var(--ph-bg)", padding: 16 }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <GrooveCard {...args} />
-          <GrooveCard {...args} groove={{ ...NIGHT_BUS, favorite: false }} previewing size={4} />
+          <GrooveCard {...args} groove={{ ...NIGHT_BUS, favorite: false }} previewing size={4} selected />
         </div>
         <div style={{ overflowX: "auto" }}>
           <table style={{ ...tableStyle, minWidth: 0 }}>
             <tbody>
               <GrooveCard {...args} variant="row" />
-              <GrooveCard {...args} variant="row" groove={{ ...NIGHT_BUS, favorite: false }} previewing />
+              <GrooveCard {...args} variant="row" groove={{ ...NIGHT_BUS, favorite: false }} previewing selected />
             </tbody>
           </table>
         </div>

@@ -60,6 +60,15 @@
   cursor: pointer;
 }
 
+/* The tile clips its children (overflow: hidden), so the cover's focus ring is drawn inside the frame. */
+.cover:focus-visible {
+  outline-offset: -3px;
+}
+
+.tile[data-selected] {
+  border-color: var(--ph-accent);
+}
+
 .tile[data-size="1"] .cover {
   padding: var(--ph-s-3);
 }
@@ -94,11 +103,17 @@
   transition: filter var(--ph-dur-fast) var(--ph-ease);
 }
 
-.play:hover {
+.play:disabled,
+.playRow:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.play:hover:not(:disabled) {
   filter: brightness(1.08);
 }
 
-.play:active {
+.play:active:not(:disabled) {
   filter: brightness(0.94);
 }
 
@@ -148,6 +163,11 @@
   background: var(--ph-sel);
 }
 
+.row[data-selected],
+.row[data-selected]:hover {
+  background: var(--ph-accent-soft);
+}
+
 .row > td {
   padding: var(--ph-s-3);
   border-bottom: 1px solid var(--ph-line-soft);
@@ -187,7 +207,7 @@
   transition: background-color var(--ph-dur-fast) var(--ph-ease);
 }
 
-.playRow:hover {
+.playRow:hover:not(:disabled) {
   background: var(--ph-raised);
 }
 

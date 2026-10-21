@@ -204,3 +204,50 @@ describe("GrooveCard row", () => {
     expect(ref.current?.tagName).toBe("TR");
   });
 });
+
+describe("GrooveCard states", () => {
+  it("should disable the play button and ignore its click when previewDisabled", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const { onPreview } = setup({ previewDisabled: true });
+
+    // Act
+    await user.click(screen.getByRole("button", { name: "Play Night bus" }));
+
+    // Assert
+    expect(screen.getByRole("button", { name: "Play Night bus" })).toBeDisabled();
+    expect(onPreview).not.toHaveBeenCalled();
+  });
+
+  it("should mark a selected row with aria-selected", () => {
+    // Arrange / Act
+    setupRow({ selected: true });
+
+    // Assert
+    expect(screen.getByRole("row")).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("should not set aria-selected on an unselected row", () => {
+    // Arrange / Act
+    setupRow();
+
+    // Assert
+    expect(screen.getByRole("row")).not.toHaveAttribute("aria-selected");
+  });
+
+  it("should flag a selected tile with data-selected", () => {
+    // Arrange / Act
+    setup({ selected: true });
+
+    // Assert
+    expect(screen.getByRole("article")).toHaveAttribute("data-selected");
+  });
+
+  it("should disable the row play button when previewDisabled", () => {
+    // Arrange / Act
+    setupRow({ previewDisabled: true });
+
+    // Assert
+    expect(screen.getByRole("button", { name: "Play Night bus" })).toBeDisabled();
+  });
+});

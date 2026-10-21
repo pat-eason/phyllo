@@ -104,13 +104,14 @@
   cursor: not-allowed;
 }
 
-/* ---- loading: label stays in layout (keeps width), spinner sits on top ---- */
+/* ---- loading: label stays in layout (keeps width) and in the accessibility tree; only its paint is hidden.
+   Never hide it with visibility or display: that drops the button's accessible name. ---- */
 .button[data-loading] {
   cursor: progress;
 }
 
 .button[data-loading] .content {
-  visibility: hidden;
+  opacity: 0;
 }
 
 .spinner {

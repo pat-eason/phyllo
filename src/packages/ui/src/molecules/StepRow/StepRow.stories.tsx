@@ -45,8 +45,8 @@ const beatLabels: CSSProperties = { flex: 1, display: "grid", gridTemplateColumn
 const small: CSSProperties = { font: "400 11px/1.4 var(--ph-font-mono)", color: "var(--ph-muted)" };
 
 /** StepSequencer-shaped grid: paint by press-and-drag, Space/Enter on a cell, select a row by its label. */
-function Sequencer({ playing = false, width = 1060 }: { playing?: boolean; width?: number }) {
-  const [rows, setRows] = useState(() => Object.fromEntries(ROWS.map((r) => [r.sound, parse(r.steps)])));
+function Sequencer({ playing = false, width = 1060, stepCount = 16 }: { playing?: boolean; width?: number; stepCount?: 8 | 16 }) {
+  const [rows, setRows] = useState(() => Object.fromEntries(ROWS.map((r) => [r.sound, parse(r.steps.slice(0, stepCount))])));
   const [selected, setSelected] = useState("oh");
   const paint = useRef<boolean>(false);
   const handles = useRef<Record<string, StepRowHandle | null>>({});
@@ -56,10 +56,10 @@ function Sequencer({ playing = false, width = 1060 }: { playing?: boolean; width
     let step = 0;
     const id = setInterval(() => {
       for (const h of Object.values(handles.current)) h?.setCurrentStep(step);
-      step = (step + 1) % 16;
+      step = (step + 1) % stepCount;
     }, 125);
     return () => clearInterval(id);
-  }, [playing]);
+  }, [playing, stepCount]);
 
   const set = (sound: string, i: number, on: boolean) =>
     setRows((rs) => ({ ...rs, [sound]: (rs[sound] ?? []).map((v, j) => (j === i ? on : v)) }));
@@ -68,8 +68,8 @@ function Sequencer({ playing = false, width = 1060 }: { playing?: boolean; width
     <div role="grid" aria-label="Drum steps" style={{ display: "flex", flexDirection: "column", gap: 8, width }}>
       <div style={header} aria-hidden="true">
         <div style={{ flex: "0 0 140px" }} />
-        <div style={beatLabels}>
-          {[1, 2, 3, 4].map((b) => (
+        <div style={{ ...beatLabels, gridTemplateColumns: `repeat(${stepCount / 4}, minmax(0, 1fr))` }}>
+          {Array.from({ length: stepCount / 4 }, (_, b) => b + 1).map((b) => (
             <span key={b} style={small}>
               beat {b}
             </span>
@@ -89,7 +89,7 @@ function Sequencer({ playing = false, width = 1060 }: { playing?: boolean; width
             label={r.label}
             color={r.color}
             steps={steps}
-            mini={toMini(r.sound, steps)}
+            mini={toMini(r.sound, stepCount === 16 ? steps : [...steps, ...steps])}
             selected={selected === r.sound}
             onSelect={() => setSelected(r.sound)}
             onToggleStep={(i) => {
@@ -164,10 +164,11 @@ export const Grid: Story = { render: () => <Sequencer /> };
 /** Playhead driven through `ref.setCurrentStep` (no row re-render). */
 export const Playing: Story = { render: () => <Sequencer playing /> };
 
+/** 8-step rows: a ThemePair half is about 650 px wide and a 16-step row needs about 850 (cells are at least 26 px). */
 export const Themes: Story = {
   render: () => (
     <ThemePair>
-      <Sequencer width={900} />
+      <Sequencer width={640} stepCount={8} />
     </ThemePair>
   ),
 };

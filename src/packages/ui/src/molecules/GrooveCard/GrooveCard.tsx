@@ -36,6 +36,13 @@ export interface GrooveCardProps extends Omit<HTMLAttributes<HTMLElement>, "chil
   size?: GrooveTileSize;
   /** The groove's preview is playing: the play button shows pause and `aria-pressed`. */
   previewing?: boolean;
+  /** Disables the play button (preview unavailable, e.g. the groove file is missing). */
+  previewDisabled?: boolean;
+  /**
+   * Multi-select state. Row: `aria-selected` plus an accent-soft background. Tile: accent border. Selection itself
+   * (click, shift-click) is owned by the browser.
+   */
+  selected?: boolean;
   /** Cover or name click. */
   onOpen: () => void;
   /** Play button click: start (or stop) the looped preview. */
@@ -71,14 +78,15 @@ function FavoriteButton({ groove, onFavoriteChange }: FavoriteButtonProps) {
 interface PlayButtonProps {
   name: string;
   previewing: boolean;
+  disabled: boolean;
   onPreview: () => void;
   className: string | undefined;
 }
 
-function PlayButton({ name, previewing, onPreview, className }: PlayButtonProps) {
+function PlayButton({ name, previewing, disabled, onPreview, className }: PlayButtonProps) {
   return (
-    <button type="button" className={className} aria-label={`Play ${name}`} aria-pressed={previewing} onClick={onPreview}>
-      <Icon name={previewing ? "pause" : "play"} size={12} />
+    <button type="button" className={className} aria-label={`Play ${name}`} aria-pressed={previewing} disabled={disabled} onClick={onPreview}>
+      <Icon name={previewing ? "pause" : "play"} size={10} />
     </button>
   );
 }
@@ -100,16 +108,28 @@ function TagList({ tags }: { tags: GrooveTag[] }) {
  * selection, preview playback and persistence. The cover/name is a button that calls `onOpen`.
  */
 export const GrooveCard = forwardRef<HTMLElement, GrooveCardProps>(function GrooveCard(
-  { groove, variant = "tile", size = 3, previewing = false, onOpen, onPreview, onFavoriteChange, className, ...rest },
+  { groove, variant = "tile", size = 3, previewing = false, previewDisabled = false, selected = false, onOpen, onPreview, onFavoriteChange, className, ...rest },
   ref,
 ) {
   const classes = className ? `${styles[variant]} ${className}` : styles[variant];
 
   if (variant === "row") {
     return (
-      <tr ref={ref as Ref<HTMLTableRowElement>} className={classes} {...(rest as HTMLAttributes<HTMLTableRowElement>)}>
+      <tr
+        ref={ref as Ref<HTMLTableRowElement>}
+        className={classes}
+        aria-selected={selected || undefined}
+        data-selected={selected ? "" : undefined}
+        {...(rest as HTMLAttributes<HTMLTableRowElement>)}
+      >
         <td className={styles["cellPlay"]}>
-          <PlayButton name={groove.name} previewing={previewing} onPreview={onPreview} className={styles["playRow"]} />
+          <PlayButton
+            name={groove.name}
+            previewing={previewing}
+            disabled={previewDisabled}
+            onPreview={onPreview}
+            className={styles["playRow"]}
+          />
         </td>
         <td className={styles["cell"]}>
           <button type="button" className={styles["nameButton"]} onClick={onOpen}>
@@ -137,12 +157,12 @@ export const GrooveCard = forwardRef<HTMLElement, GrooveCardProps>(function Groo
   const showDetails = size >= 3;
 
   return (
-    <article ref={ref} className={classes} data-size={size} {...rest}>
+    <article ref={ref} className={classes} data-size={size} data-selected={selected ? "" : undefined} {...rest}>
       <div className={styles["coverFrame"]}>
         <button type="button" className={styles["cover"]} aria-label={`Open ${groove.name}`} onClick={onOpen}>
           <Punchcard rows={groove.preview} size={COVER_CELL_SIZE[size]} />
         </button>
-        <PlayButton name={groove.name} previewing={previewing} onPreview={onPreview} className={styles["play"]} />
+        <PlayButton name={groove.name} previewing={previewing} disabled={previewDisabled} onPreview={onPreview} className={styles["play"]} />
       </div>
       <div className={styles["body"]}>
         <div className={styles["head"]}>

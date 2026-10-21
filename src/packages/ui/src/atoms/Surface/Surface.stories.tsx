@@ -63,8 +63,8 @@ export const WoodCheeks: Story = {
       <Surface as="aside" material="panel" cheek="right" padded aria-label="Track inspector" style={{ width: 320, height: 220 }}>
         <Sample>cheek=&quot;right&quot; padded (inspector)</Sample>
       </Surface>
-      <Surface as="aside" material="panel" padded aria-label="Plain panel" style={{ width: 200, height: 220 }}>
-        <Sample>no cheek</Sample>
+      <Surface as="aside" material="panel" edge="right" padded aria-label="Plain panel" style={{ width: 200, height: 220 }}>
+        <Sample>no cheek, edge=&quot;right&quot; (inner-edge line)</Sample>
       </Surface>
     </div>
   ),

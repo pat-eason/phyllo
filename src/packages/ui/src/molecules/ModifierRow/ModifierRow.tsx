@@ -44,7 +44,11 @@ export interface ModifierRowProps extends Omit<ComponentPropsWithoutRef<"div">, 
   enableLabel?: string;
 }
 
-/** One entry of a track's modifier chain (Pro inspector): handle · tinted code + description · switch · remove. */
+/**
+ * One entry of a track's modifier chain (Pro inspector): handle · tinted code + description · switch. The remove button
+ * floats over the right end of the code column, shown on row hover or when focus is inside the row (it stays in the tab
+ * order), so the code keeps the Kit's full width.
+ */
 export const ModifierRow = forwardRef<HTMLDivElement, ModifierRowProps>(function ModifierRow(
   {
     code,
@@ -231,17 +235,21 @@ export const ModifierRow = forwardRef<HTMLDivElement, ModifierRowProps>(function
             </button>
           )}
           <span className={styles["description"]}>{description}</span>
+          {editing ? null : (
+            <span className={styles["removeWrap"]}>
+              <IconButton
+                icon="close"
+                size={26}
+                variant="plain"
+                label={removeLabel ?? `Remove ${code}`}
+                className={styles["remove"]}
+                onClick={onRemove}
+              />
+            </span>
+          )}
         </div>
 
         <Switch size="sm" checked={enabled} onChange={onEnabledChange} label={enableLabel ?? `Enable ${code}`} />
-        <IconButton
-          icon="close"
-          size={26}
-          variant="plain"
-          label={removeLabel ?? `Remove ${code}`}
-          className={styles["remove"]}
-          onClick={onRemove}
-        />
       </div>
       {error ? (
         <p id={errorId} className={styles["error"]}>

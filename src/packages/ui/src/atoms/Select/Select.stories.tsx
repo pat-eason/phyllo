@@ -55,6 +55,11 @@ export const Small: Story = {
   render: () => <Controlled label="Snap" labelPosition="inline" size="sm" value="1/4" options={SNAP_OPTIONS} />,
 };
 
+/** 40 px, the select height in the Export and Onboarding mockups. */
+export const Size40: Story = {
+  render: () => <Controlled label="Sample rate" labelPosition="top" size={40} value="48000" options={RATE_OPTIONS} minWidth={180} />,
+};
+
 export const Mono: Story = {
   render: () => <Controlled label="Sound" labelPosition="top" mono value="sawtooth" options={SOUND_OPTIONS} minWidth={200} />,
 };

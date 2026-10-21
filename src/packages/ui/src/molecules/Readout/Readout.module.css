@@ -61,6 +61,46 @@ button.button:focus-visible {
   outline-offset: -2px;
 }
 
+/* Cell with a separate caption button: the value and the caption are two stacked buttons sharing the cell's padding. */
+.valueSlot {
+  display: block;
+  flex: none;
+  margin: 0;
+  padding: 0 14px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+button.valueSlot {
+  cursor: pointer;
+}
+
+button.valueSlot:hover,
+.captionButton:hover {
+  background: var(--ph-hl);
+}
+
+button.valueSlot:focus-visible,
+.captionButton:focus-visible {
+  outline-offset: -2px;
+}
+
+.captionButton {
+  margin: 0;
+  padding: 0 14px;
+  border: 0;
+  background: transparent;
+  color: var(--ph-muted);
+  font: 400 10px/1.3 var(--ph-font-ui);
+  letter-spacing: 0.08em;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
 .value {
   min-height: 1.1em;
   font: 500 18px/1.1 var(--ph-font-ui);

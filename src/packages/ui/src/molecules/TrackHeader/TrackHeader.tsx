@@ -26,7 +26,10 @@ export interface TrackHeaderProps extends Omit<ComponentPropsWithoutRef<"div">, 
   level?: number;
   /** Live meter feed (see `Meter`'s `subscribe`). */
   meterSubscribe?: MeterSubscribe;
-  /** Evaluation error for this track: shows a red dot with the message as its tooltip and accessible name. */
+  /**
+   * Evaluation error for this track: shows a red dot (tooltip and image name = the message) and adds the message to the
+   * name button's `aria-describedby`, so keyboard and screen-reader users hear it when they focus the track.
+   */
   error?: string;
   /** The track is a raw-code track (SPEC 4.4): shows a code badge. */
   codeTrack?: boolean;
@@ -72,6 +75,7 @@ export const TrackHeader = forwardRef<HTMLDivElement, TrackHeaderProps>(function
   const uid = useId();
   const nameId = `${uid}-name`;
   const soundId = `${uid}-sound`;
+  const errorId = `${uid}-error`;
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(name);
   const input = useRef<HTMLInputElement>(null);
@@ -149,7 +153,7 @@ export const TrackHeader = forwardRef<HTMLDivElement, TrackHeaderProps>(function
             className={styles["select"]}
             aria-pressed={selected}
             aria-labelledby={nameId}
-            aria-describedby={soundId}
+            aria-describedby={error ? `${soundId} ${errorId}` : soundId}
             onClick={onSelect}
             onDoubleClick={startEditing}
             onKeyDown={onNameKeyDown}
@@ -162,6 +166,11 @@ export const TrackHeader = forwardRef<HTMLDivElement, TrackHeaderProps>(function
             </span>
           </button>
         )}
+        {error ? (
+          <span id={errorId} className={styles["visuallyHidden"]}>
+            {`Error: ${error}`}
+          </span>
+        ) : null}
         {codeTrack || error ? (
           <span className={styles["marks"]}>
             {codeTrack ? (

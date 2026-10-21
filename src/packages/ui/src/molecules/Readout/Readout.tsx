@@ -28,6 +28,13 @@ export interface ReadoutCell {
    * typed text, Escape cancels. Also makes the cell a button.
    */
   onEdit?: (value: string) => void;
+  /**
+   * Makes the caption its own button (BPM · TAP: tap tempo) next to the value. The value stays a separate button when
+   * `onActivate` / `onEdit` are set, so the two actions don't nest.
+   */
+  onCaptionClick?: () => void;
+  /** Accessible name of the caption button. Defaults to the caption text. */
+  captionLabel?: string;
   /** Wheel or Arrow Up/Down on an interactive cell nudges the value by one step. */
   onNudge?: (delta: 1 | -1) => void;
   /** Accessible name for an interactive cell, e.g. "Tempo 120 BPM, edit". Defaults to value + caption. */
@@ -66,7 +73,7 @@ export const Readout = forwardRef<HTMLDivElement, ReadoutProps>(function Readout
 });
 
 function Cell({ cell }: { cell: ReadoutCell }) {
-  const { id, value, caption, mono = false, onActivate, onEdit, onNudge, label, minWidth, subscribe } = cell;
+  const { id, value, caption, mono = false, onActivate, onEdit, onNudge, onCaptionClick, captionLabel, label, minWidth, subscribe } = cell;
   const compact = cell.compact ?? (id === "key" || id === "cycle");
   const interactive = Boolean(onActivate ?? onEdit);
   const [editing, setEditing] = useState(false);
@@ -161,6 +168,45 @@ function Cell({ cell }: { cell: ReadoutCell }) {
   );
   const captionEl = <span className={styles["caption"]}>{caption}</span>;
   const style = minWidth === undefined ? undefined : { minWidth };
+
+  if (onCaptionClick) {
+    let valuePart;
+    if (!interactive) {
+      valuePart = <div className={styles["valueSlot"]}>{body}</div>;
+    } else if (editing) {
+      valuePart = <div className={styles["valueSlot"]}>{body}</div>;
+    } else {
+      valuePart = (
+        <button
+          ref={buttonRef}
+          type="button"
+          className={styles["valueSlot"]}
+          aria-label={label}
+          onClick={() => {
+            onActivate?.();
+            if (onEdit) {
+              setDraft(value);
+              setEditing(true);
+            }
+          }}
+          onKeyDown={onKeyDown}
+        >
+          {body}
+        </button>
+      );
+    }
+    return (
+      <>
+        <span className={styles["rule"]} aria-hidden="true" />
+        <div className={styles["cell"]} data-interactive="" style={style} data-cell={id}>
+          {valuePart}
+          <button type="button" className={styles["captionButton"]} aria-label={captionLabel} onClick={onCaptionClick}>
+            {caption}
+          </button>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

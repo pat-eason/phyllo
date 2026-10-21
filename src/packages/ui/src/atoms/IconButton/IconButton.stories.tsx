@@ -8,7 +8,7 @@ const meta = {
   component: IconButton,
   args: { icon: "settings", label: "Settings", size: 38, onClick: () => {} },
   argTypes: {
-    size: { control: "inline-radio", options: [26, 30, 32, 38] },
+    size: { control: "inline-radio", options: [26, 30, 32, 38, 40] },
     shape: { control: "inline-radio", options: ["square", "circle"] },
     variant: { control: "inline-radio", options: ["outline", "plain", "filled"] },
     tone: { control: "inline-radio", options: ["neutral", "accent"] },
@@ -28,6 +28,7 @@ export const Sizes: Story = {
       <IconButton icon="plus" label="Zoom in" size={30} />
       <IconButton icon="plus" label="Zoom in" size={32} />
       <IconButton icon="settings" label="Settings" size={38} />
+      <IconButton icon="settings" label="Settings" size={40} />
     </div>
   ),
 };

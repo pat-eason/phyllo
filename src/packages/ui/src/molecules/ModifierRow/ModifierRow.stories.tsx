@@ -78,7 +78,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Enabled: Story = {};
 
-/** Off: kept in the model, dropped from the code; code at 60%. */
+/** Off: kept in the model, dropped from the code; code drawn in `--ph-muted` (not dimmed by opacity, so contrast holds). */
 export const Disabled: Story = { args: { code: ".lastOf(4, rev)", description: "Reverses the last cycle of every 4", enabled: false } };
 
 /** Strings, numbers and calls tinted. */

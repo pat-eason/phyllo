@@ -18,6 +18,7 @@ const meta = {
   args: { status: "ok", label: "Live" },
   argTypes: {
     status: { control: "select", options: STATUSES },
+    labelTone: { control: "inline-radio", options: ["default", "muted", "accent"] },
   },
   decorators: [(Story) => <div style={{ padding: 24 }}>{Story()}</div>],
 } satisfies Meta<typeof StatusDot>;
@@ -68,8 +69,20 @@ export const DotOnly: Story = {
   args: { label: undefined, "aria-label": "Engine running" },
 };
 
+/** `labelTone="accent"` is the accent-coloured, semibold "Watching" / "Live" look (`--ph-accent-text`). */
 export const Watching: Story = {
-  args: { status: "ok", label: "Watching" },
+  args: { status: "ok", label: "Watching", labelTone: "accent" },
+};
+
+/** Label tones: default `--ph-text`, `muted` `--ph-muted`, `accent` `--ph-accent-text` at 600. */
+export const LabelTones: Story = {
+  render: () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <StatusDot status="ok" label="Default label" />
+      <StatusDot status="ok" label="Muted label" labelTone="muted" />
+      <StatusDot status="ok" label="Accent label" labelTone="accent" />
+    </div>
+  ),
 };
 
 export const Themes: Story = {
@@ -84,6 +97,10 @@ export const Themes: Story = {
         <StatusDot status="ok" label="Live" badge />
         <StatusDot status="busy" label="Evaluating" badge />
         <StatusDot status="ok" aria-label="Engine running" />
+      </div>
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+        <StatusDot status="ok" label="Muted label" labelTone="muted" />
+        <StatusDot status="ok" label="Watching" labelTone="accent" />
       </div>
     </ThemePair>
   ),

@@ -15,6 +15,8 @@
 }
 
 .label {
+  color: var(--ph-text);
+  font-weight: 400;
   white-space: nowrap;
 }
 
@@ -36,23 +38,14 @@
   background: var(--ph-muted);
 }
 
-.statusDot[data-status="ok"] .label,
-.statusDot[data-status="busy"] .label {
-  color: var(--ph-accent); /* == --ph-accent-text, but that token is resolved at :root and ignores nested data-theme */
-  font-weight: 600;
-}
-
-.statusDot[data-status="warn"] .label {
-  font-weight: 600;
-}
-
-.statusDot[data-status="error"] .label {
-  color: var(--ph-rec);
-  font-weight: 600;
-}
-
-.statusDot[data-status="off"] .label {
+/* ---- label tone: plain text by default, muted or accent on request ---- */
+.label[data-tone="muted"] {
   color: var(--ph-muted);
+}
+
+.label[data-tone="accent"] {
+  color: var(--ph-accent-text);
+  font-weight: 600;
 }
 
 /* ---- badge ---- */
@@ -60,11 +53,6 @@
   padding: 4px 10px;
   border-radius: var(--ph-r-md);
   background: var(--ph-sel);
-}
-
-.statusDot[data-badge] .label {
-  color: var(--ph-accent); /* == --ph-accent-text, but that token is resolved at :root and ignores nested data-theme */
-  font-weight: 600;
 }
 
 /* ---- pulse (busy only) ---- */

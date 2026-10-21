@@ -47,7 +47,7 @@ export const SOLID_ICONS: ReadonlySet<IconName> = new Set<IconName>(["play", "pa
 export const ICON_PATHS: Record<IconName, string> = {
   play: "M7 4.5l13 7.5-13 7.5z",
   pause: "M6 5h4v14H6zM14 5h4v14h-4z",
-  stop: "M5 5h14v14H5z",
+  stop: "M7 5h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z", // Kit rect x5 y5 14x14 rx=2 (Main/transport); the Kit icon gallery draws it square
   record: "M12 5a7 7 0 1 0 0 14a7 7 0 1 0 0-14z",
   "to-start": "M6 5v14M18 6l-9 6 9 6z",
   loop: "M17 2l3 3-3 3M4 11V9a4 4 0 0 1 4-4h12M7 22l-3-3 3-3M20 13v2a4 4 0 0 1-4 4H4",

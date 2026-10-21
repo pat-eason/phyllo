@@ -2,7 +2,7 @@ import { forwardRef, type ButtonHTMLAttributes } from "react";
 import { Icon, type IconName, type IconSize } from "../Icon";
 import styles from "./IconButton.module.css";
 
-export type IconButtonSize = 26 | 30 | 32 | 38;
+export type IconButtonSize = 26 | 30 | 32 | 38 | 40;
 
 export interface IconButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> {
   icon: IconName;
@@ -20,7 +20,7 @@ export interface IconButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonEle
   tone?: "neutral" | "accent";
 }
 
-const ICON_SIZE: Record<IconButtonSize, IconSize> = { 26: 12, 30: 14, 32: 14, 38: 18 };
+const ICON_SIZE: Record<IconButtonSize, IconSize> = { 26: 12, 30: 14, 32: 14, 38: 18, 40: 18 };
 
 /** Square (or circular) button holding only an `Icon`. The accessible name comes from `label`. */
 export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
@@ -44,7 +44,8 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
       data-pressed={pressed ? "" : undefined}
       {...rest}
     >
-      <Icon name={icon} size={ICON_SIZE[size]} />
+      {/* The Kit's 26 px round Preview button carries a 10 px glyph; other 26 px buttons keep 12. */}
+      <Icon name={icon} size={shape === "circle" && size === 26 ? 10 : ICON_SIZE[size]} />
     </button>
   );
 });

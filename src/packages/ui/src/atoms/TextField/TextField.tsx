@@ -10,8 +10,8 @@ export interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElemen
   label: string;
   labelPosition?: "top" | "hidden";
   variant?: "plain" | "search" | "code";
-  /** 36 px (`md`) or 42 px (`lg`). */
-  size?: "md" | "lg";
+  /** 36 px (`md`), 42 px (`lg`) or 40 px (`40`, the Export / Onboarding / Library forms). */
+  size?: "md" | "lg" | 40;
   /** Red border plus `aria-invalid`; the description turns red and reads as the error message. */
   invalid?: boolean;
   /** Help text or error message under the field, wired up through `aria-describedby`. */
@@ -67,7 +67,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
   }
 
   const classes = [styles["root"], className].filter(Boolean).join(" ");
-  const boxClasses = [styles["box"], styles[size], isCode && styles["code"], invalid && styles["invalid"], disabled && styles["disabled"]]
+  const boxClasses = [styles["box"], styles[size === 40 ? "s40" : size], isCode && styles["code"], invalid && styles["invalid"], disabled && styles["disabled"]]
     .filter(Boolean)
     .join(" ");
 

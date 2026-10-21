@@ -163,4 +163,12 @@ describe("TextField", () => {
     expect(ref.current).toBe(screen.getByTestId("in"));
     expect(container.firstElementChild).toHaveClass("extra");
   });
+
+  it("should apply the 40 px size", () => {
+    // Arrange / Act
+    render(<Harness label="Folder" size={40} />);
+
+    // Assert
+    expect(screen.getByRole("textbox", { name: "Folder" }).parentElement).toHaveClass("s40");
+  });
 });

@@ -12,6 +12,15 @@
   box-shadow: var(--ph-shadow-bevel);
 }
 
+/* Inner-edge line of a cheek-less panel; with a cheek the line is drawn opposite it (see wood cheek below). */
+.surface[data-material="panel"][data-edge="left"] {
+  border-left: 1px solid var(--ph-line);
+}
+
+.surface[data-material="panel"][data-edge="right"] {
+  border-right: 1px solid var(--ph-line);
+}
+
 .surface[data-material="raised"] {
   background: var(--ph-btn-grad);
   box-shadow: var(--ph-shadow-btn);

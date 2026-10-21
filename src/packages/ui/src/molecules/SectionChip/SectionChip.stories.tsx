@@ -59,7 +59,7 @@ export const InRuler: Story = { render: () => <Ruler /> };
 export const Themes: Story = {
   render: () => (
     <ThemePair>
-      <div style={{ display: "flex", gap: 8 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, width: 160 }}>
         <SectionChip name="Groove" startBar={9} endBar={16} current />
         <SectionChip name="Break" startBar={17} endBar={20} current={false} />
       </div>

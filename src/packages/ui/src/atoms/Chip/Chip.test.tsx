@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { createRef } from "react";
+import { createRef, useRef, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Chip } from "./Chip";
 
@@ -220,5 +220,64 @@ describe("Chip", () => {
     expect(ref.current).toBe(chip);
     expect(chip).toHaveClass("extra");
     expect(chip).toHaveAttribute("draggable", "true");
+  });
+
+  it("should expose aria-pressed on a code chip only when selected is passed", () => {
+    // Arrange / Act
+    render(
+      <>
+        <Chip variant="code">supersaw</Chip>
+        <Chip variant="code" selected>
+          sawtooth
+        </Chip>
+        <Chip variant="code" selected={false}>
+          square
+        </Chip>
+      </>,
+    );
+
+    // Assert
+    expect(screen.getByRole("button", { name: "supersaw" })).not.toHaveAttribute("aria-pressed");
+    expect(screen.getByRole("button", { name: "sawtooth" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "square" })).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("should draw a selected code chip with the selected class", () => {
+    // Arrange / Act
+    render(
+      <Chip variant="code" selected>
+        sawtooth
+      </Chip>,
+    );
+
+    // Assert
+    expect(screen.getByRole("button", { name: "sawtooth" })).toHaveClass("selected");
+  });
+
+  it("should let the parent move focus in onRemove when the chip goes away", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    function Filters() {
+      const [tags, setTags] = useState(["house", "techno"]);
+      const nextRef = useRef<HTMLButtonElement>(null);
+      return (
+        <>
+          {tags.map((tag) => (
+            <Chip key={tag} variant="removable" onRemove={() => { setTags((current) => current.filter((t) => t !== tag)); nextRef.current?.focus(); }}>
+              {tag}
+            </Chip>
+          ))}
+          <button ref={nextRef} type="button">Add filter</button>
+        </>
+      );
+    }
+    render(<Filters />);
+
+    // Act
+    await user.click(screen.getByRole("button", { name: "Remove house" }));
+
+    // Assert
+    expect(screen.queryByRole("button", { name: "Remove house" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add filter" })).toHaveFocus();
   });
 });

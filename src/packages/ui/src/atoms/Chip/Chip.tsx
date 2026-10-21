@@ -7,13 +7,20 @@ export type ChipVariant = "filter" | "tag" | "removable" | "code" | "meta";
 export interface ChipProps extends Omit<HTMLAttributes<HTMLElement>, "onClick" | "color" | "children"> {
   variant: ChipVariant;
   children: ReactNode;
-  /** `filter` only: pressed state, exposed as `aria-pressed`. The parent decides single vs multi select. */
+  /**
+   * Pressed state, exposed as `aria-pressed`. `filter` always has it (the parent decides single vs multi select);
+   * `code` only when this is passed (a selectable code chip, e.g. the chosen waveform), otherwise it is a plain action.
+   */
   selected?: boolean;
   /** `tag` only: color of the leading dot, from the library's tag palette (any CSS color or `var(--ph-track-n)`). */
   color?: string;
   /** `filter` and `code`. */
   onClick?: () => void;
-  /** `removable`: renders the whole chip as a "Remove" button with a trailing x. Backspace/Delete on focus also removes. */
+  /**
+   * `removable`: renders the whole chip as a "Remove" button with a trailing x. Backspace/Delete on focus also removes.
+   * The chip unmounts when removed, so the parent must move focus (e.g. to the next chip or the filter input) in this
+   * callback, otherwise focus falls back to `<body>` and keyboard users lose their place.
+   */
   onRemove?: () => void;
   /** `removable`: accessible name. Defaults to `Remove <children>` when children is text. */
   removeLabel?: string;
@@ -32,10 +39,10 @@ function textOf(children: ReactNode): string | undefined {
  * real buttons; static ones are spans. Native props, `className` and `ref` go to the root element.
  */
 export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
-  { variant, children, selected = false, color, onClick, onRemove, removeLabel, size = "md", disabled, className, onKeyDown, ...rest },
+  { variant, children, selected, color, onClick, onRemove, removeLabel, size = "md", disabled, className, onKeyDown, ...rest },
   ref,
 ) {
-  const classes = [styles["chip"], styles[variant], styles[size], selected && variant === "filter" && styles["selected"], className]
+  const classes = [styles["chip"], styles[variant], styles[size], selected && (variant === "filter" || variant === "code") && styles["selected"], className]
     .filter(Boolean)
     .join(" ");
 
@@ -76,7 +83,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
         onKeyDown={handleKeyDown}
       >
         {children}
-        <Icon name="close" size={12} className={styles["remove"]} />
+        <Icon name="close" size={10} className={styles["remove"]} />
       </button>
     );
   }
@@ -88,7 +95,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
       type="button"
       className={classes}
       disabled={disabled}
-      aria-pressed={variant === "filter" ? selected : undefined}
+      aria-pressed={variant === "filter" ? (selected ?? false) : variant === "code" ? selected : undefined}
       onClick={onClick}
       onKeyDown={onKeyDown}
     >
