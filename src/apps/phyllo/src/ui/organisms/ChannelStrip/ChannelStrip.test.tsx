@@ -8,13 +8,14 @@ import { createFakeEngine } from "../../../state/fakeEngine";
 import type { FakeEngine } from "../../../state/fakeEngine";
 import type { MockStores } from "../../../state/mocks";
 import { renderWithStores } from "../../../state/testUtils";
+import { ToastProvider } from "../../toasts";
 import { ChannelStrip } from "./ChannelStrip";
 import { mixerProject } from "./fixtures";
 
 const projectOf = (stores: MockStores): Project => stores.project.getState().project;
 const trackOf = (stores: MockStores, id: string) => findTrack(projectOf(stores), id);
 const renderStrip = (ui: ReactElement, engine?: FakeEngine) =>
-  renderWithStores(ui, { initialProject: mixerProject(), ...(engine ? { engine } : {}) });
+  renderWithStores(<ToastProvider>{ui}</ToastProvider>, { initialProject: mixerProject(), ...(engine ? { engine } : {}) });
 
 /** A ready engine whose capture tap delivers one stereo chunk. */
 function capturingEngine(): FakeEngine {

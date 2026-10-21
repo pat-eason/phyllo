@@ -1,0 +1,17 @@
+.host {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--ph-s-2);
+  max-width: min(420px, calc(100vw - 32px));
+  /* Only the toasts take the pointer; the gaps between them let clicks through. */
+  pointer-events: none;
+}
+
+.host > * {
+  pointer-events: auto;
+}

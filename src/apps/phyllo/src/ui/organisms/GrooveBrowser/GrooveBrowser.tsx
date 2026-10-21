@@ -1,7 +1,8 @@
 import { Button, Chip, EmptyState } from "@phyllo/ui";
 import type { GrooveSummary } from "@phyllo/model";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useAudition, useLibrary, useNative } from "../../../hooks";
+import { useToasts } from "../../toasts";
 import { ContextMenu } from "./ContextMenu";
 import type { MenuItem } from "./ContextMenu";
 import { grooveCount } from "./format";
@@ -47,8 +48,6 @@ interface MenuState {
   anchor: ContextAnchor;
 }
 
-const NOTICE_MS = 6000;
-
 /**
  * The Groove library: collections and tags on the left, search / sort / tile size / view on top, then the grooves as
  * a grid of tiles or a table. All state comes from `useLibrary()`; file operations go through its actions.
@@ -64,7 +63,8 @@ export function GrooveBrowser({ onOpenGroove, onBulkExport, onNewGroove, onImpor
   const [pendingTags, setPendingTags] = useState<string[]>([]);
   const [menu, setMenu] = useState<MenuState | null>(null);
   const [dialog, setDialog] = useState<DialogState | null>(null);
-  const [notice, setNotice] = useState<Notice | null>(null);
+  const toasts = useToasts();
+  const setNotice = ({ tone, text }: Notice) => void toasts.push({ title: text, tone: tone === "error" ? "error" : "neutral" });
   const returnFocus = useRef<HTMLElement | null>(null);
   const { auditioning, audition, stop } = useAudition();
 
@@ -74,12 +74,6 @@ export function GrooveBrowser({ onOpenGroove, onBulkExport, onNewGroove, onImpor
   const unusedPending = pendingTags.filter((tag) => !hasTag(library.tags.map((t) => t.name), tag));
   const tagSuggestions = [...library.tags.map((t) => t.name), ...unusedPending];
   const filtersActive = library.selectedTags.length > 0 || library.query !== "";
-
-  useEffect(() => {
-    if (!notice) return;
-    const timer = setTimeout(() => setNotice(null), NOTICE_MS);
-    return () => clearTimeout(timer);
-  }, [notice]);
 
   // Play on a tile or row auditions the groove's first section as a clean preview; the open project comes back on stop.
   function previewGroove(groove: GrooveSummary) {
@@ -247,12 +241,6 @@ export function GrooveBrowser({ onOpenGroove, onBulkExport, onNewGroove, onImpor
               Clear selection
             </Button>
           </div>
-        ) : null}
-
-        {notice ? (
-          <p className={styles["notice"]} data-tone={notice.tone} role={notice.tone === "error" ? "alert" : "status"}>
-            {notice.text}
-          </p>
         ) : null}
 
         <div className={styles["content"]}>

@@ -19,6 +19,8 @@ export interface CodeViewProps {
   selectedTrackId: string | null;
   /** Engine error placed on a displayed line. */
   error: CodeViewError | null;
+  /** Show the line-number gutter. Default true. */
+  lineNumbers?: boolean;
   /** Commit an edited pattern (`track/setPattern`). */
   onSetPattern(trackId: string, pattern: string): void;
 }
@@ -42,7 +44,7 @@ function selectAllOnCommandA(event: KeyboardEvent<HTMLPreElement>) {
  * Line-numbered, syntax-colored code. The gutter is a separate column so selecting and copying the code never
  * picks up line numbers; error rows are `user-select: none` for the same reason. ⌘A inside selects only the code.
  */
-export function CodeView({ lines, literals, tracks, selectedTrackId, error, onSetPattern }: CodeViewProps) {
+export function CodeView({ lines, literals, tracks, selectedTrackId, error, lineNumbers = true, onSetPattern }: CodeViewProps) {
   const id = useId();
   const [edit, setEdit] = useState<LiteralEdit | null>(null);
   const names = useMemo(() => new Map(tracks.map((t) => [t.id, t.name])), [tracks]);
@@ -143,10 +145,12 @@ export function CodeView({ lines, literals, tracks, selectedTrackId, error, onSe
   }
 
   return (
-    <div className={styles["codeGrid"]}>
-      <div className={styles["gutter"]} aria-hidden="true">
-        {gutter}
-      </div>
+    <div className={styles["codeGrid"]} data-line-numbers={lineNumbers ? undefined : "off"}>
+      {lineNumbers ? (
+        <div className={styles["gutter"]} aria-hidden="true">
+          {gutter}
+        </div>
+      ) : null}
       <div className={styles["codeScroll"]}>
         {/* A focusable, labelled code region: keyboard users scroll it and ⌘A selects just the code. */}
         {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex, jsx-a11y/no-noninteractive-element-interactions */}

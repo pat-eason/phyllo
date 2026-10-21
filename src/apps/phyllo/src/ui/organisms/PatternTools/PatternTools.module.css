@@ -120,17 +120,6 @@
 
 /* "off" stays plain --ph-muted: dimming it further failed 4.5:1 in both themes (T3.V). */
 
-/* Slider has no fluid width prop; stretch its track to the card (reported as an atom gap). */
-.slider {
-  display: flex;
-  width: 100%;
-}
-
-.slider > * {
-  flex: 1 1 auto;
-  width: auto !important;
-}
-
 .cheat {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);

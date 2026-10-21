@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { NativeError } from "../../../native/errors";
 import { PhylloProvider } from "../../../state/PhylloProvider";
 import { renderWithStores } from "../../../state/testUtils";
+import { ToastProvider } from "../../toasts";
 import { ExportDialog } from "./ExportDialog";
 import { createExportFixture, exportStoreOptions } from "./fixtures";
 import type { RenderMode } from "./fixtures";
@@ -12,7 +13,12 @@ function renderDialog(mode: RenderMode = "instant", extra: Parameters<typeof exp
   const fixture = createExportFixture(mode);
   const onClose = vi.fn();
   const user = userEvent.setup();
-  const view = renderWithStores(<ExportDialog open onClose={onClose} />, exportStoreOptions(fixture, extra));
+  const view = renderWithStores(
+    <ToastProvider>
+      <ExportDialog open onClose={onClose} />
+    </ToastProvider>,
+    exportStoreOptions(fixture, extra),
+  );
   return { ...view, fixture, onClose, user };
 }
 
@@ -211,7 +217,9 @@ describe("ExportDialog", () => {
     await user.click(await screen.findByRole("button", { name: "Keep working" }));
     rerender(
       <PhylloProvider stores={stores} autoStart={false}>
-        <ExportDialog open={false} onClose={onClose} />
+        <ToastProvider>
+          <ExportDialog open={false} onClose={onClose} />
+        </ToastProvider>
       </PhylloProvider>,
     );
 

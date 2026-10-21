@@ -82,3 +82,19 @@ export const Themes: Story = {
     </ThemePair>
   ),
 };
+
+/** `muteProps` / `soloProps` reach the toggles, e.g. the tip anchors (outlined here by `data-tip-active`). */
+export const TipAnchors: Story = {
+  args: {
+    muteProps: { "data-tip-target": "track-mute", "data-tip-active": "" },
+    soloProps: { "data-tip-target": "track-solo" },
+  },
+  decorators: [
+    (Story) => (
+      <div style={{ padding: 8 }}>
+        <style>{"[data-tip-active] { outline: 2px solid var(--ph-accent); outline-offset: 2px; }"}</style>
+        {Story()}
+      </div>
+    ),
+  ],
+};

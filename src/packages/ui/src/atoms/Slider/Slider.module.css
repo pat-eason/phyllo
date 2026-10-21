@@ -6,6 +6,16 @@
   gap: var(--ph-s-3);
 }
 
+.root[data-fill] {
+  display: flex;
+  width: 100%;
+}
+
+.root[data-fill] > .control {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 .disabled {
   opacity: 0.5;
 }

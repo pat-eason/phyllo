@@ -22,6 +22,7 @@ export interface ParamKnobProps extends Omit<ComponentPropsWithoutRef<"div">, "o
   /**
    * While modulated: keyboard, wheel and double-click changes call this (direction, new value in real units) instead of
    * `onChange`, so the organism can show its "replace the modifier?" confirm. Drags still go through `onChange`.
+   * A key press is reported even when it cannot move the knob (at a bound, or onto the value it already has).
    */
   onBlockedChange?: (direction: 1 | -1, value: number) => void;
   /** Shown as the value while modulated, e.g. `~400–1.4k`. */
@@ -106,10 +107,7 @@ export const ParamKnob = forwardRef<HTMLDivElement, ParamKnobProps>(function Par
         modulated={isModulated}
         onBlockedChange={
           onBlockedChange
-            ? (direction, position) => {
-                const next = spec.fromKnob(position);
-                if (next !== numeric) onBlockedChange(direction, next);
-              }
+            ? (direction, position) => onBlockedChange(direction, spec.fromKnob(position))
             : undefined
         }
         bipolar={bipolar ?? param === "pan"}

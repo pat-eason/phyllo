@@ -1,10 +1,10 @@
 import type { OutputDevice } from "@phyllo/engine";
 import { formatNumber } from "@phyllo/model";
-import { Button, dbToGain, Fader, formatDb, gainToDb, Meter, Select, Switch, Toast } from "@phyllo/ui";
+import { Button, dbToGain, Fader, formatDb, gainToDb, Meter, Select, Switch } from "@phyllo/ui";
 import type { SelectOption } from "@phyllo/ui";
 import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { useAppStores, useEngine, useMeters, useNative, useProject, useProjectFile, useProjectSelector, useSettings } from "../../../hooks";
+import { useToasts } from "../../toasts";
 import { useTransportStopped } from "./useTransportStopped";
 import { nextTakeFileName, startOutputRecording } from "./recordOutput";
 import type { OutputRecording } from "./recordOutput";
@@ -17,12 +17,6 @@ const PEAK_HOLD_MS = 1500;
 
 type RecordStatus = { kind: "idle" } | { kind: "starting" } | { kind: "recording"; startedAt: number } | { kind: "saving" };
 
-interface ToastState {
-  title: string;
-  detail?: string;
-  path?: string;
-  tone: "neutral" | "error";
-}
 
 const baseName = (path: string) => path.split(/[\\/]/).pop() ?? path;
 const messageOf = (error: unknown) => (error instanceof Error ? error.message : String(error));
@@ -118,7 +112,7 @@ export function MasterStrip() {
   const [area, faderHeight] = useFillHeight<HTMLDivElement>();
 
   const [status, setStatus] = useState<RecordStatus>({ kind: "idle" });
-  const [toast, setToast] = useState<ToastState | null>(null);
+  const toasts = useToasts();
   const session = useRef<OutputRecording | null>(null);
   const busy = useRef(false);
 
@@ -152,7 +146,7 @@ export function MasterStrip() {
       })
       .catch((error: unknown) => {
         setStatus({ kind: "idle" });
-        setToast({ title: "Couldn't record the output", detail: messageOf(error), tone: "error" });
+        toasts.push({ title: "Couldn't record the output", body: messageOf(error), tone: "error" });
       })
       .finally(() => {
         busy.current = false;
@@ -166,15 +160,19 @@ export function MasterStrip() {
     recording
       .stop()
       .then((result) => {
-        setToast({
+        toasts.push({
           title: `Saved ${baseName(result.path)}`,
-          detail: `${formatElapsed(result.durationSec * 1000)} · 24-bit WAV`,
-          path: result.path,
-          tone: "neutral",
+          body: `${formatElapsed(result.durationSec * 1000)} · 24-bit WAV`,
+          action: {
+            label: "Reveal",
+            onClick: () => {
+              native.revealInFinder(result.path).catch(() => toasts.push({ title: "Couldn't show the file", body: result.path, tone: "error" }));
+            },
+          },
         });
       })
       .catch((error: unknown) => {
-        setToast({ title: "Couldn't save the recording", detail: messageOf(error), tone: "error" });
+        toasts.push({ title: "Couldn't save the recording", body: messageOf(error), tone: "error" });
       })
       .finally(() => {
         busy.current = false;
@@ -266,30 +264,6 @@ export function MasterStrip() {
           )}
         </Button>
       </div>
-
-      {toast &&
-        createPortal(
-          <Toast
-            className={styles["toast"]}
-            title={toast.title}
-            {...(toast.detail ? { detail: toast.detail } : {})}
-            tone={toast.tone}
-            duration={toast.tone === "error" ? 0 : 6000}
-            {...(toast.path
-              ? {
-                  action: {
-                    label: "Reveal",
-                    onClick: () => {
-                      const path = toast.path;
-                      if (path) native.revealInFinder(path).catch(() => setToast({ title: "Couldn't show the file", detail: path, tone: "error" }));
-                    },
-                  },
-                }
-              : {})}
-            onDismiss={() => setToast(null)}
-          />,
-          document.body,
-        )}
     </section>
   );
 }

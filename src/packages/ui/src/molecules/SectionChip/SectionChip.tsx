@@ -14,6 +14,11 @@ export interface SectionChipProps extends Omit<ButtonHTMLAttributes<HTMLButtonEl
   onSelect?: () => void;
   /** Double-click the name (or F2) to rename in place; Enter commits, Escape cancels. */
   onRename?: (name: string) => void;
+  /**
+   * In a narrow slot, drop the bar range before the name is truncated (the range wraps to a clipped second line).
+   * Default false: the name truncates and the range stays.
+   */
+  dropRangeFirst?: boolean;
 }
 
 /**
@@ -22,7 +27,7 @@ export interface SectionChipProps extends Omit<ButtonHTMLAttributes<HTMLButtonEl
  * so neighbours never touch (the chip fills whatever box it is given).
  */
 export const SectionChip = forwardRef<HTMLButtonElement, SectionChipProps>(function SectionChip(
-  { name, startBar, endBar, current, onSelect, onRename, className, onClick, onDoubleClick, onKeyDown, ...rest },
+  { name, startBar, endBar, current, onSelect, onRename, dropRangeFirst = false, className, onClick, onDoubleClick, onKeyDown, ...rest },
   ref,
 ) {
   const [editing, setEditing] = useState(false);
@@ -60,7 +65,13 @@ export const SectionChip = forwardRef<HTMLButtonElement, SectionChipProps>(funct
 
   if (editing) {
     return (
-      <div className={classes} data-current={current ? "" : undefined} data-editing="" style={rest.style}>
+      <div
+        className={classes}
+        data-current={current ? "" : undefined}
+        data-editing=""
+        data-drop-range={dropRangeFirst ? "" : undefined}
+        style={rest.style}
+      >
         <input
           ref={input}
           className={styles["input"]}
@@ -99,6 +110,7 @@ export const SectionChip = forwardRef<HTMLButtonElement, SectionChipProps>(funct
       aria-current={current ? "true" : undefined}
       aria-label={`${name}, ${spoken}`}
       data-current={current ? "" : undefined}
+      data-drop-range={dropRangeFirst ? "" : undefined}
       onClick={(event) => {
         onClick?.(event);
         if (!event.defaultPrevented) onSelect?.();

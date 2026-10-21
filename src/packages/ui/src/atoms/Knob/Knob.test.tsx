@@ -380,15 +380,45 @@ describe("Knob", () => {
       expect(onChange).not.toHaveBeenCalled();
     });
 
-    it("should say nothing when the step would not change the value", async () => {
+    it("should report a key that cannot move the knob at a bound", async () => {
       // Arrange
       const user = userEvent.setup();
       const onBlockedChange = vi.fn();
-      const { slider } = renderKnob({ modulated: true, value: 1, onBlockedChange });
+      const { onChange, slider } = renderKnob({ modulated: true, value: 1, onBlockedChange });
       slider.focus();
 
       // Act
-      await user.keyboard("{ArrowUp}{End}");
+      await user.keyboard("{ArrowUp}{End}{PageUp}");
+
+      // Assert
+      expect(onBlockedChange).toHaveBeenCalledTimes(3);
+      expect(onBlockedChange).toHaveBeenNthCalledWith(1, 1, 1);
+      expect(onBlockedChange).toHaveBeenNthCalledWith(3, 1, 1);
+      expect(onChange).not.toHaveBeenCalled();
+    });
+
+    it("should report a downward key at the bottom bound with direction -1", async () => {
+      // Arrange
+      const user = userEvent.setup();
+      const onBlockedChange = vi.fn();
+      const { slider } = renderKnob({ modulated: true, value: 0, onBlockedChange });
+      slider.focus();
+
+      // Act
+      await user.keyboard("{ArrowDown}{Home}");
+
+      // Assert
+      expect(onBlockedChange).toHaveBeenNthCalledWith(1, -1, 0);
+      expect(onBlockedChange).toHaveBeenNthCalledWith(2, -1, 0);
+    });
+
+    it("should stay quiet for a wheel notch at a bound", () => {
+      // Arrange
+      const onBlockedChange = vi.fn();
+      const { slider } = renderKnob({ modulated: true, value: 1, onBlockedChange });
+
+      // Act
+      fireEvent.wheel(slider, { deltaY: -100 });
 
       // Assert
       expect(onBlockedChange).not.toHaveBeenCalled();

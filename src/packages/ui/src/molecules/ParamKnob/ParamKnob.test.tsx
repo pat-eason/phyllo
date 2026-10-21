@@ -95,6 +95,20 @@ describe("ParamKnob", () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
+  it("should report a key at a bound even when the value would not change", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const onBlockedChange = vi.fn();
+    const { knob } = renderKnob({ param: "gain", spec: FIXTURE_SPECS.gain, value: 1, modulated: true, onBlockedChange });
+    knob.focus();
+
+    // Act
+    await user.keyboard("{ArrowUp}");
+
+    // Assert
+    expect(onBlockedChange).toHaveBeenCalledWith(1, 1);
+  });
+
   it("should treat a patterned string value as modulated with the pattern as its value", () => {
     // Arrange / Act
     const { knob, container } = renderKnob({ param: "gain", spec: FIXTURE_SPECS.gain, value: "[.45 .7]*4", mode: "pro" });

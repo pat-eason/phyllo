@@ -1,5 +1,5 @@
 import { findTrack } from "@phyllo/model";
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { renderWithStores } from "../../../state/testUtils";
@@ -30,6 +30,36 @@ describe("StepSequencer", () => {
     ]);
     expect(within(grid).getByText("[~ oh]*4")).toBeInTheDocument();
     expect(within(grid).getByText("—")).toBeInTheDocument();
+  });
+
+  it("should audition a row's sound from the Preview button without selecting the row", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const { stores } = renderWithStores(<StepSequencer />, { initialProject: editorProject() });
+
+    // Act
+    await user.click(screen.getByRole("button", { name: "Preview Clap" }));
+
+    // Assert
+    await waitFor(() => expect(stores.fakeEngine.previews).toHaveLength(1));
+    expect(stores.fakeEngine.previews[0]).toMatchObject({ s: "cp" });
+    expect(screen.getByRole("button", { name: "Clap, cp" })).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("should keep the step grid to one tab stop per row and move between rows with ↑/↓ in the same column", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    renderWithStores(<StepSequencer />, { initialProject: editorProject() });
+    screen.getByRole("button", { name: "Kick step 5" }).focus();
+
+    // Act
+    await user.keyboard("{ArrowDown}{ArrowRight}");
+
+    // Assert
+    expect(screen.getByRole("button", { name: "Clap step 6" })).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Clap step 6" })).toHaveAttribute("tabindex", "0");
+    expect(screen.getByRole("button", { name: "Clap step 1" })).toHaveAttribute("tabindex", "-1");
+    expect(screen.getByRole("button", { name: "Kick step 5" })).toHaveAttribute("tabindex", "0");
   });
 
   it("should write the combined pattern when a step is clicked", async () => {

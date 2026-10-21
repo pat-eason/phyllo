@@ -18,8 +18,8 @@ export interface SliderProps extends Omit<
    * as-is (the parent formats it); a function gets the current value. Without it screen readers read the raw number.
    */
   valueText?: string | ((value: number) => string);
-  /** Track width in px. Default 120. */
-  width?: number;
+  /** Track width in px, or `"fill"` to stretch to the width of the parent (the wrapper becomes block-level). Default 120. */
+  width?: number | "fill";
   /** Decorative detents drawn on the track (tile size 1 to 5). They do not change stepping. */
   marks?: number[];
   /** Small glyph before the track (smallest end), e.g. a grid `Icon`. */
@@ -96,10 +96,11 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
   }
 
   const classes = [styles["root"], disabled && styles["disabled"], className].filter(Boolean).join(" ");
-  const controlStyle = { width, "--ph-slider-fraction": fraction } as CSSProperties;
+  const fill = width === "fill";
+  const controlStyle = { ...(fill ? {} : { width }), "--ph-slider-fraction": fraction } as CSSProperties;
 
   return (
-    <div className={classes}>
+    <div className={classes} data-fill={fill ? "" : undefined}>
       {startGlyph ? <span className={styles["glyph"]}>{startGlyph}</span> : null}
       <div className={styles["control"]} style={controlStyle}>
         <input

@@ -17,6 +17,27 @@ function setup(overrides: Partial<SoundRowProps> = {}) {
 }
 
 describe("SoundRow", () => {
+  it("should keep the preview button out of the tab order with previewTabbable false", () => {
+    // Arrange / Act
+    setup({ previewTabbable: false });
+
+    // Assert
+    expect(screen.getByRole("button", { name: "Preview Bass drum" })).toHaveAttribute("tabindex", "-1");
+  });
+
+  it("should keep the preview button tabbable by default and still click through", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const { onPreview } = setup();
+
+    // Act
+    await user.click(screen.getByRole("button", { name: "Preview Bass drum" }));
+
+    // Assert
+    expect(screen.getByRole("button", { name: "Preview Bass drum" })).not.toHaveAttribute("tabindex");
+    expect(onPreview).toHaveBeenCalledTimes(1);
+  });
+
   it("should be a list item described as a draggable sound", () => {
     // Arrange / Act
     const { row } = setup();

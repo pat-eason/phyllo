@@ -4,6 +4,14 @@ import { describe, expect, it, vi } from "vitest";
 import { SectionChip } from "./SectionChip";
 
 describe("SectionChip", () => {
+  it("should mark itself to drop the range before truncating the name when asked", () => {
+    // Arrange / Act
+    render(<SectionChip name="Break" startBar={17} endBar={20} current={false} dropRangeFirst />);
+
+    // Assert
+    expect(screen.getByRole("button", { name: /^Break/ })).toHaveAttribute("data-drop-range");
+  });
+
   it("should be a button named with its bar range", () => {
     // Arrange / Act
     render(<SectionChip name="Groove" startBar={9} endBar={16} current={false} />);

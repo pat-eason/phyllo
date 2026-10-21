@@ -75,3 +75,6 @@ export const Themes: Story = {
     </ThemePair>
   ),
 };
+
+/** `previewTabbable={false}`: the row is the tab stop (roving lists); the preview button stays clickable. */
+export const PreviewOutOfTabOrder: Story = { args: { previewTabbable: false } };

@@ -22,6 +22,16 @@ function setup(overrides: Partial<TrackHeaderProps> = {}) {
 }
 
 describe("TrackHeader", () => {
+  it("should pass extra props to the Mute and Solo buttons", () => {
+    // Arrange / Act
+    setup({ muteProps: { "data-tip-target": "mute" }, soloProps: { "data-tip-target": "solo", title: "Solo it" } });
+
+    // Assert
+    expect(screen.getByRole("button", { name: "Mute Kick" })).toHaveAttribute("data-tip-target", "mute");
+    expect(screen.getByRole("button", { name: "Solo Kick" })).toHaveAttribute("data-tip-target", "solo");
+    expect(screen.getByRole("button", { name: "Solo Kick" })).toHaveAttribute("title", "Solo it");
+  });
+
   it("should show the name and sound code", () => {
     // Arrange / Act
     setup();

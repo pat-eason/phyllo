@@ -2,7 +2,7 @@ import { SOUND_DRAG_MIME, Chip, SoundRow } from "@phyllo/ui";
 import type { SoundRef } from "@phyllo/ui";
 import { baseName, drumPreview, drumRef, notePreview, sampleRef, synthRef } from "./soundRefs";
 import type { DrumSound, InstrumentSound, SynthSound, UiMode } from "@phyllo/model";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { DragEvent, KeyboardEvent, ReactNode } from "react";
 import type { SampleFile } from "../../../native/types";
 import type { LibraryActions } from "./useLibraryActions";
@@ -85,19 +85,13 @@ const ROVING_KEYS = new Set(["ArrowDown", "ArrowUp", "Home", "End"]);
 
 /**
  * Roving tabindex for a list of SoundRows: the list is one tab stop (the last row used), ↑/↓/Home/End move
- * between rows. Each row's preview button leaves the tab order (SoundRow doesn't take a prop for it, so it is
- * set on the DOM after render); it stays clickable and Space on the row previews.
+ * between rows. Each row's preview button leaves the tab order (`previewTabbable={false}`); it stays clickable and
+ * Space on the row previews.
  */
 function useRovingRows(count: number) {
   const list = useRef<HTMLUListElement>(null);
   const [active, setActive] = useState(0);
   const current = Math.min(active, Math.max(0, count - 1));
-
-  useLayoutEffect(() => {
-    list.current?.querySelectorAll<HTMLElement>(":scope > li button").forEach((button) => {
-      button.tabIndex = -1;
-    });
-  });
 
   function onKeyDown(event: KeyboardEvent<HTMLUListElement>) {
     const rows = list.current?.children;
@@ -114,7 +108,11 @@ function useRovingRows(count: number) {
     if (target instanceof HTMLElement) target.focus();
   }
 
-  const rowProps = (index: number) => ({ tabIndex: index === current ? 0 : -1, onFocus: () => setActive(index) });
+  const rowProps = (index: number) => ({
+    tabIndex: index === current ? 0 : -1,
+    previewTabbable: false,
+    onFocus: () => setActive(index),
+  });
   return { list, onKeyDown, rowProps };
 }
 

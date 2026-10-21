@@ -172,3 +172,6 @@ export const Themes: Story = {
     </ThemePair>
   ),
 };
+
+/** `onPreview`: the label's colour square becomes its own "Preview" button. ←/→/Home/End move between the cells (one tab stop). */
+export const WithPreview: Story = { args: { onPreview: () => {} } };

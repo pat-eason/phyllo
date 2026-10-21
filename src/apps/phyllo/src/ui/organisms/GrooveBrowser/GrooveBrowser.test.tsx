@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { renderWithStores } from "../../../state/testUtils";
 import type { SettingsPatch } from "../../../state/settingsModel";
 import { createFixtureNative, FIXTURE_CLOCK, seedFixtureLibrary } from "./fixtures";
+import { ToastProvider } from "../../toasts";
 import { GrooveBrowser } from "./GrooveBrowser";
 import type { GrooveBrowserProps } from "./GrooveBrowser";
 
@@ -18,12 +19,17 @@ async function setup({ library, props, empty = false }: SetupOptions = {}) {
   const user = userEvent.setup();
   const native = createFixtureNative();
   if (!empty) await seedFixtureLibrary(native);
-  const utils = renderWithStores(<GrooveBrowser now={FIXTURE_CLOCK} {...props} />, {
-    native,
-    now: () => FIXTURE_CLOCK.getTime(),
-    initialSettings: library ? { library } : undefined,
-    autoStart: true,
-  });
+  const utils = renderWithStores(
+    <ToastProvider>
+      <GrooveBrowser now={FIXTURE_CLOCK} {...props} />
+    </ToastProvider>,
+    {
+      native,
+      now: () => FIXTURE_CLOCK.getTime(),
+      initialSettings: library ? { library } : undefined,
+      autoStart: true,
+    },
+  );
   await waitFor(() => expect(utils.stores.library.getState().loaded).toBe(true));
   return { user, native, ...utils };
 }

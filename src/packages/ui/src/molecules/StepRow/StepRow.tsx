@@ -5,8 +5,10 @@ import {
   useImperativeHandle,
   useLayoutEffect,
   useRef,
+  useState,
   type ComponentPropsWithoutRef,
   type CSSProperties,
+  type KeyboardEvent,
 } from "react";
 import { StepCell } from "../../atoms/StepCell";
 import styles from "./StepRow.module.css";
@@ -49,6 +51,8 @@ export interface StepRowProps extends Omit<ComponentPropsWithoutRef<"div">, "chi
   onPaintEnter?: (step: number) => void;
   /** The label button was pressed. */
   onSelect: () => void;
+  /** Audition the row's sound. When given, the label's colour square becomes its own "Preview" button. */
+  onPreview?: () => void;
 }
 
 const StepRowImpl = forwardRef<StepRowHandle, StepRowProps>(function StepRow(
@@ -66,8 +70,10 @@ const StepRowImpl = forwardRef<StepRowHandle, StepRowProps>(function StepRow(
     onPaintStart,
     onPaintEnter,
     onSelect,
+    onPreview,
     className,
     style,
+    onKeyDown,
     ...rest
   },
   ref,
@@ -76,6 +82,9 @@ const StepRowImpl = forwardRef<StepRowHandle, StepRowProps>(function StepRow(
   const cells = useRef<(HTMLButtonElement | null)[]>([]);
   const current = useRef<number | null>(null);
   const painting = useRef(false);
+  // Roving tabindex: the row's cells are one tab stop (the last one focused); ←/→/Home/End move between them.
+  const [active, setActive] = useState(0);
+  const tabStop = Math.min(active, Math.max(0, steps.length - 1));
 
   useImperativeHandle(
     ref,
@@ -115,6 +124,21 @@ const StepRowImpl = forwardRef<StepRowHandle, StepRowProps>(function StepRow(
     };
   }, []);
 
+  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    onKeyDown?.(event);
+    if (event.defaultPrevented || event.altKey || event.metaKey || event.ctrlKey) return;
+    const from = cells.current.findIndex((cell) => cell !== null && cell === event.target);
+    if (from < 0 || from >= steps.length) return;
+    let to: number;
+    if (event.key === "ArrowRight") to = Math.min(steps.length - 1, from + 1);
+    else if (event.key === "ArrowLeft") to = Math.max(0, from - 1);
+    else if (event.key === "Home") to = 0;
+    else if (event.key === "End") to = steps.length - 1;
+    else return;
+    event.preventDefault();
+    cells.current[to]?.focus();
+  }
+
   const per = Math.max(1, Math.floor(stepsPerBeat));
   const groups: number[][] = [];
   for (let i = 0; i < steps.length; i += per) {
@@ -125,6 +149,8 @@ const StepRowImpl = forwardRef<StepRowHandle, StepRowProps>(function StepRow(
   const rowStyle = { ...style, "--row-color": color, "--beat-cols": per } as CSSProperties;
 
   return (
+    // The key handler only moves focus between the row's own buttons (roving tabindex); the row itself isn't a stop.
+    // eslint-disable-next-line jsx-a11y/interactive-supports-focus
     <div
       ref={rowRef}
       role="row"
@@ -132,6 +158,7 @@ const StepRowImpl = forwardRef<StepRowHandle, StepRowProps>(function StepRow(
       style={rowStyle}
       data-selected={selected ? "" : undefined}
       {...rest}
+      onKeyDown={handleKeyDown}
     >
       <div role="gridcell" className={styles["labelCell"]}>
         <button type="button" className={styles["label"]} aria-label={`${label}, ${sound}`} aria-pressed={selected} onClick={onSelect}>
@@ -141,6 +168,9 @@ const StepRowImpl = forwardRef<StepRowHandle, StepRowProps>(function StepRow(
             <span className={styles["sound"]}>{sound}</span>
           </span>
         </button>
+        {onPreview ? (
+          <button type="button" className={styles["preview"]} aria-label={`Preview ${label}`} onClick={onPreview} />
+        ) : null}
       </div>
 
       <div className={styles["steps"]} style={{ gridTemplateColumns: `repeat(${groups.length}, minmax(0, 1fr))` }}>
@@ -153,6 +183,8 @@ const StepRowImpl = forwardRef<StepRowHandle, StepRowProps>(function StepRow(
                     cells.current[i] = el;
                   }}
                   index={i}
+                  tabIndex={i === tabStop ? 0 : -1}
+                  onFocus={() => setActive(i)}
                   rowLabel={label}
                   color={color}
                   on={steps[i] ?? false}

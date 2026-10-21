@@ -35,7 +35,8 @@ export interface KnobProps
    * Only used while `modulated`. When given, keyboard steps, wheel and double-click reset do not call `onChange`;
    * they call this with the direction (+1 up, −1 down) and the value they would have set, so the parent can show its
    * "replace the modifier?" confirm and apply the value if accepted. Drags are unaffected (`onChangeStart` fires).
-   * Nothing is reported when the step would not change the value (already at a bound).
+   * A key press is reported even when it cannot move the knob (already at a bound; `value` is then the current
+   * value), because a modulated knob often rests at an end of its travel. Wheel and double-click report only a real change.
    */
   onBlockedChange?: (direction: 1 | -1, value: number) => void;
   /** Ring grows from 12 o'clock (pan). */
@@ -111,11 +112,16 @@ export const Knob = forwardRef<HTMLDivElement, KnobProps>(function Knob(
   const gradientId = useId();
   const v = Math.min(1, Math.max(0, Number.isFinite(value) ? value : 0));
 
-  const commit = (next: number) => {
+  /** `keyDirection`: a key press, reported to `onBlockedChange` (when modulated) even if it leaves the value unchanged. */
+  const commit = (next: number, keyDirection?: 1 | -1) => {
     const clamped = clamp01(next);
+    if (modulated && onBlockedChange) {
+      if (clamped !== v) onBlockedChange(clamped > v ? 1 : -1, clamped);
+      else if (keyDirection !== undefined) onBlockedChange(keyDirection, clamped);
+      return;
+    }
     if (clamped === v) return;
-    if (modulated && onBlockedChange) onBlockedChange(clamped > v ? 1 : -1, clamped);
-    else onChange(clamped);
+    onChange(clamped);
   };
 
   const drag = useVerticalDrag({
@@ -138,6 +144,7 @@ export const Knob = forwardRef<HTMLDivElement, KnobProps>(function Knob(
     if (event.defaultPrevented || disabled) return;
     const step = event.shiftKey ? 0.1 : 0.01;
     let next: number | null = null;
+    let direction: 1 | -1 = 1;
     switch (event.key) {
       case "ArrowUp":
       case "ArrowRight":
@@ -146,15 +153,18 @@ export const Knob = forwardRef<HTMLDivElement, KnobProps>(function Knob(
       case "ArrowDown":
       case "ArrowLeft":
         next = v - step;
+        direction = -1;
         break;
       case "PageUp":
         next = v + 0.1;
         break;
       case "PageDown":
         next = v - 0.1;
+        direction = -1;
         break;
       case "Home":
         next = 0;
+        direction = -1;
         break;
       case "End":
         next = 1;
@@ -169,7 +179,7 @@ export const Knob = forwardRef<HTMLDivElement, KnobProps>(function Knob(
         return;
     }
     event.preventDefault();
-    commit(next);
+    commit(next, direction);
   }
 
   function handleDoubleClick(event: MouseEvent<HTMLDivElement>) {

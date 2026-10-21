@@ -13,8 +13,28 @@
 }
 
 .labelCell {
+  position: relative;
   flex: 0 0 140px;
   min-width: 0;
+}
+
+/* A hit area over the label's colour square (10 px at 11 px in); the label button underneath stays the row's select. */
+.preview {
+  position: absolute;
+  top: 11px;
+  left: 4px;
+  width: 24px;
+  height: 22px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.preview:hover {
+  background: color-mix(in srgb, var(--row-color) 28%, transparent);
 }
 
 .label {
