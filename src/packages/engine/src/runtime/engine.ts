@@ -134,6 +134,38 @@ export class EngineEvalError extends Error {
   }
 }
 
+/**
+ * Superdough orbit reserved for `preview()`: previews get their own output bus, so `stopPreview()` can silence them
+ * without touching the song's voices (orbits are created lazily per number; the song uses 1 and up).
+ */
+export const PREVIEW_ORBIT = -1;
+
+/** The part of superdough's audio controller `releasePreviewOrbit` touches. */
+export interface PreviewOrbitHost {
+  nodes: Record<number, { output: AudioNode; summingNode: AudioNode } | undefined>;
+}
+
+/**
+ * Starts silencing the preview orbit: ramps its output to 0 over `rampSec` from `now` (AudioContext time) and detaches
+ * it from the controller at once, so the next preview builds a fresh bus at full level. Returns the disconnect to run
+ * after the ramp, or null when nothing has previewed since the last release.
+ */
+export function releasePreviewOrbit(controller: PreviewOrbitHost, now: number, rampSec: number): (() => void) | null {
+  const orbit = controller.nodes[PREVIEW_ORBIT];
+  if (!orbit) return null;
+  delete controller.nodes[PREVIEW_ORBIT];
+  const gain = (orbit.output as Partial<GainNode>).gain;
+  if (gain) {
+    gain.cancelScheduledValues(now);
+    gain.setValueAtTime(gain.value, now);
+    gain.linearRampToValueAtTime(0, now + rampSec);
+  }
+  return () => {
+    orbit.summingNode.disconnect();
+    orbit.output.disconnect();
+  };
+}
+
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T | undefined> {
   return Promise.race([p, new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), ms))]);
 }
@@ -844,14 +876,27 @@ export function createEngine(options: EngineOptions = {}): PhylloEngine {
     async preview(sound: PreviewSound, durationSec = 0.5) {
       if (!ready || !ctx) throw new Error("preview() before init()");
       if (rendering) return;
-      const value: Record<string, unknown> = { s: sound.s };
+      const value: Record<string, unknown> = { s: sound.s, orbit: PREVIEW_ORBIT };
       if (sound.bank) value["bank"] = sound.bank;
       if (sound.note !== undefined) value["note"] = sound.note;
       if (sound.n !== undefined) value["n"] = sound.n;
+      if (sound.gain !== undefined && Number.isFinite(sound.gain)) value["gain"] = Math.max(0, sound.gain);
       const key = soundKey(value);
       if (key) await preloadSounds([{ key, value: { ...value } }], ctx);
       openGate(); // closed while stopped
       await superdough(value, ctx.currentTime + 0.05, durationSec);
+    },
+
+    stopPreview() {
+      if (!ctx || rendering) return; // while rendering, superdough's controller is the offline one
+      let controller: PreviewOrbitHost;
+      try {
+        controller = getSuperdoughAudioController() as unknown as PreviewOrbitHost;
+      } catch {
+        return;
+      }
+      const disconnect = releasePreviewOrbit(controller, ctx.currentTime, GATE_RAMP_SEC);
+      if (disconnect) setTimeout(disconnect, STOP_CUT_MS);
     },
 
     async registerSamples(map, baseUrl = "") {
@@ -886,7 +931,9 @@ export function createEngine(options: EngineOptions = {}): PhylloEngine {
         if (!scratch) trackScratch.set(id, (scratch = {}));
         tracks[id] = a ? readMonoAnalyser(a, scratch) : SILENT;
       }
-      return { tracks, orbits: orbitMeters?.read(getSuperdoughAudioController()) ?? {}, master: chain.readMaster() };
+      const orbits = orbitMeters?.read(getSuperdoughAudioController()) ?? {};
+      delete orbits[PREVIEW_ORBIT]; // previews are not a mixer bus
+      return { tracks, orbits, master: chain.readMaster() };
     },
 
     async setOutputDevice(deviceId) {
