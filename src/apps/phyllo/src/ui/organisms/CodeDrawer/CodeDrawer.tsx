@@ -3,7 +3,7 @@ import type { CodeScope } from "@phyllo/model";
 import { Button, Icon, SegmentedControl } from "@phyllo/ui";
 import type { SegmentedOption } from "@phyllo/ui";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import type { HTMLAttributes } from "react";
+import type { CSSProperties, HTMLAttributes } from "react";
 import { useStore } from "zustand";
 import { useAppStores, useCodeDrawer, useEngine, useProject, useSelection, useTips, useUiMode } from "../../../hooks";
 import {
@@ -16,12 +16,16 @@ import {
   scopeSummary,
   sectionName,
 } from "./codeModel";
+import { useCodeEditorPrefs } from "../SettingsLayout";
 import { CodeView } from "./CodeView";
 import type { CodeViewError } from "./CodeView";
 import { EditCodePanel } from "./EditCodePanel";
 import { EvaluatedAgo } from "./EvaluatedAgo";
 import { useResizableHeight } from "./useResizableHeight";
 import styles from "./CodeDrawer.module.css";
+
+/** Line height as a multiple of the editor font size (the 12 px default gives the design's 21 px rows). */
+const CODE_LINE_HEIGHT = 1.75;
 
 export interface CodeDrawerProps extends Omit<HTMLAttributes<HTMLElement>, "children"> {
   /** Starting height of the open code area in px; the user resizes it from the top edge. Default 196. */
@@ -136,6 +140,12 @@ export function CodeDrawer({ defaultHeight = DEFAULT_HEIGHT, className, ...rest 
     mode === "guided" && !open
       ? undefined
       : `${scopeSummary(project, scope, sectionBar)} · ${errorSummary(status.error, project.tracks, errorLocation)}`;
+  const editorPrefs = useCodeEditorPrefs();
+  const bodyStyle = {
+    height,
+    "--code-size": `${editorPrefs.fontSize}px`,
+    "--code-line": `${Math.round(editorPrefs.fontSize * CODE_LINE_HEIGHT)}px`,
+  } as CSSProperties;
   const classes = className ? `${styles["drawer"]} ${className}` : styles["drawer"];
 
   return (
@@ -170,7 +180,7 @@ export function CodeDrawer({ defaultHeight = DEFAULT_HEIGHT, className, ...rest 
         {copyState === "failed" ? <p className={styles["errorBanner"]}>Couldn&apos;t copy the link. Check clipboard permissions.</p> : null}
       </div>
       {open ? (
-        <div id={bodyId} className={styles["body"]} style={{ height }}>
+        <div id={bodyId} className={styles["body"]} style={bodyStyle}>
           {editing ? (
             <EditCodePanel initialCode={editSeed} onApply={applyCode} onClose={() => setEditSeed(null)} />
           ) : (
@@ -180,6 +190,7 @@ export function CodeDrawer({ defaultHeight = DEFAULT_HEIGHT, className, ...rest 
               tracks={project.tracks}
               selectedTrackId={selectedTrackId}
               error={codeError}
+              lineNumbers={editorPrefs.lineNumbers}
               onSetPattern={(trackId, pattern) => dispatch({ type: "track/setPattern", trackId, pattern })}
             />
           )}

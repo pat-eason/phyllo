@@ -30,6 +30,11 @@ export interface SoundRowProps extends Omit<ComponentPropsWithoutRef<"li">, "chi
   dragData: SoundRef;
   /** Enter while the row has focus: add to the selected track (the keyboard alternative to dragging). */
   onInsert?: () => void;
+  /**
+   * Whether the preview button is a tab stop. Default true. Lists that make the rows one tab stop (roving tabindex)
+   * pass false: the button stays clickable and Space on the row still previews.
+   */
+  previewTabbable?: boolean;
 }
 
 /**
@@ -37,7 +42,7 @@ export interface SoundRowProps extends Omit<ComponentPropsWithoutRef<"li">, "chi
  * inside a `<ul>`/`<ol>`. The row is focusable (Space previews, Enter inserts) and natively draggable.
  */
 export const SoundRow = forwardRef<HTMLLIElement, SoundRowProps>(function SoundRow(
-  { code, friendly, mode, active = false, previewing = false, onPreview, dragData, onInsert, className, onDragStart, onKeyDown, ...rest },
+  { code, friendly, mode, active = false, previewing = false, onPreview, dragData, onInsert, previewTabbable = true, className, onDragStart, onKeyDown, ...rest },
   ref,
 ) {
   const classes = className ? `${styles["row"]} ${className}` : styles["row"];
@@ -89,6 +94,7 @@ export const SoundRow = forwardRef<HTMLLIElement, SoundRowProps>(function SoundR
         size={26}
         shape="circle"
         onClick={onPreview}
+        tabIndex={previewTabbable ? undefined : -1}
         data-previewing={previewing ? "" : undefined}
       />
       <span className={styles["labels"]}>

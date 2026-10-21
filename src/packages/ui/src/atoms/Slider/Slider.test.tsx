@@ -207,6 +207,16 @@ describe("Slider", () => {
     expect(onValue).not.toHaveBeenCalled();
   });
 
+  it("should stretch to its parent with width fill", () => {
+    // Arrange / Act
+    render(<Slider label="Amount" value={0.5} onChange={() => undefined} width="fill" data-testid="sl" />);
+
+    // Assert
+    const wrapper = screen.getByTestId("sl").closest("[data-fill]");
+    expect(wrapper).not.toBeNull();
+    expect(screen.getByTestId("sl").parentElement).not.toHaveStyle({ width: "120px" });
+  });
+
   it("should forward ref to the input and className to the wrapper", () => {
     // Arrange
     const ref = createRef<HTMLInputElement>();

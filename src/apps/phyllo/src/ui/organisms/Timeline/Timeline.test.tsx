@@ -1,7 +1,7 @@
 import { createTrack } from "@phyllo/model";
 import { SOUND_DRAG_MIME } from "@phyllo/ui";
 import type { SoundRef } from "@phyllo/ui";
-import { act, createEvent, fireEvent, screen, within } from "@testing-library/react";
+import { act, createEvent, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Profiler } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -77,6 +77,138 @@ describe("Timeline", () => {
     expect(screen.getByRole("button", { name: "Keys" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("button", { name: "Bass" })).toHaveAttribute("aria-pressed", "false");
     expect(screen.getByRole("listitem", { name: "Keys" })).toHaveAttribute("data-selected");
+  });
+
+  it("should move the selection and focus to the next track with ↓ and the previous with ↑ on a header", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    renderTimeline();
+    screen.getByRole("button", { name: "Bass" }).focus();
+
+    // Act
+    await user.keyboard("{ArrowDown}");
+    const afterDown = document.activeElement;
+    await user.keyboard("{ArrowUp}{ArrowUp}");
+
+    // Assert
+    expect(afterDown).toBe(screen.getByRole("button", { name: "Keys" }));
+    expect(screen.getByRole("button", { name: "Hats" })).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Hats" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Bass" })).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("should stop at the first and last track instead of wrapping", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    renderTimeline();
+    screen.getByRole("button", { name: "Kick" }).focus();
+
+    // Act
+    await user.keyboard("{ArrowUp}");
+    const atTop = document.activeElement;
+    screen.getByRole("button", { name: "Vox chop" }).focus();
+    await user.keyboard("{ArrowDown}");
+
+    // Assert
+    expect(atTop).toBe(screen.getByRole("button", { name: "Kick" }));
+    expect(screen.getByRole("button", { name: "Vox chop" })).toHaveFocus();
+  });
+
+  it("should leave ↑/↓ alone while a track is being renamed", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    renderTimeline();
+    await user.dblClick(screen.getByRole("button", { name: "Kick" }));
+    const input = screen.getByRole("textbox", { name: "Rename track Kick" });
+
+    // Act
+    await user.keyboard("{ArrowDown}");
+
+    // Assert
+    expect(input).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Clap" })).toHaveAttribute("aria-pressed", "false");
+  });
+
+  describe("with more than 40 tracks", () => {
+    const LANE_PX = 57;
+
+    function renderMany(count = 120) {
+      const result = renderWithStores(<Timeline data-testid="timeline" />, {
+        initialProject: largeProject(count, 8),
+        initialSettings: { uiMode: "pro" },
+      });
+      stores = result.stores;
+      return result;
+    }
+
+    const scrollTo = (top: number) => {
+      const scroller = screen.getByTestId("timeline");
+      scroller.scrollTop = top;
+      fireEvent.scroll(scroller);
+    };
+
+    it("should render only the lanes near the top and keep the full list size for assistive tech", () => {
+      // Arrange / Act
+      renderMany();
+
+      // Assert
+      const rows = trackRows();
+      expect(rows.length).toBeLessThan(40);
+      expect(rows[0]).toHaveAttribute("aria-label", "Track 1");
+      expect(rows[0]).toHaveAttribute("aria-posinset", "1");
+      expect(rows[0]).toHaveAttribute("aria-setsize", "120");
+      expect(screen.queryByRole("listitem", { name: "Track 120" })).not.toBeInTheDocument();
+      expect(screen.getByText("120 tracks · 8 bars")).toBeInTheDocument();
+    });
+
+    it("should render the lanes in view after scrolling and drop the ones left behind", async () => {
+      // Arrange
+      renderMany();
+
+      // Act
+      scrollTo(LANE_PX * 80);
+
+      // Assert
+      await waitFor(() => expect(screen.getByRole("listitem", { name: "Track 81" })).toBeInTheDocument());
+      expect(screen.queryByRole("listitem", { name: "Track 1" })).not.toBeInTheDocument();
+    });
+
+    it("should keep the lane that holds focus mounted while scrolled away", async () => {
+      // Arrange
+      renderMany();
+      screen.getByRole("button", { name: "Track 1" }).focus();
+
+      // Act
+      scrollTo(LANE_PX * 80);
+
+      // Assert
+      await waitFor(() => expect(screen.getByRole("listitem", { name: "Track 81" })).toBeInTheDocument());
+      expect(screen.getByRole("button", { name: "Track 1" })).toHaveFocus();
+    });
+
+    it("should navigate past the rendered window with ↓ by keeping the target mounted", async () => {
+      // Arrange
+      const user = userEvent.setup();
+      renderMany();
+      scrollTo(LANE_PX * 80);
+      await waitFor(() => expect(screen.getByRole("listitem", { name: "Track 81" })).toBeInTheDocument());
+      screen.getByRole("button", { name: "Track 81" }).focus();
+
+      // Act
+      await user.keyboard("{ArrowDown}{ArrowDown}");
+
+      // Assert
+      expect(screen.getByRole("button", { name: "Track 83" })).toHaveFocus();
+      expect(screen.getByRole("button", { name: "Track 83" })).toHaveAttribute("aria-pressed", "true");
+    });
+
+    it("should render every lane at 40 tracks", () => {
+      // Arrange / Act
+      renderMany(40);
+
+      // Assert
+      expect(trackRows()).toHaveLength(40);
+    });
   });
 
   it("should mute a track and mark its clips as muted", async () => {
@@ -418,8 +550,8 @@ describe("Timeline", () => {
     act(() => stores?.transport.getState().seek(18));
 
     // Assert
-    expect(screen.getByRole("button", { name: "Break, bars 17 to 20" })).toHaveAttribute("aria-current", "true");
-    expect(screen.getByRole("button", { name: "Intro, bars 1 to 8" })).not.toHaveAttribute("aria-current");
+    expect(screen.getByRole("button", { name: "Break 17–20, section" })).toHaveAttribute("aria-current", "true");
+    expect(screen.getByRole("button", { name: "Intro 1–8, section" })).not.toHaveAttribute("aria-current");
   });
 
   it("should show the engine's error on the failing track and a code badge", async () => {
@@ -476,6 +608,6 @@ describe("Timeline", () => {
     expect(stores.transport.getState().playing).toBe(true);
     expect(commits).toBe(before);
     expect(playhead.style.transform).not.toBe(startTransform);
-    expect(screen.getByRole("button", { name: "Groove, bars 9 to 16" })).toHaveAttribute("aria-current", "true");
+    expect(screen.getByRole("button", { name: "Groove 9–16, section" })).toHaveAttribute("aria-current", "true");
   });
 });

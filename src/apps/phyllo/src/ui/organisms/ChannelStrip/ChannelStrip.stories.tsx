@@ -73,8 +73,8 @@ export const MasterRecording: Story = {
   args: { kind: "master" },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("button", { name: "Record master output to a file" }));
-    await expect(await canvas.findByRole("button", { name: "Stop recording the master output" })).toBeVisible();
+    await userEvent.click(canvas.getByRole("button", { name: "Rec output, record the master output to a file" }));
+    await expect(await canvas.findByRole("button", { name: "Stop, stop recording the master output" })).toBeVisible();
   },
 };
 

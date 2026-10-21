@@ -83,3 +83,9 @@ export const Themes: Story = {
     </ThemePair>
   ),
 };
+
+/** `width="fill"`: the track takes the width of its parent (here a 320 px card). */
+export const Fill: Story = {
+  args: { width: "fill", value: 0.5 },
+  decorators: [(Story) => <div style={{ width: 320, padding: 12, border: "1px solid var(--ph-line)", borderRadius: 8 }}>{Story()}</div>],
+};

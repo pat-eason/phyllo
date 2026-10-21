@@ -70,7 +70,7 @@ export function InsertList({ track, items, labelledBy }: InsertListProps) {
         }
         const body = (
           <>
-            <span>{item.label}</span>
+            <span>{item.label}</span>{" "}
             <span className={styles["insertValue"]} data-modulated={item.modulated ? "" : undefined}>
               {item.value}
             </span>

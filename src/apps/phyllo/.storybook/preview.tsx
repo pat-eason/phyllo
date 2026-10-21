@@ -6,11 +6,16 @@ import "@phyllo/ui/fonts";
 import { ACCENTS, ThemeProvider, type Accent } from "@phyllo/ui";
 import { PhylloProvider } from "../src/state";
 import { createMockStores, type MockStoresOptions } from "../src/state/mocks";
+import { ToastProvider } from "../src/ui/toasts";
 
 /** Stories may pass `parameters.stores` (MockStoresOptions) to seed the mock stores. */
 function MockStores({ options, children }: { options: MockStoresOptions | undefined; children: React.ReactNode }) {
   const stores = useMemo(() => createMockStores(options), [options]);
-  return <PhylloProvider stores={stores}>{children}</PhylloProvider>;
+  return (
+    <PhylloProvider stores={stores}>
+      <ToastProvider>{children}</ToastProvider>
+    </PhylloProvider>
+  );
 }
 
 const withProviders: Decorator = (Story, context) => {

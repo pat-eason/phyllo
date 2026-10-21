@@ -46,6 +46,25 @@ button.chip:hover:not([data-current]) {
   opacity: 0.8;
 }
 
+/*
+ * dropRangeFirst: the chip wraps, each part sits on its own 22 px line and the clipped second line is hidden, so a
+ * narrow chip loses its bar range before its name is truncated. The range may run into the right padding.
+ */
+.chip[data-drop-range] {
+  flex-wrap: wrap;
+  align-content: flex-start;
+  width: 100%;
+}
+
+.chip[data-drop-range] > .name,
+.chip[data-drop-range] > .range {
+  line-height: 22px;
+}
+
+.chip[data-drop-range] > .range {
+  margin-right: -5px;
+}
+
 .input {
   min-width: 4ch;
   margin: 0;

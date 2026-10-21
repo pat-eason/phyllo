@@ -291,7 +291,7 @@ describe("Inspector", () => {
   it("should add a Try one suggestion as a modifier and remove it on a second click", async () => {
     // Arrange
     const { actions, track, user } = setup();
-    const bouncier = screen.getByRole("button", { name: "Bouncier, adds .swingBy(1/6, 4)" });
+    const bouncier = screen.getByRole("button", { name: "Bouncier .swingBy(1/6, 4)" });
     // Act
     await user.click(bouncier);
     // Assert

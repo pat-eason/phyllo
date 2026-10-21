@@ -39,7 +39,7 @@ describe("AppHeader", () => {
     expect(screen.getByRole("banner")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Untitled Groove/ })).toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Transport" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Tempo 120 BPM, edit" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "120 BPM, edit tempo" })).toBeInTheDocument();
     expect(screen.getByText("C minor")).toBeInTheDocument();
     expect(screen.getByText("KEY · 4/4")).toBeInTheDocument();
     expect(screen.getByText("BAR · BEAT · 16TH")).toBeInTheDocument();
@@ -130,12 +130,12 @@ describe("AppHeader", () => {
     const { stores } = renderHeader();
 
     // Act
-    await user.click(screen.getByRole("button", { name: "Tempo 120 BPM, edit" }));
+    await user.click(screen.getByRole("button", { name: "120 BPM, edit tempo" }));
     await user.keyboard("{Control>}a{/Control}128{Enter}");
 
     // Assert
     expect(stores.project.getState().project.tempo.bpm).toBe(128);
-    expect(screen.getByRole("button", { name: "Tempo 128 BPM, edit" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "128 BPM, edit tempo" })).toBeInTheDocument();
   });
 
   it("should clamp a typed tempo to 40-240", async () => {
@@ -144,7 +144,7 @@ describe("AppHeader", () => {
     const { stores } = renderHeader();
 
     // Act
-    await user.click(screen.getByRole("button", { name: "Tempo 120 BPM, edit" }));
+    await user.click(screen.getByRole("button", { name: "120 BPM, edit tempo" }));
     await user.keyboard("{Control>}a{/Control}999{Enter}");
 
     // Assert
@@ -174,7 +174,7 @@ describe("AppHeader", () => {
     const user = userEvent.setup();
     const { stores } = renderHeader();
     const now = vi.spyOn(Date, "now");
-    screen.getByRole("button", { name: "Tempo 120 BPM, edit" }).focus();
+    screen.getByRole("button", { name: "120 BPM, edit tempo" }).focus();
 
     // Act: three taps 600 ms apart = 100 BPM
     for (const at of [5_000, 5_600, 6_200]) {
@@ -191,7 +191,7 @@ describe("AppHeader", () => {
     const user = userEvent.setup();
     const { stores } = renderHeader();
     const now = vi.spyOn(Date, "now");
-    screen.getByRole("button", { name: "Tempo 120 BPM, edit" }).focus();
+    screen.getByRole("button", { name: "120 BPM, edit tempo" }).focus();
 
     // Act: 100 BPM pair, a 10 s gap, then a lone tap that must not average in the gap
     for (const at of [1_000, 1_600, 11_600]) {

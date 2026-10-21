@@ -37,7 +37,7 @@ export interface ReadoutCell {
   captionLabel?: string;
   /** Wheel or Arrow Up/Down on an interactive cell nudges the value by one step. */
   onNudge?: (delta: 1 | -1) => void;
-  /** Accessible name for an interactive cell, e.g. "Tempo 120 BPM, edit". Defaults to value + caption. */
+  /** Accessible name for an interactive cell, e.g. "120 BPM, edit tempo". Defaults to value + caption. */
   label?: string;
   /** Fixed minimum width in px so a changing value doesn't jitter its neighbours (position: 112). */
   minWidth?: number;
@@ -233,8 +233,7 @@ function Cell({ cell }: { cell: ReadoutCell }) {
               }}
               onKeyDown={onKeyDown}
             >
-              {body}
-              {captionEl}
+              {body} {captionEl}
             </button>
           )}
         </div>

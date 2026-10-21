@@ -8,13 +8,14 @@ import { createFakeEngine } from "../../../state/fakeEngine";
 import type { FakeEngine } from "../../../state/fakeEngine";
 import type { MockStores } from "../../../state/mocks";
 import { renderWithStores } from "../../../state/testUtils";
+import { ToastProvider } from "../../toasts";
 import { ChannelStrip } from "./ChannelStrip";
 import { mixerProject } from "./fixtures";
 
 const projectOf = (stores: MockStores): Project => stores.project.getState().project;
 const trackOf = (stores: MockStores, id: string) => findTrack(projectOf(stores), id);
 const renderStrip = (ui: ReactElement, engine?: FakeEngine) =>
-  renderWithStores(ui, { initialProject: mixerProject(), ...(engine ? { engine } : {}) });
+  renderWithStores(<ToastProvider>{ui}</ToastProvider>, { initialProject: mixerProject(), ...(engine ? { engine } : {}) });
 
 /** A ready engine whose capture tap delivers one stereo chunk. */
 function capturingEngine(): FakeEngine {
@@ -38,7 +39,7 @@ describe("ChannelStrip", () => {
 
     // Assert
     const inserts = within(strip).getByRole("list", { name: "Inserts" });
-    expect(within(inserts).getAllByRole("listitem").map((li) => li.textContent)).toEqual(["lpf~sine", "lpq10", "shape.3"]);
+    expect(within(inserts).getAllByRole("listitem").map((li) => li.textContent)).toEqual(["lpf ~sine", "lpq 10", "shape .3"]);
     expect(within(strip).getByText("sawtooth")).toBeInTheDocument();
     expect(within(strip).getByRole("slider", { name: "Bass Space" })).toHaveAttribute("aria-valuetext", "Space .2");
     expect(within(strip).getByRole("combobox", { name: "Bass bus" })).toHaveValue("2");
@@ -156,7 +157,7 @@ describe("ChannelStrip", () => {
     // Assert
     expect(trackOf(stores, "kick")?.modifiers.map((m) => m.code)).toEqual([".crush(6)"]);
     const inserts = within(screen.getByRole("list", { name: "Inserts" })).getAllByRole("listitem");
-    expect(inserts.map((li) => li.textContent)).toEqual(["shape.15", "crush6"]);
+    expect(inserts.map((li) => li.textContent)).toEqual(["shape .15", "crush 6"]);
   });
 
   it("should close the + Effect menu on Escape without changing the track", async () => {
@@ -297,10 +298,13 @@ describe("ChannelStrip", () => {
     // Arrange
     const user = userEvent.setup();
     const { stores } = renderStrip(<ChannelStrip kind="master" />, capturingEngine());
+    const unique = vi
+      .spyOn(stores.native, "exportUniquePath")
+      .mockResolvedValue("/Users/me/Music/Phyllo/Exports/Untitled Groove take 2.wav");
     const begin = vi.spyOn(stores.native, "exportBegin").mockResolvedValue({ sessionId: "s1" });
     const chunk = vi.spyOn(stores.native, "exportChunk").mockResolvedValue();
     vi.spyOn(stores.native, "exportFinish").mockResolvedValue({
-      path: "/Users/me/Music/Phyllo/Exports/Untitled Groove take 1.wav",
+      path: "/Users/me/Music/Phyllo/Exports/Untitled Groove take 2.wav",
       durationSec: 12,
       peakDbfs: -3,
       bytes: 100,
@@ -308,19 +312,20 @@ describe("ChannelStrip", () => {
     const reveal = vi.spyOn(stores.native, "revealInFinder").mockResolvedValue();
 
     // Act
-    await user.click(screen.getByRole("button", { name: "Record master output to a file" }));
-    await user.click(await screen.findByRole("button", { name: "Stop recording the master output" }));
+    await user.click(screen.getByRole("button", { name: "Rec output, record the master output to a file" }));
+    await user.click(await screen.findByRole("button", { name: "Stop, stop recording the master output" }));
 
     // Assert
+    expect(unique).toHaveBeenCalledWith("Untitled Groove take.wav");
     expect(begin).toHaveBeenCalledWith(
-      expect.objectContaining({ format: "wav", bitDepth: 24, channels: 2, path: expect.stringMatching(/^Untitled Groove take \d+\.wav$/) }),
+      expect.objectContaining({ format: "wav", bitDepth: 24, channels: 2, path: "/Users/me/Music/Phyllo/Exports/Untitled Groove take 2.wav" }),
     );
     expect(chunk).toHaveBeenCalledWith("s1", new Float32Array([0.1, 0.3, 0.2, 0.4]));
-    expect(await screen.findByText("Saved Untitled Groove take 1.wav")).toBeInTheDocument();
+    expect(await screen.findByText("Saved Untitled Groove take 2.wav")).toBeInTheDocument();
     expect(screen.getByText("0:12 · 24-bit WAV")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Reveal" }));
-    expect(reveal).toHaveBeenCalledWith("/Users/me/Music/Phyllo/Exports/Untitled Groove take 1.wav");
-    expect(screen.getByRole("button", { name: "Record master output to a file" })).toBeInTheDocument();
+    expect(reveal).toHaveBeenCalledWith("/Users/me/Music/Phyllo/Exports/Untitled Groove take 2.wav");
+    expect(screen.getByRole("button", { name: "Rec output, record the master output to a file" })).toBeInTheDocument();
   });
 
   it("should show an error toast when the recording can't be written", async () => {
@@ -332,8 +337,8 @@ describe("ChannelStrip", () => {
     const cancel = vi.spyOn(stores.native, "exportCancel").mockResolvedValue();
 
     // Act
-    await user.click(screen.getByRole("button", { name: "Record master output to a file" }));
-    await user.click(await screen.findByRole("button", { name: "Stop recording the master output" }));
+    await user.click(screen.getByRole("button", { name: "Rec output, record the master output to a file" }));
+    await user.click(await screen.findByRole("button", { name: "Stop, stop recording the master output" }));
 
     // Assert
     const alert = await screen.findByRole("alert");

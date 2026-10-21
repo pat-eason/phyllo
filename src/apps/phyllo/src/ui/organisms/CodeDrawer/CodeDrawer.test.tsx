@@ -1,9 +1,10 @@
 import { act, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { fixtureProject } from "../../../state/mocks";
 import { renderWithStores } from "../../../state/testUtils";
 import type { MockStoresOptions } from "../../../state/mocks";
+import { CODE_EDITOR_PREFS_KEY } from "../SettingsLayout";
 import { TipCoach } from "../TipCoach";
 import { CodeDrawer } from "./CodeDrawer";
 import { BROKEN_COLUMN, fakeEngineWithErrorColumn, projectWithBrokenTrack } from "./fixtures";
@@ -32,6 +33,57 @@ async function showWholeSong(user: ReturnType<typeof userEvent.setup>) {
 }
 
 describe("CodeDrawer", () => {
+  afterEach(() => {
+    window.localStorage.removeItem(CODE_EDITOR_PREFS_KEY);
+  });
+
+  it("should draw the code at the editor font size from Settings, with line numbers by default", async () => {
+    // Arrange
+    window.localStorage.setItem(CODE_EDITOR_PREFS_KEY, JSON.stringify({ fontSize: 16, lineNumbers: true }));
+    const user = userEvent.setup();
+    renderDrawer();
+
+    // Act
+    await user.click(screen.getByRole("button", { name: "Show code" }));
+
+    // Assert
+    const body = document.getElementById(screen.getByRole("button", { name: "Hide code" }).getAttribute("aria-controls") ?? "");
+    expect(body).toHaveStyle({ "--code-size": "16px", "--code-line": "28px" });
+    expect(within(screen.getByRole("region", { name: "Code" })).getByText("1")).toBeInTheDocument();
+  });
+
+  it("should hide the line numbers when Settings turns them off", async () => {
+    // Arrange
+    window.localStorage.setItem(CODE_EDITOR_PREFS_KEY, JSON.stringify({ fontSize: 12, lineNumbers: false }));
+    const user = userEvent.setup();
+    renderDrawer();
+
+    // Act
+    await user.click(screen.getByRole("button", { name: "Show code" }));
+
+    // Assert
+    expect(within(screen.getByRole("region", { name: "Code" })).queryByText("1")).not.toBeInTheDocument();
+    expect(codeRegion()).toHaveTextContent("arrange(");
+  });
+
+  it("should follow a change of the preferences while open", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    renderDrawer();
+    await user.click(screen.getByRole("button", { name: "Show code" }));
+    const region = screen.getByRole("region", { name: "Code" });
+    expect(within(region).getByText("1")).toBeInTheDocument();
+
+    // Act
+    act(() => {
+      window.localStorage.setItem(CODE_EDITOR_PREFS_KEY, JSON.stringify({ fontSize: 14, lineNumbers: false }));
+      window.dispatchEvent(new Event("phyllo:code-editor-prefs"));
+    });
+
+    // Assert
+    expect(within(region).queryByText("1")).not.toBeInTheDocument();
+  });
+
   it("should start collapsed in Guided with the plain-language summary", () => {
     // Arrange / Act
     renderDrawer();

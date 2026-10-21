@@ -367,14 +367,6 @@
   border: 1px solid var(--ph-rec);
 }
 
-.toastSlot {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 1000;
-  max-width: calc(100% - 32px);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .barFill {
     transition: none;

@@ -17,7 +17,7 @@ export interface OutputRecording {
 export interface StartRecordingOptions {
   engine: Pick<PhylloEngine, "startCapture" | "sampleRate">;
   native: RecordNative;
-  /** Bare file name (goes to `Exports/`), e.g. `Untitled Groove take 1.wav`. */
+  /** Where to write: an unused absolute path in `Exports/` (from `native.exportUniquePath`). */
   fileName: string;
   now?: () => number;
   /** Time to let the capture tap flush its last chunk after stop. Default 80 ms. */
@@ -88,15 +88,11 @@ export async function startOutputRecording(options: StartRecordingOptions): Prom
   };
 }
 
-const takes = new Map<string, number>();
-
 /**
- * `<project> take <n>.wav`, n counting up per project name for this app session. The native layer has no
- * "list exports" call, so numbering restarts at 1 after a relaunch (and an existing take of that name is replaced).
+ * `<project> take.wav`, the name to ask `native.exportUniquePath` for: it returns an absolute, unused path in
+ * Exports/ (`<project> take 2.wav` when the first exists), so takes never replace each other, across relaunches too.
  */
-export function nextTakeFileName(projectName: string): string {
+export function takeFileName(projectName: string): string {
   const base = projectName.replace(/[\\/:*?"<>|]+/g, " ").trim() || "Untitled Groove";
-  const n = (takes.get(base) ?? 0) + 1;
-  takes.set(base, n);
-  return `${base} take ${n}.wav`;
+  return `${base} take.wav`;
 }

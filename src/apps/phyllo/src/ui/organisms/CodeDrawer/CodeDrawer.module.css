@@ -117,11 +117,16 @@
   padding-bottom: var(--ph-s-5);
 }
 
+/* Font size and line numbers come from the editor preferences (Settings › Code editor): --code-size / --code-line are set on the body. */
 .codeGrid {
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr);
-  font: var(--ph-text-code);
-  line-height: 21px;
+  grid-template-columns: calc(var(--code-size, 12px) * 3.3334) minmax(0, 1fr);
+  font: 400 var(--code-size, 12px) / var(--code-line, 21px) var(--ph-font-mono);
+}
+
+.codeGrid[data-line-numbers="off"] {
+  grid-template-columns: minmax(0, 1fr);
+  padding-left: var(--ph-s-4);
 }
 
 .gutter {
@@ -137,7 +142,7 @@
 .gutterSpacer {
   position: relative;
   display: block;
-  height: 21px;
+  height: var(--code-line, 21px);
 }
 
 .lineNumber[data-error] {
@@ -147,7 +152,7 @@
 
 .errorMarker {
   position: absolute;
-  top: 7px;
+  top: calc((var(--code-line, 21px) - 7px) / 2);
   left: 6px;
   width: 7px;
   height: 7px;
@@ -179,7 +184,7 @@
 
 .line {
   display: block;
-  min-height: 21px;
+  min-height: var(--code-line, 21px);
 }
 
 .line[data-highlighted] {
@@ -198,7 +203,7 @@
 
 .errorRow {
   display: block;
-  height: 21px;
+  height: var(--code-line, 21px);
   color: var(--ph-rec);
   user-select: none;
 }
@@ -254,7 +259,7 @@
 
 .literalInput {
   box-sizing: content-box;
-  height: 19px;
+  height: calc(var(--code-line, 21px) - 2px);
   margin: 0;
   padding: 0 1px;
   border: 0;
@@ -263,7 +268,7 @@
   background: var(--ph-bg);
   color: var(--ph-code-str);
   font: inherit;
-  line-height: 19px;
+  line-height: calc(var(--code-line, 21px) - 2px);
   vertical-align: top;
 }
 
@@ -290,8 +295,7 @@
   border-radius: 9px;
   background: var(--ph-bg);
   color: var(--ph-text);
-  font: var(--ph-text-code);
-  line-height: 21px;
+  font: 400 var(--code-size, 12px) / var(--code-line, 21px) var(--ph-font-mono);
   white-space: pre;
   resize: none;
   tab-size: 2;

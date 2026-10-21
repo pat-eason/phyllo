@@ -20,6 +20,60 @@ function renderRow(props: Partial<StepRowProps> = {}) {
 const cell = (n: number) => screen.getByRole("button", { name: `Kick step ${n}` });
 
 describe("StepRow", () => {
+  it("should make the cells one tab stop that follows focus", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    renderRow();
+
+    // Act
+    cell(5).focus();
+    await user.keyboard("{ArrowRight}{ArrowRight}");
+
+    // Assert
+    expect(cell(7)).toHaveFocus();
+    expect(cell(7)).toHaveAttribute("tabindex", "0");
+    expect(cell(1)).toHaveAttribute("tabindex", "-1");
+    expect(cell(5)).toHaveAttribute("tabindex", "-1");
+  });
+
+  it("should move to the ends with Home and End and stop at them", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    renderRow();
+    cell(3).focus();
+
+    // Act
+    await user.keyboard("{End}{ArrowRight}");
+    const atEnd = document.activeElement;
+    await user.keyboard("{Home}{ArrowLeft}");
+
+    // Assert
+    expect(atEnd).toBe(cell(16));
+    expect(cell(1)).toHaveFocus();
+  });
+
+  it("should audition the row's sound from a separate Preview button", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const onPreview = vi.fn();
+    const { onSelect } = renderRow({ onPreview });
+
+    // Act
+    await user.click(screen.getByRole("button", { name: "Preview Kick" }));
+
+    // Assert
+    expect(onPreview).toHaveBeenCalledTimes(1);
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  it("should not render a Preview button without onPreview", () => {
+    // Arrange / Act
+    renderRow();
+
+    // Assert
+    expect(screen.queryByRole("button", { name: "Preview Kick" })).not.toBeInTheDocument();
+  });
+
   it("should render a row of 16 step cells plus label and output cells", () => {
     // Arrange / Act
     renderRow();
@@ -54,7 +108,7 @@ describe("StepRow", () => {
     // Arrange
     const user = userEvent.setup();
     const { onSelect, rerender } = renderRow();
-    const label = screen.getByRole("button", { name: "Kick, bd" });
+    const label = screen.getByRole("button", { name: "Kick bd" });
 
     // Act
     await user.click(label);
@@ -66,7 +120,7 @@ describe("StepRow", () => {
 
     // Assert
     expect(onSelect).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole("button", { name: "Kick, bd" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Kick bd" })).toHaveAttribute("aria-pressed", "true");
   });
 
   it("should toggle a step with a click when paint handlers are absent", async () => {

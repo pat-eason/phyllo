@@ -229,6 +229,34 @@ describe("SettingsLayout", () => {
     expect(settings().audio.sampleRate).toBeNull();
   });
 
+  it("should say a sample rate that differs from the running engine applies after restart", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const { stores } = renderSettings();
+    stores.engineHost.get();
+    const select = region("Audio").getByRole("combobox", { name: "Sample rate" });
+
+    // Act
+    await user.selectOptions(select, "44.1 kHz");
+
+    // Assert
+    expect(await region("Audio").findByText("Applies after restart. Exports can resample.")).toBeInTheDocument();
+  });
+
+  it("should not warn when the chosen rate is the one the engine runs at", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const { stores } = renderSettings();
+    stores.engineHost.get();
+    const select = region("Audio").getByRole("combobox", { name: "Sample rate" });
+
+    // Act
+    await user.selectOptions(select, "48 kHz");
+
+    // Assert
+    expect(region("Audio").queryByText(/Applies after restart/)).not.toBeInTheDocument();
+  });
+
   it("should prefetch the built-in sounds and follow the progress", async () => {
     // Arrange
     const user = userEvent.setup();

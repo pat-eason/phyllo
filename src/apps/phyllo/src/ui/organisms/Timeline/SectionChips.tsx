@@ -78,6 +78,7 @@ export const SectionChips = memo(function SectionChips({ sections, barWidth, act
             startBar={section.startBar}
             endBar={section.endBar}
             current={false}
+            dropRangeFirst
             title={`${section.name}: click to jump here, ⌥-click to loop it`}
             onClick={(event) => onChipClick(section, event)}
             onRename={(name) => actions.dispatch({ type: "section/update", sectionId: section.id, patch: { name } })}

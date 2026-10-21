@@ -4,7 +4,7 @@ import type { StepRowHandle } from "@phyllo/ui";
 import { useEffect, useRef } from "react";
 import type { KeyboardEvent } from "react";
 import { useStore } from "zustand";
-import { useAppStores } from "../../../hooks";
+import { useAppStores, useEngine } from "../../../hooks";
 import { STEPS, deriveDrumGrid, drumLabel, drumRowMini, withStep, writeSteps, writeVelocities } from "./drumGrid";
 import type { DrumGrid } from "./drumGrid";
 import type { TrackEditor } from "./useTrackEditor";
@@ -36,6 +36,7 @@ function stepOf(cycle: number): number {
 /** Step grid for a drum track: StepRows, "+ Add sound", and the selected row's velocity lane. */
 export function StepsView({ name, grid, bank, extraSounds, onAddSound, selectedRow, onSelectRow, editor }: StepsViewProps) {
   const stores = useAppStores();
+  const { preview } = useEngine();
   const playing = useStore(stores.transport, (s) => s.playing);
   const handles = useRef(new Map<string, StepRowHandle>());
   const paint = useRef<{ sound: string; value: boolean } | null>(null);
@@ -91,12 +92,16 @@ export function StepsView({ name, grid, bank, extraSounds, onAddSound, selectedR
     if (change) editor.write(change);
   }
 
-  /** Arrow keys move between the grid's buttons (label + 16 cells per row). */
+  /**
+   * Arrow keys move between the grid's toggles (label + 16 cells per row). A cell's own ←/→/Home/End are handled by
+   * the StepRow (roving tabindex), so only what it leaves is handled here: ↑/↓ across rows and ←/→ from the label.
+   */
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.defaultPrevented) return;
     const keys: Record<string, [number, number]> = { ArrowLeft: [0, -1], ArrowRight: [0, 1], ArrowUp: [-1, 0], ArrowDown: [1, 0] };
     const move = keys[event.key];
     if (!move) return;
-    const rows = grid.rows.map((r) => [...(handles.current.get(r.sound)?.element?.querySelectorAll("button") ?? [])]);
+    const rows = grid.rows.map((r) => [...(handles.current.get(r.sound)?.element?.querySelectorAll<HTMLButtonElement>("button[aria-pressed]") ?? [])]);
     const r = rows.findIndex((buttons) => buttons.includes(event.target as HTMLButtonElement));
     if (r < 0) return;
     const c = rows[r]?.indexOf(event.target as HTMLButtonElement) ?? -1;
@@ -138,6 +143,9 @@ export function StepsView({ name, grid, bank, extraSounds, onAddSound, selectedR
               mini={drumRowMini(row) || null}
               selected={row.sound === selected?.sound}
               onSelect={() => onSelectRow(row.sound)}
+              onPreview={() => {
+                preview({ s: row.sound, ...(bank ? { bank } : {}) }).catch(() => undefined);
+              }}
               onToggleStep={(i) => {
                 onSelectRow(row.sound);
                 setStep(row.sound, i, !row.steps[i]);

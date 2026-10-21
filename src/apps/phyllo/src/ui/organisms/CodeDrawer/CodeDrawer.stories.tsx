@@ -141,3 +141,29 @@ export const EditCodeWithParseError: Story = {
     await userEvent.click(canvas.getByRole("button", { name: "Apply" }));
   },
 };
+
+/** Editor preferences from Settings (Code editor): 16 px and no line numbers. */
+function EditorPrefs({ children }: { children: ReactNode }) {
+  useEffect(() => {
+    const previous = window.localStorage.getItem("phyllo.codeEditor");
+    window.localStorage.setItem("phyllo.codeEditor", JSON.stringify({ fontSize: 16, lineNumbers: false }));
+    window.dispatchEvent(new Event("phyllo:code-editor-prefs"));
+    return () => {
+      if (previous === null) window.localStorage.removeItem("phyllo.codeEditor");
+      else window.localStorage.setItem("phyllo.codeEditor", previous);
+      window.dispatchEvent(new Event("phyllo:code-editor-prefs"));
+    };
+  }, []);
+  return <>{children}</>;
+}
+
+export const LargeFontNoLineNumbers: Story = {
+  parameters: { stores: { initialSettings: { uiMode: "pro", codeDrawer: { open: true } } } satisfies MockStoresOptions },
+  render: () => (
+    <EditorPrefs>
+      <CenterColumn>
+        <CodeDrawer />
+      </CenterColumn>
+    </EditorPrefs>
+  ),
+};

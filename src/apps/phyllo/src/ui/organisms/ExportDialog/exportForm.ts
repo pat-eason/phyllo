@@ -207,7 +207,7 @@ export function audioOptions(tab: "mixdown" | "stems", form: AudioForm, ctx: For
     reveal: form.reveal,
   } as const;
   return tab === "mixdown"
-    ? { kind: "mixdown", ...base, path: audioPath(form, ctx.exportsDir, ctx.project).trim() }
+    ? { kind: "mixdown", ...base, path: audioPath(form, ctx.exportsDir, ctx.project).trim(), autoName: form.path === null }
     : { kind: "stems", ...base, folder: stemsFolder(form, ctx.exportsDir).trim(), trackIds: stemTrackIds(form, ctx.project) };
 }
 

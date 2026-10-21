@@ -9,7 +9,9 @@ import { ViewToolbar } from "../ViewToolbar";
 import { Timeline } from "./Timeline";
 import { DEFAULT_SNAP } from "./timelineModel";
 import type { EditTool, Snap } from "./timelineModel";
-import { arrangeProject, withTracks } from "./timelineFixtures";
+import { arrangeProject, largeProject, withTracks } from "./timelineFixtures";
+
+const manyTracksProject = (count: number) => largeProject(count, 32);
 
 /** Stand-in for the sibling ViewTabs organism. */
 function TabsPlaceholder() {
@@ -220,4 +222,9 @@ export const LightPro: Story = {
       <SeekTo bar={13.25} />
     </ArrangeColumn>
   ),
+};
+
+/** More than 40 tracks: only the lanes in view are rendered (scroll to see the rest); ↑/↓ on a header walks the tracks. */
+export const ManyTracks: Story = {
+  parameters: stores({ initialProject: manyTracksProject(80), initialSettings: pro }),
 };

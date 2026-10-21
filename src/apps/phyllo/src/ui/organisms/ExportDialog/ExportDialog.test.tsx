@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { NativeError } from "../../../native/errors";
 import { PhylloProvider } from "../../../state/PhylloProvider";
 import { renderWithStores } from "../../../state/testUtils";
+import { ToastProvider } from "../../toasts";
 import { ExportDialog } from "./ExportDialog";
 import { createExportFixture, exportStoreOptions } from "./fixtures";
 import type { RenderMode } from "./fixtures";
@@ -12,7 +13,12 @@ function renderDialog(mode: RenderMode = "instant", extra: Parameters<typeof exp
   const fixture = createExportFixture(mode);
   const onClose = vi.fn();
   const user = userEvent.setup();
-  const view = renderWithStores(<ExportDialog open onClose={onClose} />, exportStoreOptions(fixture, extra));
+  const view = renderWithStores(
+    <ToastProvider>
+      <ExportDialog open onClose={onClose} />
+    </ToastProvider>,
+    exportStoreOptions(fixture, extra),
+  );
   return { ...view, fixture, onClose, user };
 }
 
@@ -162,6 +168,39 @@ describe("ExportDialog", () => {
     expect(await screen.findByRole("status")).toHaveTextContent("Export finished");
   });
 
+  it.each([
+    ["mixdown", /Mixdown/, "Export WAV", /\.wav$/],
+    ["MIDI", /MIDI/, "Export MIDI", /\.mid$/],
+    ["code", /Code/, "Save .strudel", /\.strudel$/],
+  ])("should take a free name for the default %s file instead of replacing one", async (_name, tab, button, extension) => {
+    // Arrange
+    const { user, fixture } = renderDialog();
+    const unique = vi.spyOn(fixture.native, "exportUniquePath");
+    await user.click(screen.getByRole("button", { name: tab }));
+
+    // Act
+    await user.click(await screen.findByRole("button", { name: button }));
+    await screen.findByRole("status");
+
+    // Assert
+    expect(unique).toHaveBeenCalledWith(expect.stringMatching(extension));
+  });
+
+  it("should keep a path the user chose as it is", async () => {
+    // Arrange
+    const { user, fixture } = renderDialog();
+    const unique = vi.spyOn(fixture.native, "exportUniquePath");
+    vi.spyOn(fixture.native, "saveDialog").mockResolvedValue("/Users/me/Desktop/Mine.wav");
+    await user.click(screen.getByRole("button", { name: "Choose a file…" }));
+
+    // Act
+    await user.click(await screen.findByRole("button", { name: "Export WAV" }));
+    await screen.findByRole("status");
+
+    // Assert
+    expect(unique).not.toHaveBeenCalled();
+  });
+
   it("should copy a strudel.cc link from the Code tab", async () => {
     // Arrange
     const { user } = renderDialog();
@@ -211,7 +250,9 @@ describe("ExportDialog", () => {
     await user.click(await screen.findByRole("button", { name: "Keep working" }));
     rerender(
       <PhylloProvider stores={stores} autoStart={false}>
-        <ExportDialog open={false} onClose={onClose} />
+        <ToastProvider>
+          <ExportDialog open={false} onClose={onClose} />
+        </ToastProvider>
       </PhylloProvider>,
     );
 

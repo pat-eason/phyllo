@@ -70,25 +70,6 @@
   padding: 0 2px;
 }
 
-/*
- * A narrow chip drops its bar range before it truncates the name (Break 17–20 at zoom 1, mockup 01): the chip
- * wraps, each part sits on its own 22 px line, and the clipped second line is hidden. The range may run into
- * the chip's right padding, as in the mockup. (SectionChip has no option for this; reported as a molecule gap.)
- */
-.sectionSlot > .sectionChip {
-  flex-wrap: wrap;
-  align-content: flex-start;
-  width: 100%;
-}
-
-.sectionSlot > .sectionChip > span {
-  line-height: 22px;
-}
-
-.sectionSlot > .sectionChip > span:last-child {
-  margin-right: -5px;
-}
-
 .loopBand {
   position: absolute;
   top: 30px;
@@ -196,7 +177,17 @@
 
 .lane {
   display: flex;
+  box-sizing: border-box;
+  /* Fixed row height (LANE_ROW_PX in useLaneRange.ts): virtualized lists place spacers by it. */
+  height: calc(var(--ph-lane-h) + 1px);
   border-bottom: 1px solid var(--ph-line);
+}
+
+.laneGap {
+  display: block;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .lane[data-selected] {

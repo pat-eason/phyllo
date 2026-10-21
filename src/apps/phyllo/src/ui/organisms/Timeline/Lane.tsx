@@ -2,8 +2,8 @@ import { newId } from "@phyllo/model";
 import type { Clip as ClipModel, TipTarget, Track } from "@phyllo/model";
 import { Clip, TrackHeader } from "@phyllo/ui";
 import type { ClipEdge, MeterSubscribe } from "@phyllo/ui";
-import { memo, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { DragEvent, KeyboardEvent, MouseEvent, PointerEvent as ReactPointerEvent, RefObject } from "react";
+import { memo, useMemo, useRef, useState } from "react";
+import type { DragEvent, KeyboardEvent, MouseEvent, PointerEvent as ReactPointerEvent } from "react";
 import { usePointerDrag } from "./pointerDrag";
 import { isSoundDrag, readSoundRef } from "./soundDrop";
 import styles from "./Timeline.module.css";
@@ -32,42 +32,22 @@ export interface LaneProps {
   meterStopped: boolean;
   actions: TimelineActions;
   onEditPattern: ((trackId: string) => void) | undefined;
+  /** 1-based place in the track list and the list's size; set when lanes are virtualized so readers know where they are. */
+  position?: number;
+  setSize?: number;
 }
 
 type Range = { startBar: number; endBar: number };
 /** What a drag shows before it is applied: the clip at its new place, or a ghost for duplicates and drawing. */
 type Preview = Range & { clipId: string | null; ghost: boolean };
 
-const CLIP_KEYS = "Delete Backspace Enter ArrowLeft ArrowRight Shift+ArrowLeft Shift+ArrowRight";
+/** Tip anchor for the first lane's Mute / Solo (`data-tip-active` pulses it while that tip is current). */
+const tipAnchor = (target: TipTarget, highlight: TipTarget | null) => ({
+  "data-tip-target": target,
+  "data-tip-active": highlight === target ? "" : undefined,
+});
 
-/** Puts the tip anchors on the first track's Mute/Solo (TrackHeader doesn't forward props to its toggles). */
-function useTipAnchors(
-  root: RefObject<HTMLDivElement | null>,
-  name: string,
-  enabled: boolean,
-  highlight: TipTarget | null,
-) {
-  useLayoutEffect(() => {
-    const header = root.current;
-    if (!header || !enabled) return;
-    const anchors: [TipTarget, HTMLElement | null][] = [
-      ["track-mute", header.querySelector<HTMLElement>(`button[aria-label="${CSS.escape(`Mute ${name}`)}"]`)],
-      ["track-solo", header.querySelector<HTMLElement>(`button[aria-label="${CSS.escape(`Solo ${name}`)}"]`)],
-    ];
-    for (const [target, button] of anchors) {
-      if (!button) continue;
-      button.setAttribute("data-tip-target", target);
-      if (highlight === target) button.setAttribute("data-tip-active", "");
-      else button.removeAttribute("data-tip-active");
-    }
-    return () => {
-      for (const [, button] of anchors) {
-        button?.removeAttribute("data-tip-target");
-        button?.removeAttribute("data-tip-active");
-      }
-    };
-  }, [root, name, enabled, highlight]);
-}
+const CLIP_KEYS = "Delete Backspace Enter ArrowLeft ArrowRight Shift+ArrowLeft Shift+ArrowRight";
 
 /** One track row: TrackHeader plus the clip lane (clip editing, drawing, splitting, sound drops). */
 export const Lane = memo(function Lane({
@@ -85,6 +65,8 @@ export const Lane = memo(function Lane({
   meterStopped,
   actions,
   onEditPattern,
+  position,
+  setSize,
 }: LaneProps) {
   const header = useRef<HTMLDivElement>(null);
   const lane = useRef<HTMLDivElement>(null);
@@ -96,8 +78,6 @@ export const Lane = memo(function Lane({
   const { kind, pattern, source } = track;
   const viz = useMemo(() => trackViz({ kind, pattern, source }, lengthBars), [kind, pattern, source, lengthBars]);
   const label = kind === "code" ? ((track.rawCode ?? "").split("\n")[0]?.trim() ?? "") : pattern;
-
-  useTipAnchors(header, track.name, tipAnchors, tipHighlight);
 
   /** 1-based fractional bar under the pointer. */
   const barAt = (clientX: number) => 1 + (clientX - (lane.current?.getBoundingClientRect().left ?? 0)) / barWidth;
@@ -229,6 +209,9 @@ export const Lane = memo(function Lane({
     <li
       className={styles["lane"]}
       aria-label={track.name}
+      aria-posinset={position}
+      aria-setsize={setSize}
+      data-track-id={trackId}
       data-selected={selected ? "" : undefined}
       data-drop={dropping ? "" : undefined}
       onDragOver={onDragOver}
@@ -239,6 +222,7 @@ export const Lane = memo(function Lane({
       <TrackHeader
         ref={header}
         className={styles["header"]}
+        data-track-header=""
         name={track.name}
         sound={trackSoundCode(track)}
         color={track.color}
@@ -247,6 +231,7 @@ export const Lane = memo(function Lane({
         soloed={track.solo}
         meterSubscribe={meterSubscribe}
         meterStopped={meterStopped}
+        {...(tipAnchors ? { muteProps: tipAnchor("track-mute", tipHighlight), soloProps: tipAnchor("track-solo", tipHighlight) } : {})}
         {...(error ? { error } : {})}
         codeTrack={kind === "code"}
         onSelect={() => actions.select(trackId)}

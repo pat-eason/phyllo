@@ -438,10 +438,3 @@ button.head:hover .name {
   background: var(--ph-rec);
   color: var(--ph-rec-ink);
 }
-
-.toast {
-  position: fixed;
-  z-index: 1000;
-  right: 24px;
-  bottom: 24px;
-}

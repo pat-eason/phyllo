@@ -1,4 +1,3 @@
-import { Toast } from "@phyllo/ui";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { useStore } from "zustand";
 import { useAppStores } from "../../state/context";
@@ -14,9 +13,9 @@ import {
   SettingsScreen,
 } from "../screens";
 import screenStyles from "../screens/screens.module.css";
+import { ToastProvider, useToasts } from "../toasts";
 import { createShellActions } from "./actions";
 import type { RunAction, ShellActionEnv } from "./actions";
-import styles from "./AppShell.module.css";
 import { ShortcutsDialog, UnsavedChangesDialog, VersionHistoryDialog } from "./dialogs";
 import type { UnsavedChoice } from "./dialogs";
 import { ExportSlot } from "./ExportSlot";
@@ -52,10 +51,6 @@ function defaultOpenUrl(url: string) {
   window.open(url, "_blank", "noopener");
 }
 
-interface ToastEntry extends ShellToast {
-  id: number;
-}
-
 type Dialog =
   | { kind: "none" }
   | { kind: "history" }
@@ -73,7 +68,15 @@ export interface AppShellProps {
  * The main window: startup flow, hash router, screens, app-level dialogs and toasts, the global shortcut layer and
  * the native menu/media/open-file glue. Must render under `<PhylloProvider>` (and the theme).
  */
-export function AppShell({ openUrl = defaultOpenUrl, isMac = detectMac() }: AppShellProps) {
+export function AppShell(props: AppShellProps) {
+  return (
+    <ToastProvider>
+      <AppShellContent {...props} />
+    </ToastProvider>
+  );
+}
+
+function AppShellContent({ openUrl = defaultOpenUrl, isMac = detectMac() }: AppShellProps) {
   const stores = useAppStores();
   const hashRoute = useHashRoute();
   const [initialRoute] = useState<Route | null>(() => hashRoute);
@@ -81,18 +84,15 @@ export function AppShell({ openUrl = defaultOpenUrl, isMac = detectMac() }: AppS
   const [snap, setSnap] = useState<Snap>(DEFAULT_SNAP);
   const [exportOpen, setExportOpen] = useState(false);
   const [dialog, setDialog] = useState<Dialog>({ kind: "none" });
-  const [toasts, setToasts] = useState<ToastEntry[]>([]);
+  const toasts = useToasts();
   const [recentClearedAt, setRecentClearedAt] = useState(readClearedAt);
-  const nextToast = useRef(1);
   const libraryPanelRef = useRef<LibraryPanelHandle | null>(null);
   const uiMode = useStore(stores.settings, (s) => s.settings.uiMode);
   const autosaveOn = useStore(stores.settings, (s) => s.settings.system.autosave);
   const projectName = useStore(stores.project, (s) => s.project.name);
 
-  const notify = (toast: ShellToast) => {
-    const id = nextToast.current++;
-    setToasts((list) => [...list, { ...toast, id }]);
-  };
+  const notify = ({ title, detail, tone }: ShellToast) =>
+    void toasts.push({ title, tone: tone ?? "neutral", ...(detail ? { body: detail } : {}) });
 
   // `run` is declared below; startup only calls the handler later, from an event.
   const { ready, projectOpen } = useStartup({
@@ -202,20 +202,6 @@ export function AppShell({ openUrl = defaultOpenUrl, isMac = detectMac() }: AppS
         {dialog.kind === "shortcuts" ? <ShortcutsDialog onClose={() => setDialog({ kind: "none" })} /> : null}
         {dialog.kind === "unsaved" ? (
           <UnsavedChangesDialog projectName={projectName} saving={dialog.saving} onChoose={(choice) => void chooseUnsaved(choice)} />
-        ) : null}
-        {toasts.length > 0 ? (
-          <div className={styles["toasts"]}>
-            {toasts.map((toast) => (
-              <Toast
-                key={toast.id}
-                title={toast.title}
-                detail={toast.detail}
-                tone={toast.tone ?? "neutral"}
-                duration={toast.tone === "error" ? 0 : 6000}
-                onDismiss={() => setToasts((list) => list.filter((entry) => entry.id !== toast.id))}
-              />
-            ))}
-          </div>
         ) : null}
         <NativeBridge stores={stores} run={run} onOpenHistory={shell.openHistory} recentClearedAt={recentClearedAt} />
       </LibraryPanelRefContext.Provider>

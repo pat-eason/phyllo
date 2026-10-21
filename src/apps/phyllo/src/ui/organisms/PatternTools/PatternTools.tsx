@@ -155,7 +155,7 @@ function FeelCard({ track, editor }: { track: Track | undefined; editor: TrackEd
               </code>
             </div>
             <Slider
-              className={styles["slider"]}
+              width="fill"
               label={tool.label}
               min={tool.min}
               max={tool.max}

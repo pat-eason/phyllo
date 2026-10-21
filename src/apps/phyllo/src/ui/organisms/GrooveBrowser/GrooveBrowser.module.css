@@ -72,18 +72,6 @@
   font-weight: 600;
 }
 
-.notice {
-  margin: 0;
-  padding: var(--ph-s-2) var(--ph-s-3);
-  border-radius: var(--ph-r-md);
-  background: var(--ph-raised);
-  font: var(--ph-text-small);
-}
-
-.notice[data-tone="error"] {
-  color: var(--ph-rec);
-}
-
 .content {
   display: flex;
   flex-direction: column;

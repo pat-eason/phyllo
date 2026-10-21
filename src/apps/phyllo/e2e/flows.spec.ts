@@ -29,7 +29,7 @@ test("first launch: Guided start → Lo-fi keys at 83 BPM → Arrange in Guided"
   await expect(page).toHaveURL(/#\/arrange$/);
   await expect(tracks(page)).toHaveCount(3);
   await expect(page.getByRole("radio", { name: "Guided" })).toBeChecked();
-  await expect(page.getByRole("button", { name: /Tempo 83 BPM/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /83 BPM/ })).toBeVisible();
   await expect(inspector(page).getByRole("slider")).toHaveCount(6);
   await expect(page.getByRole("region", { name: "Tip" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Show code" })).toBeVisible();

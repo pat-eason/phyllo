@@ -1,9 +1,10 @@
-import { Icon, Toast } from "@phyllo/ui";
+import { Icon } from "@phyllo/ui";
 import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { useAppStores, useExport, useNative, useProject } from "../../../hooks";
 import type { ExportJobResult, ExportOptions } from "../../../state/exportPipeline";
 import { FORMAT_EXT } from "../../../state/exportPipeline";
+import { useToasts } from "../../toasts";
 import { AudioPane, CodePane, MidiPane } from "./ExportPanes";
 import {
   DEFAULT_AUDIO_FORM,
@@ -70,6 +71,8 @@ export function ExportDialog({ open, onClose }: ExportDialogProps) {
   const [code, setCode] = useState<CodeForm>(DEFAULT_CODE_FORM);
   const [seenResult, setSeenResult] = useState<ExportJobResult | null>(null);
   const dialogRef = useRef<HTMLElement>(null);
+  const toasts = useToasts();
+  const announced = useRef<ExportJobResult | null>(null);
 
   const busy = job.state === "rendering" || job.state === "encoding";
   const ctx: FormContext = { project, exportsDir, nativeKind: native.kind };
@@ -110,7 +113,7 @@ export function ExportDialog({ open, onClose }: ExportDialogProps) {
     problem = pathProblem(midiPath);
     exportLabel = "Export MIDI";
     workLabel = "Reading the notes";
-    options = () => ({ kind: "midi", range: midi.range, layout: midi.layout, path: midiPath.trim() });
+    options = () => ({ kind: "midi", range: midi.range, layout: midi.layout, path: midiPath.trim(), autoName: midi.path === null });
   } else {
     problem = code.action === "file" ? pathProblem(codePath) : null;
     exportLabel = code.action === "file" ? "Save .strudel" : "Copy link";
@@ -121,7 +124,7 @@ export function ExportDialog({ open, onClose }: ExportDialogProps) {
       action: code.action,
       scope: section ? "section" : "song",
       ...(section ? { sectionBar: section.startBar } : {}),
-      ...(code.action === "file" ? { path: codePath.trim() } : {}),
+      ...(code.action === "file" ? { path: codePath.trim(), autoName: code.path === null } : {}),
     });
   }
   if (!exportsDir && problem === null && tab !== "code") problem = "Looking up the exports folder…";
@@ -179,6 +182,19 @@ export function ExportDialog({ open, onClose }: ExportDialogProps) {
 
   const info = infoNote(tab, audio, ctx, code.action);
   const toastResult = !open && job.state === "done" && job.result && job.result !== seenResult ? job.result : null;
+
+  // A result that finishes while the dialog is closed ("Keep working") is announced once on the app toast queue.
+  useEffect(() => {
+    if (!toastResult || announced.current === toastResult) return;
+    announced.current = toastResult;
+    const { title, detail, path } = toastResult;
+    toasts.push({
+      title,
+      body: detail,
+      ...(path ? { action: { label: "Reveal", onClick: () => reveal(path) } } : {}),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- announce per result; `toasts` and `reveal` are current when it fires
+  }, [toastResult]);
 
   return (
     <>
@@ -245,16 +261,6 @@ export function ExportDialog({ open, onClose }: ExportDialogProps) {
               />
             </div>
           </section>
-        </div>
-      ) : null}
-      {toastResult ? (
-        <div className={styles["toastSlot"]}>
-          <Toast
-            title={toastResult.title}
-            detail={toastResult.detail}
-            {...(toastResult.path ? { action: { label: "Reveal", onClick: () => reveal(toastResult.path ?? "") } } : {})}
-            onDismiss={() => setSeenResult(toastResult)}
-          />
         </div>
       ) : null}
     </>

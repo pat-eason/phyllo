@@ -10,7 +10,7 @@ import {
 } from "react";
 import { Icon } from "../../atoms/Icon";
 import { Meter, type MeterSubscribe } from "../../atoms/Meter";
-import { ToggleButton } from "../../atoms/ToggleButton";
+import { ToggleButton, type ToggleButtonProps } from "../../atoms/ToggleButton";
 import styles from "./TrackHeader.module.css";
 
 export interface TrackHeaderProps extends Omit<ComponentPropsWithoutRef<"div">, "onSelect" | "color"> {
@@ -47,7 +47,15 @@ export interface TrackHeaderProps extends Omit<ComponentPropsWithoutRef<"div">, 
   onSoloChange: (soloed: boolean, event: MouseEvent<HTMLButtonElement>) => void;
   /** Double-click the name (or F2) to rename in place; Enter commits, Escape cancels. */
   onRename?: (name: string) => void;
+  /** Extra native props for the Mute button, e.g. `data-tip-target`. `pressed`, `kind`, `label` and `onChange` stay owned by the header. */
+  muteProps?: TrackHeaderToggleProps;
+  /** Extra native props for the Solo button (see `muteProps`). */
+  soloProps?: TrackHeaderToggleProps;
 }
+
+export type TrackHeaderToggleProps = Omit<ToggleButtonProps, "kind" | "pressed" | "onChange" | "label" | "children"> & {
+  [dataAttribute: `data-${string}`]: string | undefined;
+};
 
 /**
  * Left column of a timeline lane: colour strip, selectable name + sound code, level meter and Mute/Solo.
@@ -72,6 +80,8 @@ export const TrackHeader = forwardRef<HTMLDivElement, TrackHeaderProps>(function
     onMuteChange,
     onSoloChange,
     onRename,
+    muteProps,
+    soloProps,
     className,
     style,
     ...rest
@@ -155,24 +165,28 @@ export const TrackHeader = forwardRef<HTMLDivElement, TrackHeaderProps>(function
             <span className={styles["sound"]}>{sound}</span>
           </>
         ) : (
-          <button
-            ref={nameButton}
-            type="button"
-            className={styles["select"]}
-            aria-pressed={selected}
-            aria-labelledby={nameId}
-            aria-describedby={error ? `${soundId} ${errorId}` : soundId}
-            onClick={onSelect}
-            onDoubleClick={startEditing}
-            onKeyDown={onNameKeyDown}
-          >
-            <span id={nameId} className={styles["name"]}>
-              {name}
-            </span>
+          // The button holds only the name, so its accessible name is exactly its visible text (WCAG 2.5.3); the sound
+          // line sits under it as the description, and the button's ::after stretches its hit area over both lines.
+          <div className={styles["stack"]}>
+            <button
+              ref={nameButton}
+              type="button"
+              className={styles["select"]}
+              aria-pressed={selected}
+              aria-labelledby={nameId}
+              aria-describedby={error ? `${soundId} ${errorId}` : soundId}
+              onClick={onSelect}
+              onDoubleClick={startEditing}
+              onKeyDown={onNameKeyDown}
+            >
+              <span id={nameId} className={styles["name"]}>
+                {name}
+              </span>
+            </button>
             <span id={soundId} className={styles["sound"]}>
               {sound}
             </span>
-          </button>
+          </div>
         )}
         {error ? (
           <span id={errorId} className={styles["visuallyHidden"]}>
@@ -193,8 +207,8 @@ export const TrackHeader = forwardRef<HTMLDivElement, TrackHeaderProps>(function
         ) : null}
       </div>
       <Meter className={styles["meter"]} {...meterProps} />
-      <ToggleButton kind="mute" label={`Mute ${name}`} pressed={muted} onChange={onMuteChange} />
-      <ToggleButton kind="solo" label={`Solo ${name}`} pressed={soloed} onChange={onSoloChange} />
+      <ToggleButton {...muteProps} kind="mute" label={`Mute ${name}`} pressed={muted} onChange={onMuteChange} />
+      <ToggleButton {...soloProps} kind="solo" label={`Solo ${name}`} pressed={soloed} onChange={onSoloChange} />
     </div>
   );
 });

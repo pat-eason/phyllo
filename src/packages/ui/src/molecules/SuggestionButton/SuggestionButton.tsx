@@ -15,7 +15,7 @@ export interface SuggestionButtonProps extends Omit<ButtonHTMLAttributes<HTMLBut
 
 /**
  * "Try one" card: a one-click musical idea that adds (or removes) a modifier and shows the code it writes.
- * `<button aria-pressed>`; accessible name "Bouncier, adds .swingBy(1/6, 4)" unless `aria-label` is given.
+ * `<button aria-pressed>`; accessible name "Bouncier .swingBy(1/6, 4)" (the visible text, WCAG 2.5.3) unless `aria-label` is given.
  */
 export const SuggestionButton = forwardRef<HTMLButtonElement, SuggestionButtonProps>(function SuggestionButton(
   { label, code, applied, onToggle, className, onClick, type = "button", title, "aria-label": ariaLabel, ...rest },
@@ -29,7 +29,7 @@ export const SuggestionButton = forwardRef<HTMLButtonElement, SuggestionButtonPr
       type={type}
       title={title ?? code}
       aria-pressed={applied}
-      aria-label={ariaLabel ?? `${label}, adds ${code}`}
+      aria-label={ariaLabel ?? `${label} ${code}`}
       className={classes}
       data-applied={applied ? "" : undefined}
       onClick={(event) => {

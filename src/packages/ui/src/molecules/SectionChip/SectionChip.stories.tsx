@@ -66,3 +66,14 @@ export const Themes: Story = {
     </ThemePair>
   ),
 };
+
+/** `dropRangeFirst`: in a narrow slot the bar range goes before the name is truncated (resize the slots to compare). */
+export const DropRangeFirst: Story = {
+  args: { name: "Break", startBar: 17, endBar: 20, dropRangeFirst: true },
+  decorators: [(Story) => <div style={{ width: 84 }}>{Story()}</div>],
+};
+
+export const NarrowKeepsRange: Story = {
+  args: { name: "Break", startBar: 17, endBar: 20 },
+  decorators: [(Story) => <div style={{ width: 84 }}>{Story()}</div>],
+};

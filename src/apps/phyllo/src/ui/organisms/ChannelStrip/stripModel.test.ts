@@ -1,6 +1,6 @@
 import { createTrack } from "@phyllo/model";
 import { describe, expect, it } from "vitest";
-import { nextTakeFileName } from "./recordOutput";
+import { takeFileName } from "./recordOutput";
 import { effectOptions, formatElapsed, parseInsertValue, soundLine, trackInserts } from "./stripModel";
 
 const synth = (overrides: Parameters<typeof createTrack>[1] = {}) =>
@@ -71,11 +71,11 @@ describe("stripModel", () => {
     expect(parseInsertValue("loud")).toBeUndefined();
   });
 
-  it("should format elapsed time and number takes per project", () => {
+  it("should format elapsed time and name takes after the project", () => {
     // Assert
     expect(formatElapsed(7_900)).toBe("0:07");
     expect(formatElapsed(723_000)).toBe("12:03");
-    expect(nextTakeFileName("Night/Drive")).toBe("Night Drive take 1.wav");
-    expect(nextTakeFileName("Night/Drive")).toBe("Night Drive take 2.wav");
+    expect(takeFileName("Night/Drive")).toBe("Night Drive take.wav");
+    expect(takeFileName("  ")).toBe("Untitled Groove take.wav");
   });
 });
