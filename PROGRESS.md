@@ -74,3 +74,11 @@
 - F10 merged (e61badc): editor prefs, toast queue, molecule props + workaround removal, lane virtualization + ↑/↓, a11y names (axe 0 on all screens × 2 themes), F9 UI wiring (autoName, unique rec takes, restart note). pnpm check green (ui 600, app 800), e2e 7/7. CLAUDE.md updated to the current architecture.
 - Removed 41 merged agent worktrees/branches (all verified ancestors of phyllo/build). Dispatched T7.V final DoD audit.
 - T7.V done (final DoD audit): (1) §6.1 PASS re-verified; (3) `pnpm check`, phyllo e2e 7/7, engine e2e 21/21, release selftest 13/13 PASS; (4) no S1/S2 visual diffs, S3 diffs documented (D173); (5) all (verify) + §10 resolved. (2) partial: light error-text contrast 4.12:1 (S2), muted/highlighted code contrast, 3 label-name mismatches, undocumented shadow literals (documented D172) → F11 dispatched.
+- F11 merged (6f1a1f5): light `--ph-rec-text` for error text, muted code lines via `--ph-muted`, light `--ph-code-num` #1B58B0, 3 accessible-name fixes, TextField stories, Settings opens on Appearance, pinned library footnote, Strudel chunk split (build warning-free). axe: 0 violations on all app screens + app stories.
+
+## Final state (definition of done)
+- `pnpm check` green: model 555 · ui 601 · engine 2136 · app 800 tests. `pnpm --filter phyllo e2e` 7/7. `pnpm --filter @phyllo/engine e2e` 21/21. `pnpm --filter phyllo build` warning-free.
+- `pnpm --filter phyllo selftest` (release .app, WKWebView): open → play starter → edit → save → reopen from library → export WAV/MIDI/.strudel/FLAC — 13/13 PASS, CSP enforced, 0 violations.
+- SPEC §6.1 acceptance: 5/5 PASS (table above). SPEC (verify) items + §10 Q1–Q6 resolved (DECISIONS "SPEC §10" + "(verify) index").
+- Screens vs png/: no S1/S2 differences; accepted differences in D169–D175 and earlier entries.
+- Not verifiable without a person/device: tray/menu-bar mode, media keys, real MIDI hardware + record, OSC to SuperDirt, file-association double-click, clicking Reveal on a native notification, Windows/Linux. Licensing choice and signing left to the owner (D171).
