@@ -1,0 +1,148 @@
+.button {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: var(--ph-r-lg);
+  background: transparent;
+  color: var(--ph-text);
+  font: var(--ph-text-body);
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    filter var(--ph-dur-fast) var(--ph-ease),
+    transform var(--ph-dur-fast) var(--ph-ease),
+    box-shadow var(--ph-dur-fast) var(--ph-ease);
+}
+
+.content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* ---- sizes ---- */
+.button[data-size="sm"] {
+  height: 32px;
+  padding: 0 10px;
+  border-radius: var(--ph-r-md);
+}
+
+.button[data-size="sm"] .content {
+  gap: 6px;
+}
+
+.button[data-size="lg"] {
+  height: 44px;
+  padding: 0 18px;
+}
+
+/* ---- variants ---- */
+.button[data-variant="primary"] {
+  border-width: 0;
+  background: var(--ph-accent);
+  color: var(--ph-accent-ink);
+  box-shadow: var(--ph-shadow-key);
+  font-weight: 700;
+}
+
+.button[data-variant="primary"][data-tone="inverse"] {
+  background: var(--ph-text);
+  color: var(--ph-bg);
+}
+
+.button[data-variant="secondary"] {
+  border-color: var(--ph-line);
+  background: var(--ph-btn-grad);
+  box-shadow: var(--ph-shadow-btn);
+}
+
+.button[data-variant="ghost"] {
+  border-width: 0;
+  color: var(--ph-accent-text);
+}
+
+.button[data-variant="dashed"] {
+  border-style: dashed;
+  border-color: var(--ph-line);
+  color: var(--ph-muted);
+}
+
+.button[data-variant="dashed"][data-size="sm"] {
+  padding: 0 12px;
+}
+
+/* ---- states ---- */
+.button:hover:not(:disabled, [aria-disabled="true"], [data-loading]) {
+  filter: brightness(1.04);
+}
+
+.button:active:not(:disabled, [aria-disabled="true"], [data-loading]) {
+  transform: translateY(1px);
+}
+
+.button[data-variant="primary"]:active:not(:disabled, [aria-disabled="true"], [data-loading]) {
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.button[data-variant="secondary"]:active:not(:disabled, [aria-disabled="true"], [data-loading]) {
+  box-shadow: var(--ph-shadow-bevel);
+}
+
+.button:disabled,
+.button[aria-disabled="true"] {
+  opacity: 0.5;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* ---- loading: label stays in layout (keeps width), spinner sits on top ---- */
+.button[data-loading] {
+  cursor: progress;
+}
+
+.button[data-loading] .content {
+  visibility: hidden;
+}
+
+.spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 700ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition: none;
+  }
+
+  .button:active:not(:disabled, [aria-disabled="true"], [data-loading]) {
+    transform: none;
+  }
+
+  /* No spin: a static half-open ring instead. */
+  .spinner {
+    animation: none;
+  }
+}

@@ -1,0 +1,62 @@
+.switch {
+  /* Thumb is white in both themes (Kit). tokens.css has no token for it. */
+  --switch-thumb: #ffffff;
+  --switch-w: 44px;
+  --switch-h: 26px;
+  --switch-pad: 3px;
+  --switch-d: calc(var(--switch-h) - 2 * var(--switch-pad));
+
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  width: var(--switch-w);
+  height: var(--switch-h);
+  padding: var(--switch-pad);
+  border: 0;
+  border-radius: var(--ph-r-full);
+  background: var(--ph-switch-off);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background var(--ph-dur-fast) var(--ph-ease);
+}
+
+.switch[data-size="sm"] {
+  --switch-w: 28px;
+  --switch-h: 16px;
+  --switch-pad: 2px;
+  --switch-thumb: var(--ph-panel);
+}
+
+.switch[data-checked] {
+  background: var(--ph-accent);
+}
+
+.switch[data-size="sm"][data-checked] {
+  --switch-thumb: var(--ph-accent-ink);
+}
+
+.thumb {
+  display: block;
+  width: var(--switch-d);
+  height: var(--switch-d);
+  border-radius: 50%;
+  background: var(--switch-thumb);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: transform var(--ph-dur-fast) var(--ph-ease);
+}
+
+.switch[data-checked] .thumb {
+  transform: translateX(calc(var(--switch-w) - var(--switch-h)));
+}
+
+.switch:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .switch,
+  .thumb {
+    transition: none;
+  }
+}
