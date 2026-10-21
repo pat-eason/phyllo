@@ -75,7 +75,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | T3.5 | organism agent | CodeDrawer, TipCoach | T3.1, M2 | same + inline pattern edit, Edit code mode | done |
 | T3.6 | organism agent | Inspector | T3.1, M2 | same | done |
 | T3.7 | shell agent | App/main, router, all screens (Arrange, Pattern, Mixer, Library, GuidedStart, Settings), shortcuts, menu/media/open-file glue, unsaved/history dialogs, e2e flows | all organisms | SPEC §6.1 acceptance + §7; e2e flows | done |
-| T3.V | verifier | read-only | T3.7 | §6.1 checklist + screenshot parity 01/02/accent-* | todo |
+| T3.V | verifier | read-only | T3.7 | SPEC §6 acceptance + screenshot parity for every PNG (covers T4.V/T5.V) | active |
 
 ### M4 Pattern editor and Mixer
 | id | owner | owns | deps | acceptance | status |
@@ -102,6 +102,10 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | T6.V | verifier | read-only | T6.5, T3.7 | native features in `tauri dev` | todo |
 
 ### M7 Polish
+| id | owner | owns | deps | acceptance | status |
+|---|---|---|---|---|---|
+| T7.5a | build agent | self-test mode + `pnpm tauri build` | T3.7 | built app runs the DoD flow in WKWebView (open, play starter, edit, save, reopen from library, export WAV) and writes a pass report | active |
+
 T7.1 shortcuts (SPEC §7) · T7.2 a11y pass (SPEC §8) · T7.3 screenshot parity fixes · T7.4 performance (no React re-render for playhead/meters) · T7.5 `pnpm tauri build` packaging + end-to-end smoke (open, play starter, edit, save, reopen, export WAV) · T7.V final verifier against SPEC §6 + DoD.
 
 ### Follow-ups backlog (not yet assigned)
@@ -110,11 +114,11 @@ T7.1 shortcuts (SPEC §7) · T7.2 a11y pass (SPEC §8) · T7.3 screenshot parity
 - ~~B3~~ done (D139).
 - B4 MIDI input → selected track notes / CC map → inspector knobs (state layer, uses T6.2 events) — from T3.1.
 - B5 Tag manage: rename/merge/delete across files; recolor needs a model field — from T3.1/T5.1.
-- B6 Audition another program without replacing the open project (GrooveBrowser tile play, StarterPicker preview): generalize StarterPicker's `useAudition` (load as non-dirty, restore on stop) into a shared hook, or add an engine audition slot; then enable GrooveCard play (needs a `disabled`/`previewing` prop) — from T5.1/T5.2.
+- ~~B6~~ done (F5): Audition another program without replacing the open project (GrooveBrowser tile play, StarterPicker preview): generalize StarterPicker's `useAudition` (load as non-dirty, restore on stop) into a shared hook, or add an engine audition slot; then enable GrooveCard play (needs a `disabled`/`previewing` prop) — from T5.1/T5.2.
 - B7 Molecule gaps: GrooveCard `selected` row + play `disabled`; Readout caption action + cell popover (key menu); StatusDot `tone="plain"`; SegmentedControl compact padding; Chip code `selected`; IconButton/TextField/Select 40 px size — from T3.2/T3.4/T5.1/T5.2.
 - B8 Engine should honour `settings.audio.sampleRate` (AudioContext sampleRate on init) — from T5.3.
 - B9 CodeDrawer should consume `useCodeEditorPrefs()` (font size, line numbers) — from T5.3.
-- B10 ParamKnob: `aria-valuetext`/`aria-label` + caption slot props (Inspector writes the attribute after render as a workaround); Knob double-click "unset" callback — from T3.6.
+- ~~B10~~ done (F5): ParamKnob: `aria-valuetext`/`aria-label` + caption slot props (Inspector writes the attribute after render as a workaround); Knob double-click "unset" callback — from T3.6.
 - B11 Pro value text `.78` vs mockup `0.78` — decide in T7.3 parity pass (model `PARAM_SPECS.format`) — from T2.6/T3.6.
 - B12 Rec output / export naming: avoid overwriting earlier takes after relaunch (native "unique export path" like `project_new_path` for Exports/) — from T4.2.
 - B13 TrackHeader attribute passthrough for Mute/Solo (tip anchors), SectionChip imperative `current`, SegmentedControl per-option attrs — from T3.3.
@@ -122,4 +126,4 @@ T7.1 shortcuts (SPEC §7) · T7.2 a11y pass (SPEC §8) · T7.3 screenshot parity
 - B15 Timeline lane virtualization past ~40 tracks; ↑/↓ track navigation — from T3.3.
 - B16 Multi-cycle step patterns (2/4 cycles) in `miniToRows`/`rowsToMini` + StepSequencer length control; Euclid rotation control — from T4.1.
 - B17 StepRow roving tabindex + `onPreview` on the row label; Slider fluid width — from T4.1.
-- B18 UI for T6.5: show recorder `lastTake` + `midiInput.hint` (status bar/toast), list `useSampleNames()` in Inspector sound picker (sample tracks) and Library Samples tab; LibraryPanel/Inspector preview toggles call `stopPreview()` — from T6.5.
+- ~~B18~~ done (F5): UI for T6.5: show recorder `lastTake` + `midiInput.hint` (status bar/toast), list `useSampleNames()` in Inspector sound picker (sample tracks) and Library Samples tab; LibraryPanel/Inspector preview toggles call `stopPreview()` — from T6.5.
