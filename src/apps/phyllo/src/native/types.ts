@@ -15,6 +15,8 @@ export type NativeErrorCode =
   | 'watch'
   | 'midi'
   | 'osc'
+  | 'unsupported_format'
+  | 'encode'
   | 'internal'
   /** The command never reached Rust, or rejected with something that is not `{ code, message }`. */
   | 'unknown';
@@ -196,6 +198,71 @@ export interface OscMessageOut {
   atMs?: number;
 }
 
+// ── Export (SPEC §6.5, DECISIONS V11) ──────────────────────────────────────
+
+export type ExportFormat = 'wav' | 'flac' | 'mp3';
+
+/** 16/24-bit integer or 32-bit float. FLAC is 16/24 only; MP3 is always 320 kbps CBR and ignores the depth. */
+export type ExportBitDepth = 16 | 24 | 32;
+
+export interface ExportBeginOptions {
+  /** A bare file name goes to `Exports/`; otherwise an absolute path in an existing folder. A missing extension gets the format's. */
+  path: string;
+  format: ExportFormat;
+  bitDepth: ExportBitDepth;
+  /** Must equal the rate the PCM was rendered at; there is no resampler. MP3 needs 32000, 44100 or 48000. */
+  sampleRate: number;
+  channels: 1 | 2;
+  /**
+   * Scale the whole signal so its sample peak equals this many dBFS (typically -1). Boosts quiet audio and
+   * attenuates loud audio alike; digital silence is left alone. `null`/missing leaves levels untouched.
+   */
+  normalizeDbfs?: number | null;
+}
+
+export interface ExportSession {
+  sessionId: string;
+}
+
+export interface ExportResult {
+  /** Final path of the written file. */
+  path: string;
+  durationSec: number;
+  /** Sample peak of the written audio in dBFS (after normalize); `null` for digital silence. */
+  peakDbfs: number | null;
+  bytes: number;
+}
+
+export interface MidiFileNote {
+  startSec: number;
+  /** > 0 */
+  durationSec: number;
+  /** 0..127 */
+  note: number;
+  /** 1..127 */
+  velocity: number;
+}
+
+export interface MidiFileTrack {
+  name: string;
+  /** 1..16 */
+  channel: number;
+  notes: MidiFileNote[];
+}
+
+export interface MidiFileSpec {
+  /** 20..999 */
+  bpm: number;
+  /** Ticks per quarter note; defaults to 480. */
+  ppq?: number;
+  tracks: MidiFileTrack[];
+}
+
+export interface MidiFileResult {
+  path: string;
+  bytes: number;
+}
+
 // ── Command and event names (single source of truth for tauri.ts and its tests) ──
 
 export const COMMANDS = {
@@ -224,6 +291,11 @@ export const COMMANDS = {
   midiPanic: 'midi_panic',
   oscConfigure: 'osc_configure',
   oscSend: 'osc_send',
+  exportBegin: 'export_begin',
+  exportChunk: 'export_chunk',
+  exportFinish: 'export_finish',
+  exportCancel: 'export_cancel',
+  midiFileWrite: 'midi_file_write',
 } as const;
 
 export const EVENTS = {

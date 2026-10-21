@@ -9,9 +9,11 @@ use notify::RecommendedWatcher;
 use tauri::{AppHandle, Emitter, Manager, State};
 
 use crate::error::{Error, Result};
+use crate::export::{self, BeginOptions, BeginResult, ExportResult, ExportSessions};
 use crate::history::{self, SnapshotInfo};
 use crate::library::{self, LibraryScan};
 use crate::midi::{self, MidiHub, OutMessage, PortInfo};
+use crate::midifile::{self, MidiFileResult, MidiFileSpec};
 use crate::osc::{OscConfig, OscMessageIn, OscState};
 use crate::paths::{self, PhylloPaths};
 use crate::samples::{self, SampleScan};
@@ -241,4 +243,68 @@ pub async fn osc_configure(app: AppHandle, config: OscConfig) -> Result<()> {
 #[tauri::command]
 pub async fn osc_send(app: AppHandle, messages: Vec<OscMessageIn>) -> Result<()> {
     blocking(move || app.state::<OscState>().send(&messages).map(|_| ())).await
+}
+
+// ── Export ──────────────────────────────────────────────────────────────────
+
+/// Header carrying the session id on `export_chunk` (the body is the raw PCM).
+pub const EXPORT_SESSION_HEADER: &str = "x-session";
+
+fn export_scratch_dir() -> PathBuf {
+    std::env::temp_dir().join("phyllo-export")
+}
+
+/// Open a streaming export. A bare `path` file name goes to `Exports/`.
+#[tauri::command]
+pub async fn export_begin(app: AppHandle, options: BeginOptions) -> Result<BeginResult> {
+    blocking(move || {
+        app.state::<ExportSessions>()
+            .begin(&paths::root()?, &export_scratch_dir(), &options)
+    })
+    .await
+}
+
+/// Append PCM. The body is raw interleaved little-endian `f32` (binary IPC, no JSON); the session id is the
+/// `x-session` header.
+#[tauri::command]
+pub async fn export_chunk(app: AppHandle, request: tauri::ipc::Request<'_>) -> Result<()> {
+    let session = request
+        .headers()
+        .get(EXPORT_SESSION_HEADER)
+        .and_then(|v| v.to_str().ok())
+        .map(str::to_owned)
+        .ok_or_else(|| Error::InvalidArgument(format!("missing {EXPORT_SESSION_HEADER} header")))?;
+    let tauri::ipc::InvokeBody::Raw(bytes) = request.body() else {
+        return Err(Error::InvalidArgument(
+            "export_chunk expects a raw binary body".into(),
+        ));
+    };
+    let bytes = bytes.clone();
+    blocking(move || app.state::<ExportSessions>().chunk(&session, &bytes)).await
+}
+
+/// Normalize (if asked), encode and move into place. The session is consumed even on failure.
+#[tauri::command]
+pub async fn export_finish(app: AppHandle, session_id: String) -> Result<ExportResult> {
+    blocking(move || app.state::<ExportSessions>().finish(&session_id)).await
+}
+
+/// Discard the session and its partial data. Unknown ids are ignored.
+#[tauri::command]
+pub fn export_cancel(sessions: State<'_, ExportSessions>, session_id: String) {
+    sessions.cancel(&session_id);
+}
+
+/// Write a Standard MIDI File (type 1). A bare file name goes to `Exports/`; `.mid` is added if missing.
+#[tauri::command]
+pub async fn midi_file_write(path: String, spec: MidiFileSpec) -> Result<MidiFileResult> {
+    blocking(move || {
+        let dest = export::resolve_output(&paths::root()?, &path, "mid")?;
+        let bytes = midifile::write(&dest, &spec)?;
+        Ok(MidiFileResult {
+            path: dest.display().to_string(),
+            bytes,
+        })
+    })
+    .await
 }

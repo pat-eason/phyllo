@@ -1,9 +1,12 @@
 mod commands;
+mod encode;
 mod error;
+mod export;
 mod fsutil;
 mod history;
 mod library;
 mod midi;
+mod midifile;
 mod osc;
 mod paths;
 mod project;
@@ -21,7 +24,8 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .manage(commands::Watchers::default())
         .manage(midi::MidiHub::default())
-        .manage(osc::OscState::default());
+        .manage(osc::OscState::default())
+        .manage(export::ExportSessions::default());
 
     // Global shortcuts exist on desktop only.
     #[cfg(desktop)]
@@ -58,6 +62,11 @@ pub fn run() {
             commands::midi_panic,
             commands::osc_configure,
             commands::osc_send,
+            commands::export_begin,
+            commands::export_chunk,
+            commands::export_finish,
+            commands::export_cancel,
+            commands::midi_file_write,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

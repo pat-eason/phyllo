@@ -34,8 +34,13 @@ dirs = "7"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 midir = "0.11.1"
 rosc = "0.11.4"
+hound = "3.5.1"
+midly = "0.5.3"
+flacenc = "0.5.1"
+mp3lame-encoder = "0.2.5"
 
 [dev-dependencies]
+claxon = "0.4.3"
 tempfile = "3"
 
 

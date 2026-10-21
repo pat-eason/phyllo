@@ -33,6 +33,10 @@ pub enum Error {
     #[error("OSC error: {0}")]
     Osc(String),
     #[error("{0}")]
+    UnsupportedFormat(String),
+    #[error("encode error: {0}")]
+    Encode(String),
+    #[error("{0}")]
     Internal(String),
 }
 
@@ -50,6 +54,8 @@ impl Error {
             Error::Watch(_) => "watch",
             Error::Midi(_) => "midi",
             Error::Osc(_) => "osc",
+            Error::UnsupportedFormat(_) => "unsupported_format",
+            Error::Encode(_) => "encode",
             Error::Internal(_) => "internal",
         }
     }

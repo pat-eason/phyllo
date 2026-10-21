@@ -1,5 +1,10 @@
 import type {
+  ExportBeginOptions,
+  ExportResult,
+  ExportSession,
   LibraryScan,
+  MidiFileResult,
+  MidiFileSpec,
   MidiMessageEvent,
   MidiOutMessage,
   MidiPortInfo,
@@ -87,6 +92,25 @@ export interface NativeApi {
   oscConfigure(config: OscConfig): Promise<void>;
   /** A no-op while OSC is disabled. */
   oscSend(messages: OscMessageOut[]): Promise<void>;
+
+  // Export (streaming PCM; see `streamAudioBuffer` in `export.ts`)
+  /**
+   * Open an export session. Rejects `invalid_argument` for impossible combinations (FLAC 32-bit, MP3 at 22.05 kHz,
+   * channels other than 1/2, normalize outside -60..0 dBFS) and `unsupported_format` where the format cannot be
+   * produced (the browser implementation only writes WAV).
+   */
+  exportBegin(options: ExportBeginOptions): Promise<ExportSession>;
+  /** Append interleaved frames (a whole number of frames for the session's channel count). Sent as raw bytes, not JSON. */
+  exportChunk(sessionId: string, frames: Float32Array): Promise<void>;
+  /** Normalize (if requested), encode and move into place atomically. The session is consumed even on failure. */
+  exportFinish(sessionId: string): Promise<ExportResult>;
+  /** Discard the session and any partial data. Idempotent. */
+  exportCancel(sessionId: string): Promise<void>;
+  /**
+   * Write a Standard MIDI File (type 1: a tempo track plus one track per entry). A bare file name goes to
+   * `Exports/`; `.mid` is added if missing. In the browser this triggers a download.
+   */
+  midiFileWrite(path: string, spec: MidiFileSpec): Promise<MidiFileResult>;
 
   // OS integration
   openDialog(options?: OpenDialogOptions): Promise<string | string[] | null>;

@@ -1,5 +1,13 @@
 import type { NativeApi } from './api';
 import { NativeError } from './errors';
+import {
+  BrowserExportSession,
+  type Download,
+  buildMidiFile,
+  defaultDownload,
+  downloadName,
+  validateBegin,
+} from './exportBrowser';
 import { type RequestMidiAccess, createWebMidiBridge, defaultMidiAccess } from './webmidi';
 import type {
   LibraryEntry,
@@ -43,6 +51,8 @@ export interface BrowserApiOptions {
    * MIDI ports at all.
    */
   requestMidiAccess?: RequestMidiAccess | null;
+  /** How exports reach the user; defaults to a Blob + `a[download]` click. Tests inject a recorder. */
+  download?: Download;
 }
 
 function defaultStorage(): Pick<Storage, 'getItem' | 'setItem'> | null {
@@ -174,6 +184,10 @@ export function createBrowserApi(options: BrowserApiOptions = {}): NativeApi {
 
   const settingsMemory: { value: unknown } = { value: null };
 
+  const download = options.download ?? defaultDownload;
+  const exportSessions = new Map<string, BrowserExportSession>();
+  let exportCounter = 0;
+
   return {
     kind: 'browser',
 
@@ -287,6 +301,35 @@ export function createBrowserApi(options: BrowserApiOptions = {}): NativeApi {
     // OSC needs a UDP socket, which a web page cannot open.
     oscConfigure: async () => {},
     oscSend: async () => {},
+
+    // Export: WAV only (encoded in JS, delivered as a download); FLAC/MP3 need the desktop app.
+    exportBegin: async (exportOptions) => {
+      validateBegin(exportOptions);
+      exportCounter += 1;
+      const sessionId = `browser-export-${exportCounter}`;
+      exportSessions.set(sessionId, new BrowserExportSession(exportOptions));
+      return { sessionId };
+    },
+    exportChunk: async (sessionId, frames) => {
+      const session = exportSessions.get(sessionId);
+      if (!session) throw new NativeError('not_found', `unknown export session: ${sessionId}`);
+      session.push(frames);
+    },
+    exportFinish: async (sessionId) => {
+      const session = exportSessions.get(sessionId);
+      if (!session) throw new NativeError('not_found', `unknown export session: ${sessionId}`);
+      exportSessions.delete(sessionId);
+      return session.finish(download);
+    },
+    exportCancel: async (sessionId) => {
+      exportSessions.delete(sessionId);
+    },
+    midiFileWrite: async (path, spec) => {
+      const name = downloadName(path, 'mid');
+      const bytes = buildMidiFile(spec);
+      download(name, new Blob([bytes as BlobPart], { type: 'audio/midi' }));
+      return { path: name, bytes: bytes.length };
+    },
 
     openDialog: async () => null,
     saveDialog: async () => null,

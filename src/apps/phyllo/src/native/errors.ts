@@ -10,6 +10,8 @@ const CODES: ReadonlySet<string> = new Set<NativeErrorCode>([
   'watch',
   'midi',
   'osc',
+  'unsupported_format',
+  'encode',
   'internal',
   'unknown',
 ]);

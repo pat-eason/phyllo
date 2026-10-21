@@ -12,6 +12,8 @@ export { createBrowserApi } from './browser';
 export type { BrowserApiOptions } from './browser';
 export { NativeError, isNativeError, toNativeError } from './errors';
 export { createTauriApi } from './tauri';
+export { DEFAULT_CHUNK_SECONDS, formatExportNotification, interleave, streamAudioBuffer } from './export';
+export type { AudioBufferLike, ExportProgress, StreamExportOptions } from './export';
 export { assignPortIds, createWebMidiBridge, parseMidiMessage } from './webmidi';
 export type { RequestMidiAccess, WebMidiBridge } from './webmidi';
 export * from './types';
