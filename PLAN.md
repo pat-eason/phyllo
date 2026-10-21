@@ -42,7 +42,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | F1 | orchestrator | content/starters | T1.V | lofi chords voice in all keys (T1.V #1) | done |
 | F2 | fix agent | model reducer/serialize, engine parse/codegen | T1.V | T1.V #2–#9, #13–#18; verifier fuzz passes | done |
 | F4 | fix agent | @phyllo/ui atoms/molecules/tokens/stories | T2.V | T2.V defects 1–20; axe clean except documented by-design rules | active |
-| F3 | fix agent | engine runtime | T1.V, T6.6 | T1.V #10 unknown chord → error, #11 stop releases voices, #12 limiter default on + ceiling, #19 offline error flood, #20 pattern error column | active |
+| F3 | fix agent | engine runtime | T1.V, T6.6 | T1.V #10 unknown chord → error, #11 stop releases voices, #12 limiter default on + ceiling, #19 offline error flood, #20 pattern error column | done |
 
 ### M2 Atoms, then molecules
 | id | owner | owns | deps | acceptance | status |
@@ -91,7 +91,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | T5.1 | organism agent | GrooveBrowser | T3.1, M2 | SPEC §6.7 | done |
 | T5.2 | organism agent | StarterPicker | T3.1, M2 | SPEC §6.2 | done |
 | T5.3 | organism agent | SettingsLayout, AccentPicker | T3.1, M2 | SPEC §6.6, offline sounds download | done |
-| T5.4 | organism agent | ExportDialog + export pipeline + engine note query | F3, T6.3 | SPEC §6.5 all tabs, notification | todo |
+| T5.4 | organism agent | ExportDialog + export pipeline + engine note query | F3, T6.3 | SPEC §6.5 all tabs, notification | active |
 | T5.5 | agent | version history UI, screens Library/GuidedStart/Settings window, routing | T5.1–T5.3 | screens.md | todo |
 | T5.V | verifier | read-only | T5.5 | png 03/06/07/08* parity | todo |
 

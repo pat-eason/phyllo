@@ -20,6 +20,8 @@ export interface FakeEngine extends PhylloEngine {
   readonly songLength: number;
   readonly outputDevice: string | null;
   readonly initCount: number;
+  /** Last value passed to `setLimiter` (null until called). */
+  readonly limiter: boolean | null;
 }
 
 export interface FakeEngineOptions {
@@ -65,6 +67,7 @@ export function createFakeEngine(options: FakeEngineOptions = {}): FakeEngine {
   let songLength = 0;
   let lookahead = 100;
   let outputDevice: string | null = null;
+  let limiter: boolean | null = null;
 
   const setStatus = (next: EngineStatus) => {
     status = next;
@@ -202,7 +205,9 @@ export function createFakeEngine(options: FakeEngineOptions = {}): FakeEngine {
       previews.push(sound);
     },
     async registerSamples() {},
-    setLimiter() {},
+    setLimiter(on) {
+      limiter = on;
+    },
     getMeters: meters,
     async setOutputDevice(deviceId) {
       outputDevice = deviceId;
@@ -234,6 +239,9 @@ export function createFakeEngine(options: FakeEngineOptions = {}): FakeEngine {
     },
     get songLength() {
       return songLength;
+    },
+    get limiter() {
+      return limiter;
     },
     get outputDevice() {
       return outputDevice;

@@ -227,6 +227,8 @@ export interface EngineError {
   trackId?: string;
   line?: number;
   column?: number;
+  /** For `pattern` errors: 1-based column inside the mini-notation string (`column` is absolute in the code). */
+  patternColumn?: number;
 }
 
 export interface EngineStatus {

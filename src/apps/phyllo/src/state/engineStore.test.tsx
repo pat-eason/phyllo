@@ -48,6 +48,19 @@ afterEach(() => {
 });
 
 describe("engineStore", () => {
+  it("should apply the project's limiter setting to the engine when it changes", async () => {
+    // Arrange
+    ({ stores } = renderWithStores(<CodeView />));
+    stores.engine.getState().regenerateNow();
+    await act(() => vi.advanceTimersByTimeAsync(100));
+
+    // Act
+    act(() => stores?.project.getState().dispatch({ type: "master/set", patch: { limiter: false } }));
+
+    // Assert
+    expect(stores.fakeEngine.limiter).toBe(false);
+  });
+
   it("should show the mute in the code within 100 ms", async () => {
     // Arrange
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime.bind(vi) });

@@ -129,6 +129,11 @@ export function createAppStores(deps: AppDeps): AppStores {
     engineHost.onCreate((engine) => {
       const device = settingsNow().audio.outputDevice;
       if (device !== null) void engine.setOutputDevice(device).catch((e: unknown) => onError("Output device", e));
+      engine.setLimiter(project.store.getState().project.master.limiter);
+    }),
+    // The master limiter is a project setting applied to the engine's master chain (SPEC §6.4, DECISIONS V10).
+    project.store.subscribe((state, prev) => {
+      if (state.project.master.limiter !== prev.project.master.limiter) engineHost.peek()?.setLimiter(state.project.master.limiter);
     }),
   );
 
