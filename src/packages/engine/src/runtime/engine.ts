@@ -51,7 +51,15 @@ import type { MasterChain } from "./master";
 import { hapToMidiMessages, midiPortName } from "./midi";
 import { renderPatternOffline, suppressCrossContextErrors } from "./offline";
 import { hapToOscMessage } from "./osc";
-import { loadDefaultSamples, preloadSounds, registeredSampleUrls, setFontLoader, soundKey, soundsInRange } from "./samples";
+import {
+  installUrlResolver,
+  loadDefaultSamples,
+  preloadSounds,
+  registeredSampleUrls,
+  setFontLoader,
+  soundKey,
+  soundsInRange,
+} from "./samples";
 import { soloTracks } from "./stems";
 import { heardSchedulerCycle, loopToCycles, mapCycle, segmentAt, songCycleAt, transportPattern } from "./transport";
 import type { LoopCycles, Segment } from "./transport";
@@ -182,6 +190,9 @@ export function createEngine(options: EngineOptions = {}): PhylloEngine {
     warned.add(message);
     log(message, "warn");
   };
+
+  // Offline sound cache (V15): sample maps, sample files and soundfonts all load through `options.resolveUrl`.
+  const uninstallUrlResolver = options.resolveUrl ? installUrlResolver(options.resolveUrl) : undefined;
 
   let ctx: AudioContext | undefined;
   let ready = false;
@@ -736,6 +747,7 @@ export function createEngine(options: EngineOptions = {}): PhylloEngine {
     dispose() {
       if (disposed) return;
       disposed = true;
+      uninstallUrlResolver?.();
       halt(0);
       cyclist?.stop();
       if (logListener && typeof document !== "undefined") document.removeEventListener("strudel.log", logListener);

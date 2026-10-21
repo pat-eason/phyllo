@@ -215,3 +215,49 @@ describe('browser native: history', () => {
     expect((await rejection(api.historySnapshot('p1', '{}'))).code).toBe('invalid_format');
   });
 });
+
+describe('browser native: sound cache', () => {
+  const api = () => createBrowserApi({ storage: null, log: () => undefined });
+  const url = 'https://strudel.b-cdn.net/piano.json';
+
+  it('resolves the URL itself and reports an empty cache', async () => {
+    const native = api();
+    expect(await native.soundCacheFetch(url)).toEqual({ path: url });
+    expect(await native.soundCacheStatus()).toEqual({ files: 0, bytes: 0 });
+    await expect(native.soundCacheClear()).resolves.toBeUndefined();
+  });
+
+  it('rejects URLs the desktop cache would reject', async () => {
+    const native = api();
+    expect((await rejection(native.soundCacheFetch('https://evil.example/x.wav'))).code).toBe('invalid_argument');
+    expect((await rejection(native.soundCachePrefetch([url, 'http://strudel.b-cdn.net/x.wav']))).code).toBe(
+      'invalid_argument',
+    );
+  });
+
+  it('prefetch warms the HTTP cache, reports progress and counts failures', async () => {
+    const fetched: string[] = [];
+    const native = createBrowserApi({
+      storage: null,
+      log: () => undefined,
+      fetch: async (u) => {
+        fetched.push(u);
+        if (u.endsWith('bad.wav')) throw new Error('offline');
+      },
+    });
+    const seen: { done: number; total: number; failed: number }[] = [];
+    const off = await native.onSoundCacheProgress((p) => seen.push(p));
+
+    const result = await native.soundCachePrefetch([
+      'https://strudel.b-cdn.net/a.wav',
+      'https://strudel.b-cdn.net/bad.wav',
+      'https://strudel.b-cdn.net/a.wav',
+    ]);
+    off();
+
+    expect(result).toEqual({ done: 2, total: 2, failed: 1 });
+    expect([...fetched].sort()).toEqual(['https://strudel.b-cdn.net/a.wav', 'https://strudel.b-cdn.net/bad.wav']);
+    expect(seen[0]).toEqual({ done: 0, total: 2, failed: 0 });
+    expect(seen.at(-1)).toEqual(result);
+  });
+});

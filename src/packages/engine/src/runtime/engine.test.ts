@@ -1,5 +1,5 @@
 // Engine behaviour that needs no audio device (Node). Audio paths are covered by harness/runtime.spec.ts.
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { GeneratedProgram } from "@phyllo/model";
 import { createEngine, DEFAULT_LOOKAHEAD_MS } from "./engine";
 import type { LogLevel } from "./types";
@@ -101,5 +101,36 @@ describe("look-ahead", () => {
     expect(engine.getLookahead()).toBe(1000);
     engine.setLookahead(60);
     expect(engine.getLookahead()).toBe(60);
+  });
+});
+
+describe("resolveUrl option", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("routes sound fetches through the resolver until dispose, and is inert without it", async () => {
+    const calls: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: unknown) => {
+        calls.push(String(input));
+        return {};
+      }),
+    );
+    const stubbed = globalThis.fetch;
+
+    createEngine(); // no resolver: fetch untouched
+    expect(globalThis.fetch).toBe(stubbed);
+
+    const engine = createEngine({ resolveUrl: (url) => url.replace("https://cdn.test/", "asset://cache/") });
+    expect(globalThis.fetch).not.toBe(stubbed);
+    await fetch("https://cdn.test/kit/map.json");
+    expect(calls).toEqual(["asset://cache/kit/map.json"]);
+
+    engine.dispose();
+    expect(globalThis.fetch).toBe(stubbed);
+    await fetch("https://cdn.test/kit/map.json");
+    expect(calls[1]).toBe("https://cdn.test/kit/map.json");
   });
 });

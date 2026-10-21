@@ -30,6 +30,9 @@ import type {
   SampleScan,
   SamplesChangedEvent,
   SnapshotInfo,
+  SoundCacheFetchResult,
+  SoundCacheProgress,
+  SoundCacheStatus,
 } from './types';
 
 const SETTINGS_FILE = 'settings.json';
@@ -201,6 +204,12 @@ export function createTauriApi(options: TauriApiOptions = {}): NativeApi {
     onOpenFiles: (callback) => subscribeWindow<OpenFilesEvent>(EVENTS.openFiles, callback),
 
     notifyExportFinished: (notification) => call<boolean>(COMMANDS.notifyExportFinished, { notification }),
+
+    soundCacheFetch: (url) => call<SoundCacheFetchResult>(COMMANDS.soundCacheFetch, { url }),
+    soundCacheStatus: () => call<SoundCacheStatus>(COMMANDS.soundCacheStatus),
+    soundCacheClear: () => call<void>(COMMANDS.soundCacheClear),
+    soundCachePrefetch: (urls) => call<SoundCacheProgress>(COMMANDS.soundCachePrefetch, { urls }),
+    onSoundCacheProgress: (callback) => subscribe<SoundCacheProgress>(EVENTS.soundCacheProgress, callback),
 
     settingsStore: {
       load: () =>

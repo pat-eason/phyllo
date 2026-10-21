@@ -4,6 +4,7 @@
  * Superdough skips a sample whose buffer isn't cached on its first trigger (sampler.mjs:297), so the
  * runtime collects every sound a program will play and loads it before playback.
  */
+import { INSTRUMENTS } from "@phyllo/model";
 import { getSoundIndex } from "@strudel/core";
 import type { Hap, Pattern } from "@strudel/core";
 import { aliasBank, getSampleInfo, loadBuffer, samples, soundMap } from "@strudel/webaudio";
@@ -125,4 +126,126 @@ export function registeredSampleUrls(names: readonly string[]): string[] {
     }
   }
   return urls;
+}
+
+// ── URL resolution / offline cache (DECISIONS V15, T6.6) ───────────────────
+
+/** Maps a sound URL to the URL to actually load (e.g. a locally cached copy). Must return its input for URLs it doesn't handle. */
+export type UrlResolver = (url: string) => string | Promise<string>;
+
+/**
+ * Routes every http(s) `GET` made through `fetch` via `resolve`: the sample-map JSON, each sample file and the
+ * soundfont `.js` files. Superdough and @strudel/soundfonts call the global `fetch` themselves with the final URL
+ * (`fetchSampleMap`, `loadBuffer`, `loadFont`) and offer no hook, so this is the one place all three can be
+ * covered, including sounds a program triggers that were never preloaded. A resolver that throws falls back to the
+ * original URL. Returns an uninstall function; an uninstalled layer passes straight through even if something else
+ * wrapped `fetch` on top of it.
+ */
+export function installUrlResolver(resolve: UrlResolver): () => void {
+  const original = globalThis.fetch;
+  if (typeof original !== "function") return () => undefined;
+  let active = true;
+  const wrapped = async (input: Parameters<typeof fetch>[0], init?: RequestInit): Promise<Response> => {
+    const url = typeof input === "string" ? input : input instanceof URL ? input.href : undefined;
+    const method = (init?.method ?? "GET").toUpperCase();
+    if (!active || url === undefined || method !== "GET" || !/^https?:\/\//i.test(url)) {
+      return original.call(globalThis, input, init);
+    }
+    let target = url;
+    try {
+      target = await resolve(url);
+    } catch {
+      // keep the original URL: online use must keep working when the cache can't help
+    }
+    return original.call(globalThis, target, init);
+  };
+  globalThis.fetch = wrapped as typeof fetch;
+  return () => {
+    active = false;
+    if (globalThis.fetch === wrapped) globalThis.fetch = original;
+  };
+}
+
+/** GM soundfonts are served from here (`@strudel/soundfonts` default; `${base}/${font}.js`). */
+export const SOUNDFONT_BASE = "https://felixroos.github.io/webaudiofontdata/sound";
+
+export interface BuiltInSoundOptions {
+  /** Sound names of the GM instruments to include (default: the model's `INSTRUMENTS` catalog). */
+  instruments?: readonly string[];
+  /** `all` lists every font variant of each instrument (hundreds of MB); `first` only the one that plays by default (`n` = 0). */
+  soundfontVariants?: "first" | "all";
+  /** Font file names per instrument (default: Strudel's GM table, `@strudel/soundfonts/gm.mjs`). */
+  fontsFor?: (instrument: string) => readonly string[] | undefined;
+  /** Maps URLs before reading the sample-map JSON, so listing works offline from a cache. Defaults to the identity. */
+  resolveUrl?: UrlResolver;
+  /** Reads a JSON document; defaults to `fetch(url).then(r => r.json())`. */
+  fetchJson?: (url: string) => Promise<unknown>;
+}
+
+async function defaultFetchJson(url: string): Promise<unknown> {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json();
+}
+
+async function gmFonts(): Promise<Record<string, readonly string[]>> {
+  // @ts-expect-error -- untyped deep import: the GM table isn't re-exported by the package entry point
+  const gm = (await import("@strudel/soundfonts/gm.mjs")) as { default: Record<string, readonly string[]> };
+  return gm.default;
+}
+
+/** Sample-map JSON: `{ _base?, name: ["file", ...] | { note: ["file", ...] } }`. Mirrors superdough's `processSampleMap`. */
+export function sampleMapFileUrls(json: unknown, baseUrl: string): string[] {
+  if (typeof json !== "object" || json === null) return [];
+  const urls: string[] = [];
+  for (const [key, value] of Object.entries(json as Record<string, unknown>)) {
+    if (key === "_base") continue;
+    const own = typeof value === "object" && value !== null && !Array.isArray(value) ? (value as Record<string, unknown>)["_base"] : undefined;
+    const base = typeof own === "string" ? own : baseUrl;
+    const add = (file: unknown) => {
+      if (typeof file === "string") urls.push(base + file);
+    };
+    if (typeof value === "string") add(value);
+    else if (Array.isArray(value)) value.forEach(add);
+    else if (typeof value === "object" && value !== null) {
+      for (const [note, files] of Object.entries(value as Record<string, unknown>)) {
+        if (note === "_base") continue;
+        if (typeof files === "string") add(files);
+        else if (Array.isArray(files)) files.forEach(add);
+      }
+    }
+  }
+  return urls;
+}
+
+/**
+ * Every URL "Download built-in sounds for offline use" must fetch: the default sample-map JSONs and alias file,
+ * every sample file they list, and the soundfonts of the model's GM instruments. JSON documents come first.
+ * Reads the maps from the network (or through `resolveUrl`), so it needs no engine instance or audio context.
+ */
+export async function listBuiltInSoundUrls(options: BuiltInSoundOptions = {}): Promise<string[]> {
+  const resolve = options.resolveUrl ?? ((url: string) => url);
+  const fetchJson = options.fetchJson ?? defaultFetchJson;
+  const documents: string[] = [DEFAULT_BANK_ALIASES];
+  const files: string[] = [];
+
+  const maps = await Promise.all(
+    DEFAULT_SAMPLE_SOURCES.map(async (src) => {
+      documents.push(src.map);
+      return { src, json: await fetchJson(await resolve(src.map)) };
+    }),
+  );
+  for (const { src, json } of maps) files.push(...sampleMapFileUrls(json, src.base));
+
+  const instruments = options.instruments ?? INSTRUMENTS.map((i) => i.code);
+  const table = options.fontsFor ? undefined : await gmFonts();
+  const fontsFor = options.fontsFor ?? ((name: string) => table?.[name]);
+  const fonts: string[] = [];
+  for (const name of instruments) {
+    const variants = fontsFor(name) ?? [];
+    const chosen = options.soundfontVariants === "all" ? variants : variants.slice(0, 1);
+    for (const font of chosen) fonts.push(`${SOUNDFONT_BASE}/${font}.js`);
+  }
+
+  return [...new Set([...documents, ...files, ...fonts])];
 }

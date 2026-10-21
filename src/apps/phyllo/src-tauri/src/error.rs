@@ -44,6 +44,8 @@ pub enum Error {
     Tray(String),
     #[error("notification error: {0}")]
     Notification(String),
+    #[error("network error: {0}")]
+    Network(String),
     #[error("{0}")]
     Internal(String),
 }
@@ -68,6 +70,7 @@ impl Error {
             Error::Window(_) => "window",
             Error::Tray(_) => "tray",
             Error::Notification(_) => "notification",
+            Error::Network(_) => "network",
             Error::Internal(_) => "internal",
         }
     }

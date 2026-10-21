@@ -15,6 +15,7 @@ mod osc;
 mod paths;
 mod project;
 mod samples;
+mod sound_cache;
 mod trash;
 mod tray;
 mod watch;
@@ -31,6 +32,7 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_notification::init())
         .manage(commands::Watchers::default())
+        .manage(commands::SoundCacheState::default())
         .manage(midi::MidiHub::default())
         .manage(osc::OscState::default())
         .manage(export::ExportSessions::default())
@@ -99,6 +101,10 @@ pub fn run() {
             commands::media_set_now_playing,
             commands::take_pending_open_files,
             commands::notify_export_finished,
+            commands::sound_cache_fetch,
+            commands::sound_cache_status,
+            commands::sound_cache_clear,
+            commands::sound_cache_prefetch,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application");

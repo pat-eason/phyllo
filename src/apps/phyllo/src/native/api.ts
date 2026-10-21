@@ -24,6 +24,9 @@ import type {
   SamplesChangedEvent,
   SaveDialogOptions,
   SnapshotInfo,
+  SoundCacheFetchResult,
+  SoundCacheProgress,
+  SoundCacheStatus,
   Unsubscribe,
 } from './types';
 
@@ -183,6 +186,25 @@ export interface NativeApi {
    * notification servers the action button does not show. Resolves `false` in the browser.
    */
   notifyExportFinished(notification: ExportFinishedNotification): Promise<boolean>;
+
+  // Offline cache for Strudel's built-in sounds (DECISIONS V15). Allowlisted hosts only (`SOUND_CACHE_HOSTS`);
+  // anything else rejects `invalid_argument`. Most callers want `createCachedUrlResolver` instead.
+  /**
+   * Make sure `url` is cached in `~/Music/Phyllo/.cache/sounds/` (downloading it if needed; concurrent calls for one
+   * URL share a download) and resolve its path. Rejects `network` when the download fails. Browser: resolves the URL
+   * itself, since the HTTP cache handles it.
+   */
+  soundCacheFetch(url: string): Promise<SoundCacheFetchResult>;
+  soundCacheStatus(): Promise<SoundCacheStatus>;
+  /** Delete every cached sound. Idempotent. */
+  soundCacheClear(): Promise<void>;
+  /**
+   * Download all `urls` (6 at a time), skipping cached ones. Rejects `invalid_argument` up front if any URL is not
+   * allowlisted; individual download failures only count in `failed`. Resolves with the final counts.
+   */
+  soundCachePrefetch(urls: string[]): Promise<SoundCacheProgress>;
+  /** `sound-cache://progress` while a prefetch runs: once at the start (`done: 0`) and after every file. */
+  onSoundCacheProgress(callback: (progress: SoundCacheProgress) => void): Promise<Unsubscribe>;
 
   settingsStore: SettingsStore;
 }
