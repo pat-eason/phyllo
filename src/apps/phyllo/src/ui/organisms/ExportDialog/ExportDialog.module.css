@@ -8,7 +8,12 @@
   padding: 48px 16px;
   box-sizing: border-box;
   overflow: auto;
-  background: var(--ph-scrim);
+  /* Nearly opaque like the mockup (06): the screen behind is only a faint shape (sampled #0B0D0C on dark).
+     Scrim (62 %) plus an 85 % page-colour layer = 94 % cover, in both themes. */
+  --export-cover: color-mix(in srgb, color-mix(in srgb, var(--ph-sunken) 70%, var(--ph-bg)) 85%, transparent);
+  background:
+    linear-gradient(var(--export-cover), var(--export-cover)),
+    var(--ph-scrim);
 }
 
 .dialog {

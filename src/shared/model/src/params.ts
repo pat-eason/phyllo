@@ -241,9 +241,10 @@ export const PARAM_SPECS: Record<ParamName, ParamSpec> = {
     max: 1,
     unit: "s",
     knobWhenUnset: 0,
-    round: 3,
+    // 4 decimals so 3/16 of a cycle (.1875) isn't shown/saved as .188
+    round: 4,
     ...linear,
-    text: (v) => `${formatNumber(v, 3)} s`,
+    text: (v) => `${formatNumber(v, 4)} s`,
     unsetText: "3/16 cycle",
     guidedLabel: "Echo time",
     description: "Delay time in seconds (Strudel's default is 3/16 of a cycle).",

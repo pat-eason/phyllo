@@ -24,6 +24,21 @@ export const defaultDownload: Download = (fileName, blob) => {
   setTimeout(() => URL.revokeObjectURL(url), 10_000);
 };
 
+/**
+ * True for a path the app wrote as export output rather than a virtual library file: inside the exports folder, or a
+ * bare file name (the export pipeline puts `.strudel` next to the downloaded audio, whose "path" is just its name).
+ */
+export function isExportOutputPath(path: string, exportsDir: string): boolean {
+  return path.startsWith(`${exportsDir}/`) || !/[\\/]/.test(path);
+}
+
+/** Delivers Strudel code as a `.strudel` download; returns the file name. */
+export function downloadStrudel(download: Download, path: string, code: string): string {
+  const name = downloadName(path, 'strudel');
+  download(name, new Blob([code], { type: 'text/plain;charset=utf-8' }));
+  return name;
+}
+
 /** Last path component, with `ext` appended when it has no extension. */
 export function downloadName(path: string, ext: string): string {
   const name = path.split(/[\\/]/).filter(Boolean).pop() ?? '';

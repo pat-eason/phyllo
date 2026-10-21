@@ -94,8 +94,20 @@ export function AppShell({ openUrl = defaultOpenUrl, isMac = detectMac() }: AppS
     setToasts((list) => [...list, { ...toast, id }]);
   };
 
+  // `run` is declared below; startup only calls the handler later, from an event.
+  const { ready, projectOpen } = useStartup({
+    stores,
+    initialRoute,
+    onOpenFiles: (paths) => {
+      const first = paths[0];
+      if (first !== undefined) run("file.openRecent", { path: first });
+    },
+    onError: (title, detail) => notify({ title, detail, tone: "error" }),
+  });
+
   const shell: ShellState = {
     route: hashRoute,
+    projectOpen,
     navigate,
     tool,
     setTool,
@@ -149,16 +161,6 @@ export function AppShell({ openUrl = defaultOpenUrl, isMac = detectMac() }: AppS
     },
     [stores],
   );
-
-  const ready = useStartup({
-    stores,
-    initialRoute,
-    onOpenFiles: (paths) => {
-      const first = paths[0];
-      if (first !== undefined) run("file.openRecent", { path: first });
-    },
-    onError: (title, detail) => notify({ title, detail, tone: "error" }),
-  });
 
   useGlobalShortcuts(run, { screen: ready ? (hashRoute?.screen ?? null) : null, uiMode, nativeMenu: stores.native.kind === "tauri", isMac });
 

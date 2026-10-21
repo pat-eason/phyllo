@@ -1,12 +1,12 @@
 import type { ParamValue } from "@phyllo/model";
 
 /**
- * Number text as the mockups write it: `.82`, `-.5`, `0`, `10`, `1.25`; at most 3 decimals.
+ * Number text as the mockups write it: `.82`, `-.5`, `0`, `10`, `1.25`; at most 4 decimals (so 3/16 = `.1875` survives).
  * Non-finite values print as `0` so generated code always evaluates.
  */
 export function formatNumber(v: number): string {
   if (!Number.isFinite(v)) return "0";
-  const r = Math.round(v * 1000) / 1000;
+  const r = Math.round(v * 10000) / 10000;
   if (r === 0) return "0";
   if (Number.isInteger(r)) return String(r);
   return String(r).replace(/^(-?)0\./, "$1.");

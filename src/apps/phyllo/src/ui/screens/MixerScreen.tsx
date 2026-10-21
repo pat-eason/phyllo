@@ -13,6 +13,7 @@ export function MixerScreen() {
     <div className={styles["screen"]}>
       <AppHeader className={styles["chrome"]} variant="compact" viewTabs={<ScreenTabs current="mixer" />} />
       <main className={styles["mixer"]} aria-label="Mixer">
+        <h1 className={styles["visuallyHidden"]}>Mixer</h1>
         <MixerStrips />
       </main>
     </div>

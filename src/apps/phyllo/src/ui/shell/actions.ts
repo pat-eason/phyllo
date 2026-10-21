@@ -73,6 +73,7 @@ export function createShellActions(stores: AppStores, shell: ShellState, env: Sh
     "tool.draw": () => shell.setTool("draw"),
     "tool.split": () => shell.setTool("split"),
     "library.search": () => {
+      if (!shell.projectOpen) return;
       if (shell.route?.screen !== "arrange") shell.navigate({ screen: "arrange" });
       shell.requestSearchFocus();
     },
@@ -113,9 +114,16 @@ export function createShellActions(stores: AppStores, shell: ShellState, env: Sh
       if (onProjectScreen() || shell.route?.screen === "library") shell.openExport();
     },
     "file.recent.clear": () => shell.clearRecent(),
-    "view.arrange": () => shell.navigate({ screen: "arrange" }),
-    "view.pattern": () => shell.navigate({ screen: "pattern", trackId: null }),
-    "view.mixer": () => shell.navigate({ screen: "mixer" }),
+    // With no open project these would show an empty phantom project; Library / New groove come first.
+    "view.arrange": () => {
+      if (shell.projectOpen) shell.navigate({ screen: "arrange" });
+    },
+    "view.pattern": () => {
+      if (shell.projectOpen) shell.navigate({ screen: "pattern", trackId: null });
+    },
+    "view.mixer": () => {
+      if (shell.projectOpen) shell.navigate({ screen: "mixer" });
+    },
     "view.library": () => shell.navigate({ screen: "library" }),
     "view.codeDrawer": () => {
       settings().set("codeDrawer", { open: !codeDrawerOpen(settings().settings) });
