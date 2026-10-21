@@ -143,3 +143,4 @@ One line each: decision — reason — where. Strudel verification results are i
 - D104 Library: settings store `tileSize` 0–4, hook exposes GrooveCard's 1–5; rename changes the name inside the file only (no file rename command); sound-name search matches pattern words only (Rust summary lacks source sound/bank) — state/libraryStore.ts.
 - D105 Tips 1–4 complete from project actions; step 5 completes on export/copy link; finishing step 5 turns tips off — SPEC §6.1 curriculum — state/tipsStore.ts.
 - D106 App Vitest config inlines Strudel deps like the engine's (agent change outside its ownership, accepted) — src/apps/phyllo/vitest.config.ts.
+- D107 Organisms and screens get their own Storybook in the app (`pnpm --filter phyllo stories`, port 6007) with a decorator wrapping ThemeProvider + `PhylloProvider` over `createMockStores(parameters.stores)` — organisms need stores; @phyllo/ui stays store-free — src/apps/phyllo/.storybook.

@@ -33,7 +33,7 @@ export default tseslint.config(
 
   // React code: ui + app sources and stories.
   {
-    files: ["src/apps/*/src/**/*.{ts,tsx}", "src/packages/ui/src/**/*.{ts,tsx}", "src/packages/ui/.storybook/**/*.{ts,tsx}"],
+    files: ["src/apps/*/src/**/*.{ts,tsx}", "src/packages/ui/src/**/*.{ts,tsx}", "src/packages/ui/.storybook/**/*.{ts,tsx}", "src/apps/*/.storybook/**/*.{ts,tsx}"],
     languageOptions: { globals: globals.browser },
     extends: [reactHooks.configs.flat.recommended, jsxA11y.flatConfigs.recommended],
     plugins: { "react-refresh": reactRefresh },
@@ -46,6 +46,12 @@ export default tseslint.config(
   {
     files: ["**/*.config.{js,ts,mjs}", "**/e2e/**/*.ts", "**/.storybook/main.ts"],
     languageOptions: { globals: globals.node },
+  },
+
+  // Storybook preview files define decorators next to helper components.
+  {
+    files: ["**/.storybook/**/*.{ts,tsx}"],
+    rules: { "react-refresh/only-export-components": "off" },
   },
 
   // Hooks + context live next to the provider on purpose (design-system README §4).

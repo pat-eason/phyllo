@@ -11,7 +11,9 @@
     "test": "vitest run --passWithNoTests",
     "e2e": "playwright test",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "stories": "storybook dev -p 6007",
+    "stories:build": "storybook build -o storybook-static"
   },
   "dependencies": {
     "@phyllo/engine": "workspace:*",
@@ -43,6 +45,8 @@
     "jsdom": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "storybook": "catalog:",
+    "@storybook/react-vite": "catalog:"
   }
 }
