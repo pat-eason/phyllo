@@ -63,6 +63,8 @@ export interface PreviewSound {
   bank?: string | null;
   note?: string | number;
   n?: number;
+  /** Linear gain, e.g. MIDI velocity / 127 (default: Strudel's 1). */
+  gain?: number;
 }
 
 export interface RenderOptions {
@@ -115,6 +117,11 @@ export interface PhylloEngine {
   getLookahead(): number;
 
   preview(sound: PreviewSound, durationSec?: number): Promise<void>;
+  /**
+   * Silences every preview still sounding (short fade, then disconnect) without touching the song: previews play on
+   * a reserved orbit of their own. No-op before `init` or when nothing is previewing.
+   */
+  stopPreview(): void;
   /** Registers `{ name: [url, …] }` (e.g. convertFileSrc URLs) and preloads every buffer. */
   registerSamples(map: Record<string, string[]>, baseUrl?: string): Promise<void>;
   setLimiter(on: boolean): void;

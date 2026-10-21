@@ -15,3 +15,5 @@ export { useLibrary } from "./useLibrary";
 export type { UseLibrary } from "./useLibrary";
 export { useNative } from "./useNative";
 export { useAppStores } from "../state/context";
+export { useMidiInput, useRecorder, useSampleNames, useSamples } from "./useRecorder";
+export type { UseRecorder } from "./useRecorder";

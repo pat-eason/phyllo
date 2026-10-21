@@ -16,6 +16,8 @@ export interface FakeEngine extends PhylloEngine {
   readonly evaluations: readonly GeneratedProgram[];
   /** Every `preview` call. */
   readonly previews: readonly PreviewSound[];
+  /** How many times `stopPreview` ran. */
+  readonly previewStops: number;
   readonly loop: LoopSettings;
   readonly songLength: number;
   readonly outputDevice: string | null;
@@ -68,6 +70,7 @@ export function createFakeEngine(options: FakeEngineOptions = {}): FakeEngine {
   let lookahead = 100;
   let outputDevice: string | null = null;
   let limiter: boolean | null = null;
+  let previewStops = 0;
 
   const setStatus = (next: EngineStatus) => {
     status = next;
@@ -204,6 +207,9 @@ export function createFakeEngine(options: FakeEngineOptions = {}): FakeEngine {
     async preview(sound) {
       previews.push(sound);
     },
+    stopPreview() {
+      previewStops += 1;
+    },
     async registerSamples() {},
     setLimiter(on) {
       limiter = on;
@@ -233,6 +239,9 @@ export function createFakeEngine(options: FakeEngineOptions = {}): FakeEngine {
     },
     get previews() {
       return previews;
+    },
+    get previewStops() {
+      return previewStops;
     },
     get loop() {
       return loop;

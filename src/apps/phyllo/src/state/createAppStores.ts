@@ -14,8 +14,14 @@ import { defaultFrameScheduler } from "./feed";
 import type { FrameScheduler, Unsubscribe } from "./feed";
 import { createLibraryStore } from "./libraryStore";
 import type { LibraryStoreState } from "./libraryStore";
+import { createMidiInput } from "./midiInput";
+import type { MidiInputState } from "./midiInput";
 import { createProjectStore } from "./projectStore";
 import type { ProjectStoreState } from "./projectStore";
+import { createRecorder } from "./recorder";
+import type { RecorderState } from "./recorder";
+import { createSampleFolders } from "./sampleFolders";
+import type { SampleFoldersState } from "./sampleFolders";
 import { createNativeSettingsChannel, createSettingsStore } from "./settingsStore";
 import type { SettingsChannel, SettingsStoreState } from "./settingsStore";
 import type { SettingsPatch } from "./settingsModel";
@@ -71,6 +77,12 @@ export interface AppStores {
   settings: StoreApi<SettingsStoreState>;
   tips: StoreApi<TipsStoreState>;
   library: StoreApi<LibraryStoreState>;
+  /** User sample folders registered with the engine (SPEC §4.5). */
+  samples: StoreApi<SampleFoldersState>;
+  /** Enabled MIDI inputs → selected track notes / CC knobs (SPEC §6.6). */
+  midiInput: StoreApi<MidiInputState>;
+  /** MIDI record onto the selected track (SPEC §6.1). */
+  recorder: StoreApi<RecorderState>;
   /** The lazily created engine (export pipeline, tests). */
   engineHost: EngineHost;
   /** Load settings, apply their side effects, scan + watch the library. Idempotent. */
@@ -151,6 +163,15 @@ export function createAppStores(deps: AppDeps): AppStores {
     highlightMs: timing.tipHighlightMs,
   });
   const library = createLibraryStore({ native, settings: settings.store, project: project.store, now, newId });
+  const samples = createSampleFolders({ native, settings: settings.store, host: engineHost, onError });
+  const midiInput = createMidiInput({ native, settings: settings.store, project: project.store, host: engineHost, now, onError });
+  const recorder = createRecorder({
+    transport: transport.store,
+    project: project.store,
+    host: engineHost,
+    onMidiMessage: midiInput.onMessage,
+    now,
+  });
 
   // "This section" scope follows the playhead's section while playing.
   let offSectionWatch: Unsubscribe | undefined;
@@ -208,11 +229,14 @@ export function createAppStores(deps: AppDeps): AppStores {
     settings: settings.store,
     tips: tips.store,
     library: library.store,
+    samples: samples.store,
+    midiInput: midiInput.store,
+    recorder: recorder.store,
     engineHost,
     start() {
       started ??= (async () => {
         await settings.load();
-        await library.start();
+        await Promise.all([library.start(), samples.start(), midiInput.start()]);
       })();
       return started;
     },
@@ -222,6 +246,9 @@ export function createAppStores(deps: AppDeps): AppStores {
     dispose() {
       for (const cleanup of cleanups.splice(0)) cleanup();
       tips.dispose();
+      recorder.dispose();
+      midiInput.dispose();
+      samples.dispose();
       library.dispose();
       transport.dispose();
       engine.dispose();
