@@ -16,3 +16,4 @@
 - T6.2 merged (63802f1): midir MIDI in/out with scheduled output thread + hot-plug poller, rosc OSC sender, NativeApi + Web MIDI browser fallback. Orchestrator re-ran: cargo test 64 passed (1 ignored hw smoke), clippy clean, app 66 tests. Real-device MIDI untested (no ports on this machine) — flagged for T6.V.
 - T2.4 merged (0d819d1): Knob, Fader, Meter, StepCell; ui 334 tests. All 21 atoms done. Dispatched molecules T2.5–T2.7.
 - T1.1 merged (b79063c): ids, params, factories, reducer (all actions), serialize/migrate, time helpers; model 221 tests.
+- T1.3 merged (ab24e8d): bjorklund (matches Strudel euclid), rowToMini/miniToRows with semantic fit check, velocity↔gain, previewRows, clipViz; engine 1653 tests (incl. 300 seeded round-trips).

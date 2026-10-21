@@ -79,3 +79,10 @@ One line each: decision — reason — where. Strudel verification results are i
 - D46 New project: 120 BPM 4/4, C minor, 32 bars, one "Song" section, loop on over bars 1–8, master postgain 1 + limiter on — SPEC "Loop on (default)" — model/factories.ts.
 - D47 Clips/modifiers missing ids on load get stable derived ids (`<trackId>:c1`, `:m1`); hard parse errors only for bad JSON/format/tracks, everything else coerced with warnings — no id churn on autosave — model/serialize.ts.
 - D48 Guided pan text `Center`/`Left 16`/`Right 30`; Pro `C`/`L16`/`R30`; unset lpf reads "off" with the knob fully open — model/params.ts.
+
+## Engine (M1)
+- D49 Euclid rotation follows Strudel (positive r shifts hits later; `bd(3,8,2)` → steps 0,2,5; r ≥ n unrotated), verified against Strudel's own euclid for all k≤n≤16 — SPEC §4.3 — engine/mini/bjorklund.ts.
+- D50 Text → grid fitness is decided semantically (compare cycles 0–15 + inspect for random ops), not by syntax: lossless `<bd bd>*4` / aligned polymeters fit; triplets, alternation, `?`, `|`, two hits of one sound on one step refuse with the SPEC message + a `detail` — SPEC §4.3 "no lossy grid" — engine/mini/parse.ts.
+- D51 Grid ignores durations (onsets only); `bd:3` is its own row; `row.euclid` only set while steps still equal the rhythm, so stale flags can't emit wrong `(k,n)` code — engine/mini.
+- D52 Velocity lane → `.gain("<pattern>")` with `~` on inactive steps (regenerated when steps change), a single number when all equal; per-row velocities in multi-row drum patterns deferred to T4.1 (one `.gain()` applies to all layers) — SPEC §6.3 (proposed) — engine/mini/velocity.ts.
+- D53 `previewRows` snaps off-grid hits and never throws; `clipViz(track, cycle)` takes a cycle so multi-bar clips of `<…>` patterns vary per bar; chords voiced with tonal, unknown symbols fall back to a small table — engine/mini/viz.ts.
