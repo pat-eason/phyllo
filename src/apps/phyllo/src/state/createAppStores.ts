@@ -4,6 +4,7 @@ import { newId as modelNewId, sectionAtBar } from "@phyllo/model";
 import type { Project, Settings } from "@phyllo/model";
 import type { StoreApi } from "zustand/vanilla";
 import type { NativeApi } from "../native/api";
+import { createCachedUrlResolver } from "../native/soundCache";
 import { createNativeBridge } from "./bridge";
 import { createEngineHost } from "./engineHost";
 import type { EngineHost } from "./engineHost";
@@ -117,6 +118,8 @@ export function createAppStores(deps: AppDeps): AppStores {
     engineFactory({
       bridge: bridge.bridge,
       lookaheadMs: settingsNow().audio.lookaheadMs,
+      // Built-in sounds go through the Rust cache so they keep working offline (DECISIONS V15, D108).
+      resolveUrl: createCachedUrlResolver(native),
       logger: (message, level) => {
         if (level === "warn" || level === "error") onError(message, null);
       },

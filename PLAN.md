@@ -41,7 +41,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 |---|---|---|---|---|---|
 | F1 | orchestrator | content/starters | T1.V | lofi chords voice in all keys (T1.V #1) | done |
 | F2 | fix agent | model reducer/serialize, engine parse/codegen | T1.V | T1.V #2–#9, #13–#18; verifier fuzz passes | active |
-| F3 | fix agent | engine runtime | T1.V, T6.6 | T1.V #10 unknown chord → error, #11 stop releases voices, #12 limiter default on + ceiling, #19 offline error flood, #20 pattern error column | todo |
+| F3 | fix agent | engine runtime | T1.V, T6.6 | T1.V #10 unknown chord → error, #11 stop releases voices, #12 limiter default on + ceiling, #19 offline error flood, #20 pattern error column | active |
 
 ### M2 Atoms, then molecules
 | id | owner | owns | deps | acceptance | status |
@@ -62,7 +62,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | T6.2 | rust-B | same | T6.1 | MIDI in/out bridge (`midir`), OSC UDP to SuperDirt; TS bindings | done |
 | T6.3 | rust-C | same | T6.2 | PCM stream sink + WAV/FLAC/MP3 encoder, normalize post-pass, MIDI file writer | done |
 | T6.4 | rust-D | same + `tauri.conf.json` | T6.3 | tray/menu-bar transport, media keys, file associations, notifications w/ Reveal, app menu, settings window | done |
-| T6.6 | rust-E | same | T6.4 | local cache/mirror for Strudel default sample maps + soundfonts so built-in sounds work offline after first use (V15) | active |
+| T6.6 | rust-E | same | T6.4 | local cache/mirror for Strudel default sample maps + soundfonts so built-in sounds work offline after first use (V15) | done |
 
 ### M3 Arrange screen
 | id | owner | owns | deps | acceptance | status |
