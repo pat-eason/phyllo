@@ -12,4 +12,6 @@ export { createBrowserApi } from './browser';
 export type { BrowserApiOptions } from './browser';
 export { NativeError, isNativeError, toNativeError } from './errors';
 export { createTauriApi } from './tauri';
+export { assignPortIds, createWebMidiBridge, parseMidiMessage } from './webmidi';
+export type { RequestMidiAccess, WebMidiBridge } from './webmidi';
 export * from './types';

@@ -8,7 +8,15 @@ import { load } from '@tauri-apps/plugin-store';
 import type { NativeApi } from './api';
 import { toNativeError } from './errors';
 import { COMMANDS, EVENTS } from './types';
-import type { LibraryScan, PhylloPaths, SampleScan, SamplesChangedEvent, SnapshotInfo } from './types';
+import type {
+  LibraryScan,
+  MidiMessageEvent,
+  MidiPortInfo,
+  PhylloPaths,
+  SampleScan,
+  SamplesChangedEvent,
+  SnapshotInfo,
+} from './types';
 
 const SETTINGS_FILE = 'settings.json';
 const SETTINGS_KEY = 'settings';
@@ -66,6 +74,20 @@ export function createTauriApi(): NativeApi {
     sampleFolderScan: (path) => call<SampleScan>(COMMANDS.sampleFolderScan, { path }),
     sampleFoldersWatch: (paths) => call<void>(COMMANDS.sampleFoldersWatch, { paths }),
     onSamplesChanged: (callback) => subscribe<SamplesChangedEvent>(EVENTS.samplesChanged, callback),
+
+    midiListPorts: () => call<MidiPortInfo[]>(COMMANDS.midiListPorts),
+    midiRescan: () => call<MidiPortInfo[]>(COMMANDS.midiRescan),
+    midiOpenInput: (id) => call<void>(COMMANDS.midiOpenInput, { id }),
+    midiCloseInput: (id) => call<void>(COMMANDS.midiCloseInput, { id }),
+    midiOpenOutput: (id) => call<void>(COMMANDS.midiOpenOutput, { id }),
+    midiCloseOutput: (id) => call<void>(COMMANDS.midiCloseOutput, { id }),
+    midiSend: (id, messages) => call<void>(COMMANDS.midiSend, { id, messages }),
+    midiPanic: (id) => call<void>(COMMANDS.midiPanic, { id }),
+    onMidiMessage: (callback) => subscribe<MidiMessageEvent>(EVENTS.midiMessage, callback),
+    onMidiPortsChanged: (callback) => subscribe<MidiPortInfo[]>(EVENTS.midiPortsChanged, callback),
+
+    oscConfigure: (config) => call<void>(COMMANDS.oscConfigure, { config }),
+    oscSend: (messages) => call<void>(COMMANDS.oscSend, { messages }),
 
     openDialog: (options) => guard(async () => (await open(options)) ?? null),
     saveDialog: (options) => guard(async () => (await save(options)) ?? null),
