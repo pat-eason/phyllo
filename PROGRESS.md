@@ -69,3 +69,4 @@
 - Dispatched F9 (sample rate, unique export names, offline-render warning, CSP, single-instance, selftest re-run).
 - F7 merged (a72b00f): ruler seek under loop band, chips, clip pitch scale, drawer scope/header/text, lane sound line, inspector modulated keys, ⌘K Enter, meters stopped, roving lists, contrast; adopted validatePattern + F6 props. pnpm check + e2e green.
 - Dispatched F10 (UI backlog: editor prefs, toast host, molecule gaps, lane virtualization, a11y names).
+- F9 merged (2131faa): engine sampleRate, export_unique_path + pipeline, superdough pool guard (offline renders no longer reuse live nodes), double log prefix, production CSP, single-instance plugin; selftest 13/13 with CSP enforced, 0 violations (agent-run). Orchestrator re-ran: pnpm check green (app 775, engine 2136), cargo 147, e2e 7/7. UI wiring for autoName/rec takes/sample-rate note sent to F10.
