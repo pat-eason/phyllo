@@ -47,3 +47,4 @@
 - T6.5 merged (524a577): sample folders → engine registration + watch, MIDI input (preview + CC → selected track knobs), MIDI recorder + useRecorder, engine stopPreview on reserved orbit. Orchestrator added engineStore.stopPreview passthrough. App 605 tests.
 - F4 merged (e655b1d): T2.V defects fixed; axe down to documented by-design findings only (Clip muted opacity, doc-mandated label-content-name-mismatch, TipCard Themes landmark); light accent-text token darkened (D137). Orchestrator set labelTone=accent on Watching dots. pnpm check green (ui 541).
 - B3 done by orchestrator (D139): code/replace orbit comes from the code; tests updated.
+- T5.4 merged (a06ed2d): ExportDialog (Mixdown/Stems/MIDI/Code, focus trap, progress/cancel/done/retry, background toast) + exportPipeline + useExport + engine queryNoteEvents. Real Tauri encode/notification untested → T6.V.
