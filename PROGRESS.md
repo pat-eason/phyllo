@@ -66,3 +66,4 @@
 `pnpm --filter phyllo selftest` (release .app, WKWebView, real Rust layer): open → play House starter → edit → save → reopen from library → export WAV (+ MIDI, .strudel, FLAC) — 13/13 PASS (T7.5a, re-run by orchestrator).
 - F6 merged (46640bf): Fader keyboard/scale, Meter peak/stop props, theme-switch transition suppression, Punchcard 3 rows + small-tile play, Slider valueText string, Knob onBlockedChange. pnpm check green.
 - F8 merged (7bcacca): library search, no-project Library header + shortcut guard, export backdrop/estimate/browser .strudel download, engine validatePattern, delaytime precision, landmarks/h1, look-ahead select. pnpm check + e2e green. Asked F7 to adopt validatePattern + F6 props.
+- Dispatched F9 (sample rate, unique export names, offline-render warning, CSP, single-instance, selftest re-run).
