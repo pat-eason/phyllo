@@ -104,7 +104,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 ### M7 Polish
 | id | owner | owns | deps | acceptance | status |
 |---|---|---|---|---|---|
-| T7.5a | build agent | self-test mode + `pnpm tauri build` | T3.7 | built app runs the DoD flow in WKWebView (open, play starter, edit, save, reopen from library, export WAV) and writes a pass report | active |
+| T7.5a | build agent | self-test mode + `pnpm tauri build` | T3.7 | built app runs the DoD flow in WKWebView (open, play starter, edit, save, reopen from library, export WAV) and writes a pass report | done |
 
 T7.1 shortcuts (SPEC §7) · T7.2 a11y pass (SPEC §8) · T7.3 screenshot parity fixes · T7.4 performance (no React re-render for playhead/meters) · T7.5 `pnpm tauri build` packaging + end-to-end smoke (open, play starter, edit, save, reopen, export WAV) · T7.V final verifier against SPEC §6 + DoD.
 
@@ -127,3 +127,4 @@ T7.1 shortcuts (SPEC §7) · T7.2 a11y pass (SPEC §8) · T7.3 screenshot parity
 - B16 Multi-cycle step patterns (2/4 cycles) in `miniToRows`/`rowsToMini` + StepSequencer length control; Euclid rotation control — from T4.1.
 - B17 StepRow roving tabindex + `onPreview` on the row label; Slider fluid width — from T4.1.
 - ~~B18~~ done (F5): UI for T6.5: show recorder `lastTake` + `midiInput.hint` (status bar/toast), list `useSampleNames()` in Inspector sound picker (sample tracks) and Library Samples tab; LibraryPanel/Inspector preview toggles call `stopPreview()` — from T6.5.
+- B19 Offline render logs "Source and destination nodes belong to different audio contexts" once per render, and engine log lines are double-prefixed `[phyllo] [phyllo]` — from T7.5a.

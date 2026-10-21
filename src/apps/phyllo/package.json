@@ -14,7 +14,8 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "stories": "storybook dev -p 6007",
-    "stories:build": "storybook build -o storybook-static"
+    "stories:build": "storybook build -o storybook-static",
+    "selftest": "sh scripts/selftest.sh"
   },
   "dependencies": {
     "@phyllo/engine": "workspace:*",
