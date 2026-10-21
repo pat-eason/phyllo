@@ -2,6 +2,7 @@
 
 /* Fixed to the window height; regions scroll on their own (SPEC §2.8). */
 .screen {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -13,6 +14,7 @@
 
 /* Onboarding, Settings and the Library page scroll as a whole. */
 .page {
+  position: relative; /* hidden labels scroll with the page instead of stretching the document */
   height: 100%;
   overflow: auto;
   background: var(--ph-bg);

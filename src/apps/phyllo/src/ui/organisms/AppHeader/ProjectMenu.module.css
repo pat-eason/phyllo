@@ -36,9 +36,10 @@
   white-space: nowrap;
 }
 
-/* The rename input covers the trigger, which stays mounted so focus can return to it. */
+/* The rename input covers the trigger, which stays mounted so focus can return to it. The trigger keeps its size
+   (hidden, not resized) and the input is absolutely positioned over exactly that box, so renaming neither reflows
+   the header nor overlaps the transport; a long name scrolls inside the field. */
 .trigger[data-renaming] {
-  min-width: 220px;
   opacity: 0;
 }
 

@@ -1,5 +1,8 @@
 /* The window: every screen fills it; screens decide what scrolls (SPEC §2.8). */
 .app {
+  /* Containing block for absolutely positioned descendants (visually-hidden labels): without it they escape the
+     overflow clip and stretch <html>, giving a second, document-level scrollbar. */
+  position: relative;
   height: 100%;
   min-height: 0;
   overflow: hidden;
