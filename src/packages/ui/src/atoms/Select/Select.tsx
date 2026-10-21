@@ -19,8 +19,8 @@ export interface SelectProps<T extends string> extends Omit<SelectHTMLAttributes
   labelPosition?: "top" | "inline" | "hidden";
   /** Value text in JetBrains Mono (sound picker: `s("sawtooth")`). */
   mono?: boolean;
-  /** 32 px (`sm`) or 38 px (`md`). */
-  size?: "sm" | "md";
+  /** 32 px (`sm`), 38 px (`md`) or 40 px (`40`, the Export / Onboarding / Library forms). */
+  size?: "sm" | "md" | 40;
   /** Minimum width of the box, in px. */
   minWidth?: number;
   /** Applied to the outer wrapper. All other native props go to the `<select>`. */
@@ -49,7 +49,7 @@ function SelectInner<T extends string>(
   const inline = labelPosition === "inline";
 
   const classes = [styles["root"], className].filter(Boolean).join(" ");
-  const boxClasses = [styles["box"], styles[size], mono && styles["mono"], disabled && styles["disabled"]].filter(Boolean).join(" ");
+  const boxClasses = [styles["box"], styles[size === 40 ? "s40" : size], mono && styles["mono"], disabled && styles["disabled"]].filter(Boolean).join(" ");
   const labelClass = labelPosition === "top" ? styles["label"] : inline ? styles["inlineLabel"] : styles["visuallyHidden"];
 
   const labelElement = (

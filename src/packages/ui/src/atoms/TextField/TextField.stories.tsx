@@ -21,7 +21,7 @@ const meta = {
   component: TextField,
   args: { label: "Name", value: "", onChange: () => undefined, placeholder: "Untitled groove" },
   render: (args) => <Controlled {...args} />,
-  decorators: [(Story) => <div style={{ padding: 24 }}>{Story()}</div>],
+  decorators: [(Story) => <div style={{ padding: 24, background: "var(--ph-panel)" }}>{Story()}</div>],
 } satisfies Meta<typeof TextField>;
 
 export default meta;
@@ -64,6 +64,9 @@ export const Invalid: Story = {
   args: { invalid: true, value: "", description: "Name is required", labelPosition: "top" },
 };
 
+/** 40 px, the field height in the Export, Onboarding and Library mockups. */
+export const Size40: Story = { args: { size: 40, label: "Folder", value: "~/Music/Phyllo" } };
+
 export const Large: Story = { args: { size: "lg", variant: "search", label: "Search", placeholder: "Search" } };
 
 export const Disabled: Story = { args: { disabled: true, value: "Locked" } };
@@ -73,7 +76,7 @@ export const WithDescription: Story = { args: { description: "Letters, numbers a
 export const Themes: Story = {
   render: () => (
     <ThemePair>
-      <div style={{ display: "flex", flexDirection: "column", gap: 12, width: 240, background: "var(--ph-bg)", padding: 16 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12, width: 240, background: "var(--ph-panel)", padding: 16 }}>
         <Controlled {...(Plain.args as Args)} value="" placeholder="Plain" label="Plain" onChange={() => undefined} />
         <Controlled
           label="Search sounds"

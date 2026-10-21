@@ -54,6 +54,7 @@
 }
 
 .body {
+  position: relative;
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -80,8 +81,10 @@
   transition: opacity var(--ph-dur-fast) var(--ph-ease);
 }
 
-.row:not([data-enabled]) .code {
-  opacity: 0.6;
+/* Off: dim with the muted colour, never with opacity (60% opacity drops the syntax colours under 4.5:1). */
+.row:not([data-enabled]) .code,
+.row:not([data-enabled]) .code span {
+  color: var(--ph-muted);
 }
 
 .str {
@@ -106,9 +109,31 @@
   color: var(--ph-muted);
 }
 
+.removeWrap {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  display: flex;
+  padding-left: var(--ph-s-4);
+  background: linear-gradient(90deg, transparent, var(--ph-bg) var(--ph-s-4));
+  opacity: 0;
+  transform: translateY(-50%);
+  transition: opacity var(--ph-dur-fast) var(--ph-ease);
+}
+
+.row:hover .removeWrap,
+.row:focus-within .removeWrap {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .removeWrap {
+    opacity: 1;
+  }
+}
+
 .remove {
   flex: none;
-  margin-right: -4px;
   color: var(--ph-muted);
 }
 
@@ -122,7 +147,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .row,
-  .code {
+  .code,
+  .removeWrap {
     transition: none;
   }
 }

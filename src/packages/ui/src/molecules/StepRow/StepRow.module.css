@@ -80,7 +80,7 @@
 .beat {
   display: grid;
   grid-template-columns: repeat(var(--beat-cols, 4), minmax(0, 1fr));
-  gap: var(--ph-s-2);
+  gap: var(--ph-s-1);
 }
 
 .cell {

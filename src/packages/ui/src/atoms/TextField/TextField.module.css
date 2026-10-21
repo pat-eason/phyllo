@@ -44,6 +44,10 @@
   height: 42px;
 }
 
+.s40 {
+  height: 40px;
+}
+
 .box:hover:not(.disabled) {
   border-color: var(--ph-muted);
 }

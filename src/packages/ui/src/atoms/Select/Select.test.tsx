@@ -146,4 +146,12 @@ describe("Select", () => {
     expect(ref.current).toBe(screen.getByTestId("sel"));
     expect(screen.getByTestId("sel").closest(".extra")).not.toBeNull();
   });
+
+  it("should apply the 40 px size", () => {
+    // Arrange / Act
+    render(<Harness size={40} />);
+
+    // Assert
+    expect(screen.getByRole("combobox", { name: "Snap" }).parentElement).toHaveClass("s40");
+  });
 });

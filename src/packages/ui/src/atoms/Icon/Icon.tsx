@@ -2,7 +2,7 @@ import { forwardRef, type ComponentPropsWithoutRef } from "react";
 import styles from "./Icon.module.css";
 import { ICON_PATHS, SOLID_ICONS, type IconName } from "./icons";
 
-export type IconSize = 12 | 14 | 16 | 18 | 20;
+export type IconSize = 10 | 12 | 14 | 16 | 18 | 20;
 
 export interface IconProps extends Omit<ComponentPropsWithoutRef<"svg">, "name"> {
   name: IconName;

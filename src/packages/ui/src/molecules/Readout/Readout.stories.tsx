@@ -48,6 +48,18 @@ function EditableTempo() {
 
 export const EditableBpm: Story = { render: () => <EditableTempo /> };
 
+/** The "TAP" caption is its own button (`onCaptionClick`), separate from the editable value. */
+function TapTempo() {
+  const cells: ReadoutCell[] = guided.map((cell) =>
+    cell.id === "bpm"
+      ? { ...cell, label: "Tempo 120 BPM, edit", onEdit: () => undefined, onCaptionClick: () => undefined }
+      : cell,
+  );
+  return <Readout cells={cells} />;
+}
+
+export const TapCaption: Story = { render: () => <TapTempo /> };
+
 /** Position and cycle driven through `subscribe`: React renders the cells once; the text is written to the DOM. */
 const clock: ReadoutSubscribe = (write) => {
   const start = performance.now();

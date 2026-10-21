@@ -1,8 +1,11 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { tokenizeCode } from "./codeTokens";
 import { ModifierRow, type ModifierRowProps } from "./ModifierRow";
+const rowCss = readFileSync(resolve(process.cwd(), "src/molecules/ModifierRow/ModifierRow.module.css"), "utf8");
 
 const CODE = ".sometimes(x => x.ply(2))";
 
@@ -187,5 +190,38 @@ describe("ModifierRow", () => {
       { kind: "num", text: "4" },
       { kind: "plain", text: ", rev)" },
     ]);
+  });
+
+  it("should keep the remove button in the tab order after the handle and the code", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    renderRow();
+
+    // Act
+    await user.tab();
+    await user.tab();
+    await user.tab();
+
+    // Assert
+    expect(screen.getByRole("button", { name: `Remove ${CODE}` })).toHaveFocus();
+  });
+
+  it("should hide the remove button with opacity only, so it stays reachable", () => {
+    // Arrange / Act
+    const rule = /\.removeWrap\s*\{([^}]*)\}/.exec(rowCss)?.[1] ?? "";
+
+    // Assert
+    expect(rule).toMatch(/opacity:\s*0/);
+    expect(rule).not.toMatch(/visibility|display:\s*none/);
+    expect(rowCss).toMatch(/\.row:focus-within \.removeWrap/);
+  });
+
+  it("should dim a disabled row with the muted colour instead of opacity", () => {
+    // Arrange / Act
+    const rule = /\.row:not\(\[data-enabled\]\) \.code,\s*\.row:not\(\[data-enabled\]\) \.code span\s*\{([^}]*)\}/.exec(rowCss)?.[1] ?? "";
+
+    // Assert
+    expect(rule).toMatch(/color:\s*var\(--ph-muted\)/);
+    expect(rule).not.toMatch(/opacity/);
   });
 });

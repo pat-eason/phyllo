@@ -98,6 +98,14 @@ export const Pan: Story = { args: { param: "pan", spec: FIXTURE_SPECS.pan, value
 
 export const PanGuided: Story = { args: { param: "pan", spec: FIXTURE_SPECS.pan, value: 0.62 } };
 
+/** `valueText` overrides the formatted value (`aria-valuetext` and the Pro caption). */
+export const ValueTextOverride: Story = { args: { mode: "pro", valueText: "open" } };
+
+/** `aria-label` overrides the knob's accessible name; `caption` replaces the caption line. */
+export const LabelAndCaption: Story = {
+  args: { "aria-label": "Kick filter cutoff", caption: <em>auto</em> },
+};
+
 export const Disabled: Story = { args: { disabled: true } };
 
 export const GuidedPlate: Story = { render: () => <KnobPlate mode="guided" /> };

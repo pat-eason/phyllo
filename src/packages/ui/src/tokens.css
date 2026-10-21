@@ -171,6 +171,7 @@
   --ph-accent-soft: color-mix(in srgb, var(--ph-accent) 14%, transparent);
   --ph-sel: color-mix(in srgb, var(--ph-accent) 6%, transparent);
   --ph-hl: color-mix(in srgb, var(--ph-accent) 9%, transparent);
+  --ph-accent-text: var(--ph-accent);
 }
 [data-theme='light'] {
   --ph-accent: var(--ph-accent-l);
@@ -178,8 +179,12 @@
   --ph-accent-soft: color-mix(in srgb, var(--ph-accent) 10%, transparent);
   --ph-sel: color-mix(in srgb, var(--ph-accent) 5%, transparent);
   --ph-hl: color-mix(in srgb, var(--ph-accent) 8%, transparent);
+  /* Accent as TEXT. The light accent shades are tuned as fills (4.0 to 5.0:1 on white); as 12 px text on the
+     tinted/raised surfaces they dip under 4.5:1, so darken by 15% black. Every accent then clears 4.5:1 on
+     --ph-panel, --ph-raised, --ph-accent-soft, --ph-sel and --ph-hl (min 4.66:1, teal on --ph-sunken + soft). */
+  --ph-accent-text: color-mix(in srgb, var(--ph-accent) 85%, #000);
 }
-:root, [data-theme] { --ph-accent-text: var(--ph-accent); --ph-code-kw: var(--ph-accent); }
+:root, [data-theme] { --ph-code-kw: var(--ph-accent); }
 
 /* Focus ring, used by every interactive atom */
 :where([data-theme]) :focus-visible { outline: 2px solid var(--ph-accent); outline-offset: 2px; }

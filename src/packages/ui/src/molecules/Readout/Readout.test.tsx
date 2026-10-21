@@ -199,4 +199,42 @@ describe("Readout", () => {
     // Assert
     expect(screen.getByText("5.1.1")).toBeInTheDocument();
   });
+
+  it("should make the caption its own button that does not trigger the value action", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const onCaptionClick = vi.fn();
+    const onEdit = vi.fn();
+    render(<Readout cells={[{ id: "bpm", value: "120", caption: "BPM · TAP", label: "Tempo", onEdit, onCaptionClick }]} />);
+
+    // Act
+    await user.click(screen.getByRole("button", { name: "BPM · TAP" }));
+
+    // Assert
+    expect(onCaptionClick).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+    expect(onEdit).not.toHaveBeenCalled();
+  });
+
+  it("should keep the value editable next to a caption button", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const onEdit = vi.fn();
+    render(<Readout cells={[{ id: "bpm", value: "120", caption: "BPM · TAP", label: "Tempo", onEdit, onCaptionClick: () => undefined }]} />);
+
+    // Act
+    await user.click(screen.getByRole("button", { name: "Tempo" }));
+    await user.keyboard("{Control>}a{/Control}128{Enter}");
+
+    // Assert
+    expect(onEdit).toHaveBeenCalledWith("128");
+  });
+
+  it("should name the caption button with captionLabel when given", () => {
+    // Arrange / Act
+    render(<Readout cells={[{ id: "bpm", value: "120", caption: "BPM · TAP", captionLabel: "Tap tempo", onCaptionClick: () => undefined }]} />);
+
+    // Assert
+    expect(screen.getByRole("button", { name: "Tap tempo" })).toBeInTheDocument();
+  });
 });

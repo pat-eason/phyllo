@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { ThemePair } from "../../stories/ThemePair";
 import { Chip } from "./Chip";
 
@@ -48,18 +49,37 @@ export const Tag: Story = { args: { variant: "tag", children: "lo-fi", color: "v
 
 export const TagWithoutColor: Story = { args: { variant: "tag", children: "sketch" } };
 
+/**
+ * A removable chip unmounts itself, so `onRemove` must move focus: here to the chip that takes its place (or the
+ * previous one, or the "No filters" note when the last chip goes). Without this focus drops to `<body>`.
+ */
 export const Removable: Story = {
   render: () => {
     function Active() {
       const [tags, setTags] = useState(["house", "techno", "lo-fi"]);
+      const groupRef = useRef<HTMLDivElement>(null);
+      const emptyRef = useRef<HTMLSpanElement>(null);
+
+      function remove(tag: string) {
+        const index = tags.indexOf(tag);
+        const remaining = tags.filter((t) => t !== tag);
+        flushSync(() => setTags(remaining));
+        const chips = groupRef.current?.querySelectorAll<HTMLButtonElement>("button");
+        (chips?.[Math.min(index, remaining.length - 1)] ?? emptyRef.current)?.focus();
+      }
+
       return (
-        <div style={row}>
+        <div ref={groupRef} role="group" aria-label="Active filters" style={row}>
           {tags.map((tag) => (
-            <Chip key={tag} variant="removable" onRemove={() => setTags((current) => current.filter((t) => t !== tag))}>
+            <Chip key={tag} variant="removable" onRemove={() => remove(tag)}>
               {tag}
             </Chip>
           ))}
-          {tags.length === 0 ? <span style={{ font: "var(--ph-text-small)", color: "var(--ph-muted)" }}>No filters</span> : null}
+          {tags.length === 0 ? (
+            <span ref={emptyRef} tabIndex={-1} style={{ font: "var(--ph-text-small)", color: "var(--ph-muted)" }}>
+              No filters
+            </span>
+          ) : null}
         </div>
       );
     }
@@ -70,6 +90,9 @@ export const Removable: Story = {
 export const RemovableSmall: Story = { args: { variant: "removable", size: "sm", children: "house" } };
 
 export const Code: Story = { args: { variant: "code", children: "supersaw" } };
+
+/** `selected` on a code chip adds `aria-pressed` and the accent look (the chosen waveform in a picker). */
+export const CodeSelected: Story = { args: { variant: "code", children: "sawtooth", selected: true } };
 
 export const Meta_: Story = {
   name: "Meta",
@@ -107,7 +130,9 @@ export const Themes: Story = {
         </div>
         <div style={row}>
           <Chip variant="code">supersaw</Chip>
-          <Chip variant="code">sawtooth</Chip>
+          <Chip variant="code" selected>
+            sawtooth
+          </Chip>
           <Chip variant="meta">124 BPM</Chip>
         </div>
       </div>

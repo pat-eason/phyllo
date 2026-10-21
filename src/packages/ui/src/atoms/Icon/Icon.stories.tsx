@@ -3,7 +3,7 @@ import { ThemePair } from "../../stories/ThemePair";
 import { Icon, type IconSize } from "./Icon";
 import { ICON_NAMES } from "./icons";
 
-const SIZES: IconSize[] = [12, 14, 16, 18, 20];
+const SIZES: IconSize[] = [10, 12, 14, 16, 18, 20];
 
 const meta = {
   title: "Atoms/Icon",

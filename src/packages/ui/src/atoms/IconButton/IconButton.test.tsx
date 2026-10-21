@@ -82,4 +82,20 @@ describe("IconButton", () => {
     expect(button).toHaveClass("extra");
     expect(ref.current).toBe(button);
   });
+
+  it("should support the 40 px size used by the mockups", () => {
+    // Arrange / Act
+    render(<IconButton icon="settings" label="Settings" size={40} />);
+
+    // Assert
+    expect(screen.getByRole("button", { name: "Settings" })).toHaveAttribute("data-size", "40");
+  });
+
+  it("should draw the 26 px preview glyph at 10 px", () => {
+    // Arrange / Act
+    render(<IconButton icon="play" label="Preview" size={26} shape="circle" />);
+
+    // Assert
+    expect(screen.getByRole("button", { name: "Preview" }).firstElementChild).toHaveAttribute("width", "10");
+  });
 });

@@ -1,5 +1,7 @@
 .switch {
-  /* Thumb is white in both themes (Kit). tokens.css has no token for it. */
+  /* Deliberately fixed, not themed: the md thumb is pure white in both themes (Kit) so it reads on the accent and the
+     off track alike. No --ph-* token (or token-derived mix) is white in both themes. The sm size uses
+     --ph-panel / --ph-accent-ink below. */
   --switch-thumb: #ffffff;
   --switch-w: 44px;
   --switch-h: 26px;

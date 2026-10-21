@@ -149,4 +149,30 @@ describe("ParamKnob", () => {
     expect(ref.current).toBe(screen.getByRole("slider"));
     expect(container.firstElementChild).toHaveClass("extra");
   });
+
+  it("should let valueText override the formatted value text", () => {
+    // Arrange / Act
+    const { knob, container } = renderKnob({ mode: "pro", valueText: "open" });
+
+    // Assert
+    expect(knob).toHaveAttribute("aria-valuetext", "open");
+    expect(container).toHaveTextContent("open");
+  });
+
+  it("should let aria-label override the knob's accessible name", () => {
+    // Arrange / Act
+    const { knob } = renderKnob({ "aria-label": "Kick filter cutoff" });
+
+    // Assert
+    expect(knob).toHaveAccessibleName("Kick filter cutoff");
+  });
+
+  it("should render the caption slot instead of the default caption", () => {
+    // Arrange / Act
+    const { container } = renderKnob({ caption: "auto" });
+
+    // Assert
+    expect(container).toHaveTextContent("auto");
+    expect(container).not.toHaveTextContent(".lpf()");
+  });
 });

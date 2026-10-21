@@ -1,8 +1,11 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRef } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Button } from "./Button";
+const buttonCss = readFileSync(resolve(process.cwd(), "src/atoms/Button/Button.module.css"), "utf8");
 
 describe("Button", () => {
   it("should render a native button of type button named by its text", () => {
@@ -103,6 +106,17 @@ describe("Button", () => {
     const button = screen.getByRole("button", { name: "Exporting" });
     expect(button).toHaveAttribute("aria-busy", "true");
     expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it("should keep the accessible name while loading by hiding the label with opacity only", () => {
+    // Arrange / Act
+    render(<Button loading iconStart="plus">Exporting</Button>);
+
+    // Assert
+    expect(screen.getByRole("button", { name: "Exporting" })).toBeVisible();
+    const rule = /\.button\[data-loading\] \.content\s*\{([^}]*)\}/.exec(buttonCss)?.[1] ?? "";
+    expect(rule).toMatch(/opacity:\s*0/);
+    expect(rule).not.toMatch(/visibility|display/);
   });
 
   it("should not set aria-busy when not loading", () => {

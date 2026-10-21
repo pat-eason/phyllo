@@ -94,4 +94,28 @@ describe("StatusDot", () => {
     expect(ref.current).toBe(el);
     expect(el).toHaveClass("extra");
   });
+
+  it("should default the label tone to default, and to accent for badges", () => {
+    // Arrange / Act
+    render(
+      <>
+        <StatusDot status="ok" label="Plain" />
+        <StatusDot status="ok" label="Pill" badge />
+        <StatusDot status="ok" label="Soft" badge labelTone="muted" />
+      </>,
+    );
+
+    // Assert
+    expect(screen.getByText("Plain")).toHaveAttribute("data-tone", "default");
+    expect(screen.getByText("Pill")).toHaveAttribute("data-tone", "accent");
+    expect(screen.getByText("Soft")).toHaveAttribute("data-tone", "muted");
+  });
+
+  it("should expose the accent label tone", () => {
+    // Arrange / Act
+    render(<StatusDot status="ok" label="Watching" labelTone="accent" />);
+
+    // Assert
+    expect(screen.getByText("Watching")).toHaveAttribute("data-tone", "accent");
+  });
 });

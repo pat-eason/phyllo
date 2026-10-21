@@ -73,7 +73,11 @@ const meta = {
   args: { color: ["#8FE388", "#1F7A2E"], selected: false, label: "Green", size: 30, showLabel: false, onSelect: () => {} },
   argTypes: {
     size: { control: "inline-radio", options: [30, 40] },
+    color: { control: { type: "object" } },
   },
+  // `color` takes a string or a [dark, light] pair, so the global /color$/ matcher (string-only colour picker) would
+  // warn on every render. Disable it here; the object control above edits either form.
+  parameters: { controls: { matchers: { color: /^$/ } } },
   decorators: [(Story) => <div style={{ padding: 24 }}>{Story()}</div>],
 } satisfies Meta<typeof Swatch>;
 

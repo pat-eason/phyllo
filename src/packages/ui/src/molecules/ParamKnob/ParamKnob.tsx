@@ -1,4 +1,4 @@
-import { forwardRef, type ComponentPropsWithoutRef } from "react";
+import { forwardRef, type ComponentPropsWithoutRef, type ReactNode } from "react";
 import { Knob } from "../../atoms/Knob";
 import styles from "./ParamKnob.module.css";
 import type { ParamKnobSpec } from "./paramSpecs";
@@ -21,6 +21,18 @@ export interface ParamKnobProps extends Omit<ComponentPropsWithoutRef<"div">, "o
   modulated?: boolean;
   /** Shown as the value while modulated, e.g. `~400–1.4k`. */
   modulationText?: string;
+  /**
+   * Overrides the value text (`aria-valuetext`, and the Pro caption) whatever the spec would format, e.g. `"2 bars"`
+   * or an organism's own unit formatting. Wins over `modulationText`.
+   */
+  valueText?: string;
+  /** Overrides the knob's accessible name (default: the legend). Use it to disambiguate ("Kick filter cutoff"). */
+  "aria-label"?: string;
+  /**
+   * Replaces the caption line under the legend (Guided default `.lpf()`, Pro default the value text). Content given here
+   * is read by screen readers; the defaults are not, so they never repeat the value.
+   */
+  caption?: ReactNode;
   /** Ring grows from 12 o'clock. Default: true for `pan`. */
   bipolar?: boolean;
   disabled?: boolean;
@@ -45,6 +57,9 @@ export const ParamKnob = forwardRef<HTMLDivElement, ParamKnobProps>(function Par
     mode,
     modulated = false,
     modulationText,
+    valueText: valueTextOverride,
+    "aria-label": ariaLabel,
+    caption: captionSlot,
     bipolar,
     disabled = false,
     onRequestEdit,
@@ -61,12 +76,13 @@ export const ParamKnob = forwardRef<HTMLDivElement, ParamKnobProps>(function Par
   const numeric = typeof value === "number" ? value : null;
 
   let valueText: string;
-  if (patterned) valueText = value;
+  if (valueTextOverride !== undefined) valueText = valueTextOverride;
+  else if (patterned) valueText = value;
   else if (modulated && modulationText) valueText = modulationText;
   else valueText = spec.format(numeric, mode);
 
   const legend = guided ? spec.guidedLabel : param;
-  const caption = guided ? `.${param}()` : valueText;
+  const caption = captionSlot ?? (guided ? `.${param}()` : valueText);
   const classes = [styles["paramKnob"], className].filter(Boolean).join(" ");
 
   return (
@@ -79,7 +95,7 @@ export const ParamKnob = forwardRef<HTMLDivElement, ParamKnobProps>(function Par
           const next = spec.fromKnob(position);
           if (next !== numeric) onChange(next);
         }}
-        label={legend}
+        label={ariaLabel ?? legend}
         valueText={valueText}
         modulated={isModulated}
         bipolar={bipolar ?? param === "pan"}
@@ -92,7 +108,7 @@ export const ParamKnob = forwardRef<HTMLDivElement, ParamKnobProps>(function Par
         {legend}
       </span>
       {/* Pro's caption repeats aria-valuetext; Guided's `.code()` is extra information worth reading. */}
-      <span className={styles["caption"]} aria-hidden={guided ? undefined : true}>
+      <span className={styles["caption"]} aria-hidden={guided || captionSlot !== undefined ? undefined : true}>
         {caption}
       </span>
     </div>
