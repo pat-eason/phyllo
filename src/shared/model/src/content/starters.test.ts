@@ -152,7 +152,7 @@ describe("buildStarterProject: a valid project for every starter", () => {
     const kick = house.tracks.find((t) => t.name === "Kick");
     expect(kick).toMatchObject({ kind: "drum", source: { type: "s", sound: null, bank: "RolandTR909" }, pattern: "bd*4" });
     const keys = build("lofi").tracks.find((t) => t.name === "Keys");
-    expect(keys).toMatchObject({ kind: "chord", source: { type: "chord", sound: "gm_epiano1", bank: null }, pattern: "<Fmaj7 Em7 Dm7 C^7>", params: { room: 0.6 } });
+    expect(keys).toMatchObject({ kind: "chord", source: { type: "chord", sound: "gm_epiano1", bank: null }, pattern: "<F^7 Em7 Dm7 C^7>", params: { room: 0.6 } });
   });
 
   it("maps mockup chains onto patterned params and modifiers", () => {
@@ -247,9 +247,9 @@ describe("buildStarterProject: options", () => {
 
   it("transposes chords by their root and spells for the new key", () => {
     const inG = build("lofi", { key: "G major" });
-    expect(inG.tracks.find((t) => t.name === "Keys")?.pattern).toBe("<Gmaj7 F#m7 Em7 D^7>");
+    expect(inG.tracks.find((t) => t.name === "Keys")?.pattern).toBe("<G^7 F#m7 Em7 D^7>");
     const inEb = build("lofi", { key: "Eb major" });
-    expect(inEb.tracks.find((t) => t.name === "Keys")?.pattern).toBe("<Ebmaj7 Dm7 Cm7 Bb^7>");
+    expect(inEb.tracks.find((t) => t.name === "Keys")?.pattern).toBe("<Eb^7 Dm7 Cm7 Bb^7>");
   });
 
   it("transposes every melodic track including leads", () => {

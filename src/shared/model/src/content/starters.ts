@@ -199,7 +199,7 @@ const SPECS: Record<StarterId, StarterSpec> = {
         color: VIOLET,
         kind: "chord",
         source: chordVoice("gm_epiano1"),
-        pattern: "<Fmaj7 Em7 Dm7 C^7>",
+        pattern: "<F^7 Em7 Dm7 C^7>",
         params: { room: 0.6 },
         clips: [[1, 32]],
       },
