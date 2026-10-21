@@ -1,0 +1,345 @@
+/* The panel is a fixed-height column: the cheek stays put and the content scrolls beside it. */
+.panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 var(--ph-library-w);
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  font: var(--ph-text-body);
+  --ph-field-bg: var(--ph-bg);
+}
+
+.scroll {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+  padding: 14px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.search {
+  flex: none;
+}
+
+.tabPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ph-s-3);
+  min-width: 0;
+}
+
+.group[hidden] {
+  display: none;
+}
+
+.heading {
+  margin: 0;
+  color: var(--ph-muted);
+  font: var(--ph-text-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.headingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.collapse {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ph-r-sm);
+  background: transparent;
+  color: var(--ph-muted);
+  cursor: pointer;
+}
+
+.collapse:hover {
+  color: var(--ph-text);
+}
+
+.chevron {
+  transition: transform var(--ph-dur-fast) var(--ph-ease);
+}
+
+.chevron:not([data-open]) {
+  transform: rotate(-90deg);
+}
+
+/* The three tabs share the 204 px column; segments may shrink below their label padding. */
+.tabs [role="tab"] {
+  min-width: 0;
+  padding-inline: var(--ph-s-2);
+}
+
+/* ---- chips ---- */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ph-s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chipItem {
+  display: contents;
+}
+
+/* Instruments carry friendly names, so they use the UI font; synths keep the mono code face. */
+.soundChip[data-instrument][data-instrument] {
+  font-family: var(--ph-font-ui);
+  font-size: 12px;
+}
+
+.soundChip[data-previewing][data-previewing] {
+  border-color: var(--ph-accent);
+  background: var(--ph-accent-soft);
+  color: var(--ph-accent-text);
+}
+
+.soundChip:focus-visible {
+  outline: 2px solid var(--ph-accent);
+  outline-offset: 2px;
+}
+
+/* ---- sound / sample rows ---- */
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ---- folders ---- */
+.folderList,
+.folders {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ph-s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.folderRow,
+.folderToggle {
+  display: flex;
+  align-items: center;
+  gap: var(--ph-s-4);
+  width: 100%;
+  min-width: 0;
+  padding: 0 var(--ph-s-3);
+  border: 0;
+  border-radius: var(--ph-r-md);
+  background: var(--ph-raised);
+  color: var(--ph-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.folderRow {
+  height: 36px;
+}
+
+.folderToggle {
+  height: 36px;
+}
+
+.folderRow:hover,
+.folderToggle:hover {
+  filter: brightness(1.06);
+}
+
+.folder {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.folderMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: var(--ph-s-3);
+  color: var(--ph-muted);
+  font-size: 11px;
+}
+
+.path {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font: 400 11.5px/1.3 var(--ph-font-mono);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.count {
+  flex: none;
+  color: var(--ph-muted);
+  font-size: 11px;
+}
+
+.note {
+  margin: 0;
+  padding: var(--ph-s-2) var(--ph-s-3);
+  color: var(--ph-muted);
+  font-size: 12px;
+}
+
+.linkButton {
+  justify-content: flex-start;
+  width: 100%;
+}
+
+/* ---- starters ---- */
+.starterList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ph-s-4);
+  border-radius: var(--ph-r-xl);
+}
+
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ph-s-3);
+  padding: var(--ph-s-4);
+  border: 1px solid var(--ph-accent);
+  border-radius: var(--ph-r-lg);
+  background: var(--ph-accent-soft);
+}
+
+.confirmText {
+  margin: 0;
+  font-size: 12.5px;
+}
+
+.confirmActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ph-s-2);
+}
+
+/* ---- snippets ---- */
+.snippets {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.snippet {
+  display: flex;
+  align-items: center;
+  gap: var(--ph-s-2);
+  padding: var(--ph-s-2) var(--ph-s-2) var(--ph-s-2) var(--ph-s-3);
+  border-radius: var(--ph-r-md);
+  cursor: grab;
+}
+
+.snippet:hover {
+  background: var(--ph-raised);
+}
+
+.snippet:active {
+  cursor: grabbing;
+}
+
+.snippet:focus-visible {
+  outline: 2px solid var(--ph-accent);
+  outline-offset: -2px;
+}
+
+.snippetBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.snippetCode {
+  overflow: hidden;
+  font: 400 11.5px/1.4 var(--ph-font-mono);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.snippetDescription {
+  color: var(--ph-muted);
+  font-size: 11.5px;
+  text-wrap: pretty;
+}
+
+.snippetHandle {
+  flex: none;
+  color: var(--ph-muted);
+}
+
+/* ---- footer ---- */
+.hint {
+  margin: auto 0 0;
+  padding-top: var(--ph-s-4);
+  border-top: 1px solid var(--ph-line);
+  color: var(--ph-muted);
+  font-size: 11.5px;
+}
+
+.notice {
+  margin: 0;
+  min-height: 0;
+  color: var(--ph-accent-text);
+  font-size: 11.5px;
+}
+
+.notice:empty {
+  display: none;
+}
+
+/* ---- tip highlight: pulsing accent outline on the anchor ---- */
+.starterList[data-highlight],
+.scroll [data-highlight] {
+  outline: 2px solid var(--ph-accent);
+  outline-offset: 3px;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    outline-color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .starterList[data-highlight],
+  .scroll [data-highlight] {
+    animation: none;
+  }
+
+  .chevron {
+    transition: none;
+  }
+}
