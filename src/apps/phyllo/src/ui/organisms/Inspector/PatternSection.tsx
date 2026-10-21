@@ -1,9 +1,8 @@
 import { explainPattern } from "@phyllo/model";
 import type { EngineError, Track, UiMode } from "@phyllo/model";
-import { parseMiniPatternError } from "@phyllo/engine";
+import { validatePattern } from "@phyllo/engine";
 import { PatternField } from "@phyllo/ui";
 import { useEffect, useRef, useState } from "react";
-import { friendlyPatternError } from "./inspectorModel";
 import { useTipHighlight } from "./useTipHighlight";
 import type { InspectorActions } from "./useInspectorActions";
 import styles from "./Inspector.module.css";
@@ -36,11 +35,14 @@ export function PatternSection({ track, mode, engineError, actions }: PatternSec
   const inGesture = useRef(false);
   const highlighted = useTipHighlight("inspector-pattern");
 
-  const parseError = parseMiniPatternError(text);
-  // Our parse error wins; an engine `pattern` error goes under the field, other engine errors below it.
+  // Parses and evaluates (`bd*lm` parses but can't play); never committed while invalid.
+  const validation = validatePattern(text, track.source.type);
+  const parseError = validation.ok ? null : validation;
+  // Our validation error wins; an engine `pattern` error goes under the field, other engine errors below it.
   const engineMessage = engineError && !parseError ? engineError.message : undefined;
   const enginePatternError = engineError?.kind === "pattern" ? engineMessage : undefined;
-  const fieldError = parseError ? friendlyPatternError(parseError) : enginePatternError;
+  const where = parseError?.column === undefined ? "" : `Column ${parseError.column}: `;
+  const fieldError = parseError ? `${where}${parseError.message} The last valid pattern keeps playing.` : enginePatternError;
   const otherError = engineError?.kind !== "pattern" ? engineMessage : undefined;
 
   const endEdit = () => {
@@ -66,7 +68,7 @@ export function PatternSection({ track, mode, engineError, actions }: PatternSec
   );
 
   function commitIfValid(next: string) {
-    if (parseMiniPatternError(next) === null && next !== track.pattern) actions.setPattern(next);
+    if (next !== track.pattern && validatePattern(next, track.source.type).ok) actions.setPattern(next);
   }
 
   function handleChange(next: string) {

@@ -167,12 +167,13 @@ function KnobCell({ param, track, mode, modulated, cc, editing, onRequest, onRes
         valueText={spoken}
         caption={caption}
         onChange={onRequest}
+        onBlockedChange={(_direction, next) => onRequest(next)}
         onChangeStart={onGestureStart}
         onChangeEnd={onGestureEnd}
         onRequestEdit={onStartEdit}
         // A modulated/patterned knob often rests at an end of its travel (an unset lpf sits fully open), where the
-        // Knob drops a key that can't move it, so the "Replace …?" confirm never showed for arrows. Keys are taken
-        // here instead and always ask, like a drag does.
+        // Knob drops a key that can't move it (`onBlockedChange` isn't called at a bound either), so the
+        // "Replace …?" confirm never showed for arrows. Keys are taken here instead and always ask, like a drag.
         onKeyDownCapture={(event) => {
           if (!confirmsChanges || event.altKey || event.metaKey || event.ctrlKey) return;
           const position = keyedPosition(event.key, event.shiftKey, spec.toKnob(typeof value === "number" ? value : null));

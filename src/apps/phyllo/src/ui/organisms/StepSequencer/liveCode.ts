@@ -2,7 +2,7 @@
  * The pattern editor's "Live code" bar: the track's source call (`s("…").bank("…")`, `note("…").s("…")`),
  * the same text codegen writes at the start of the track's line (engine/codegen `sourceHead`).
  */
-import { parseMiniPatternError, quote } from "@phyllo/engine";
+import { quote, validatePattern } from "@phyllo/engine";
 import type { Track, TrackSource } from "@phyllo/model";
 
 /** Source call for drum and note-based melodic tracks; null for kinds the bar doesn't edit. */
@@ -31,7 +31,7 @@ function unquote(body: string): string {
 
 /**
  * Read an edited source call back. The call name must stay the track's (`s` for drums, `note`/`n` for melodic);
- * drums may set `.bank("…")`, melodic tracks `.s("…")`. The pattern is checked with Strudel's mini parser.
+ * drums may set `.bank("…")`, melodic tracks `.s("…")`. The pattern must parse and evaluate (`validatePattern`).
  */
 export function parseSourceCall(text: string, track: Pick<Track, "kind" | "source">): SourceCallParse {
   const head = track.kind === "drum" ? "s" : track.source.type === "n" ? "n" : "note";
@@ -43,8 +43,8 @@ export function parseSourceCall(text: string, track: Pick<Track, "kind" | "sourc
     return { ok: false, error: `Keep the form ${example}. Other calls belong in the code view.` };
   }
   const pattern = unquote(m[1] ?? "");
-  const err = parseMiniPatternError(pattern);
-  if (err) return { ok: false, error: `Column ${err.column}: ${err.message}` };
+  const check = validatePattern(pattern, track.source.type);
+  if (!check.ok) return { ok: false, error: check.column === undefined ? check.message : `Column ${check.column}: ${check.message}` };
   const value = m[2] === undefined ? null : unquote(m[2]);
   const source: Partial<TrackSource> = track.kind === "drum" ? { bank: value } : { sound: value };
   return { ok: true, pattern, source };

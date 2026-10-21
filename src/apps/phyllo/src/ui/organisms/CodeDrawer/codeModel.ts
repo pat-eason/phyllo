@@ -160,12 +160,6 @@ export function locateError(
   return sameText && error.column !== undefined ? { line, column: error.column } : { line };
 }
 
-/** Mini-notation parser messages list every expected token; keep the part a person can act on. */
-export function friendlyMiniError(message: string): string {
-  const found = /but (.+?) found\.?$/.exec(message);
-  return found ? `Unexpected ${found[1]} in the pattern` : message;
-}
-
 /**
  * The message under the drawer header: "Line 18: …" while the code is visible; with the code hidden a line number
  * means nothing, so it names the track ("Broken: …") and falls back to the line.

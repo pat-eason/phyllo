@@ -171,4 +171,15 @@ describe("pattern editor model", () => {
     // Assert
     expect(parsed.ok).toBe(false);
   });
+
+  it("should reject a live code pattern that parses but can't be played", () => {
+    // Arrange
+    const track = { kind: "drum" as const, source: { type: "s" as const, sound: null, bank: null } };
+
+    // Act
+    const parsed = parseSourceCall('s("bd*lm")', track);
+
+    // Assert
+    expect(parsed).toEqual({ ok: false, error: "Column 4: `lm` isn't a number — `*` needs a number like `*4`." });
+  });
 });

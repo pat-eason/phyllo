@@ -216,6 +216,23 @@ describe("CodeDrawer", () => {
     expect(codeRegion()).toHaveTextContent('note("<a1 a1 c2 g1>*2")');
   });
 
+  it("should not commit an edited pattern that parses but can't be played", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const { stores } = renderDrawer(PRO);
+    await user.click(screen.getAllByRole("button", { name: 'Edit pattern for Kick: "bd*4"' })[0] as HTMLElement);
+    const input = screen.getByRole("textbox", { name: "Pattern for Kick" });
+
+    // Act
+    await user.clear(input);
+    await user.type(input, "bd*lm{Enter}");
+
+    // Assert
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(input).toHaveAccessibleDescription(/`lm` isn't a number/);
+    expect(stores.project.getState().project.tracks[0]?.pattern).toBe("bd*4");
+  });
+
   it("should keep the last valid pattern while the edited one doesn't parse", async () => {
     // Arrange
     const user = userEvent.setup();

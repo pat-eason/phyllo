@@ -237,7 +237,23 @@ describe("Inspector", () => {
     await user.clear(field);
     await user.type(field, "c2 [[eb2{Enter}");
     // Assert
-    expect(screen.getByText(/Can’t read this pattern at column 8: it ends before a bracket is closed/)).toBeInTheDocument();
+    expect(screen.getByText(/^Column \d+: `\[` is never closed — add `\]`\. The last valid pattern keeps playing\.$/)).toBeInTheDocument();
+    expect(field).toHaveAttribute("aria-invalid", "true");
+    expect(actions().filter((a) => a.type === "track/setPattern")).toEqual([]);
+    expect(track()?.pattern).toBe("<a1 a1 c2 g1>*2");
+  });
+
+  it("should not commit a pattern that parses but can't be played", async () => {
+    // Arrange
+    const { actions, track, user } = setup();
+    const field = screen.getByRole("textbox", { name: "Pattern" });
+
+    // Act
+    await user.clear(field);
+    await user.type(field, "c2*lm{Enter}");
+
+    // Assert
+    expect(screen.getByText(/`lm` isn't a number/)).toBeInTheDocument();
     expect(field).toHaveAttribute("aria-invalid", "true");
     expect(actions().filter((a) => a.type === "track/setPattern")).toEqual([]);
     expect(track()?.pattern).toBe("<a1 a1 c2 g1>*2");
