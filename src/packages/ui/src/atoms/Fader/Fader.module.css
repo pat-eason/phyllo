@@ -1,0 +1,76 @@
+/* Root is the slider. 7 px of block padding = half the cap, so the cap never overhangs the box. */
+.fader {
+  --fader-cap-h: 14px;
+  display: inline-flex;
+  flex: none;
+  gap: var(--ph-s-4);
+  padding-block: calc(var(--fader-cap-h) / 2);
+  border-radius: var(--ph-r-xs);
+  cursor: ns-resize;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* All marks share one grid cell (column width = widest label) and are offset to their position. */
+.scale {
+  display: grid;
+  align-items: start;
+  height: var(--fader-h);
+  font: 400 9.5px/1 var(--ph-font-mono);
+  color: var(--ph-muted);
+  text-align: right;
+}
+
+.mark {
+  grid-area: 1 / 1;
+  transform: translateY(calc(var(--mark-pos) * var(--fader-h) - 50%));
+  white-space: nowrap;
+}
+
+.slot {
+  position: relative;
+  width: 26px;
+  height: var(--fader-h);
+}
+
+.track {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 11px;
+  width: 4px;
+  border-radius: var(--ph-r-xs);
+  background: var(--ph-sunken);
+}
+
+.cap {
+  position: absolute;
+  left: 0;
+  top: calc(var(--fader-pos) * 100%);
+  width: 26px;
+  height: var(--fader-cap-h);
+  margin-top: calc(var(--fader-cap-h) / -2);
+  border-radius: 4px;
+  background: var(--ph-text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Center groove (proposed in the Fader doc). */
+.cap::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  top: 50%;
+  height: 1px;
+  margin-top: -0.5px;
+  background: var(--ph-bg);
+  opacity: 0.55;
+}
+
+.fader[data-disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

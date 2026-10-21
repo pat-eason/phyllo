@@ -1,0 +1,42 @@
+.meter {
+  display: inline-flex;
+  flex: none;
+  align-items: stretch;
+  gap: 3px;
+  height: var(--meter-length, 30px);
+}
+
+/* Fill: stretch to the height of the flex row it sits in (a percentage height wouldn't resolve there). */
+.meter[data-fill] {
+  height: auto;
+  align-self: stretch;
+}
+
+.bar {
+  position: relative;
+  width: var(--meter-thickness, 5px);
+  border-radius: 3px;
+  background: var(--ph-sunken);
+  overflow: hidden;
+}
+
+/*
+ * Full-height fill clipped from the top by (1 − level). Clipping (not resizing or translating) keeps
+ * layout untouched and pins the gradient to the bar: only levels in the top 10% show --ph-solo
+ * (proposed hot zone).
+ */
+.fill {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, var(--ph-accent) 90%, var(--ph-solo) 90%);
+  clip-path: inset(calc((1 - var(--meter-level, 0)) * 100%) 0 0 0);
+}
+
+.peak {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--meter-peak, 0) * 100% - 2px);
+  height: 2px;
+  background: var(--ph-text);
+}
