@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { play, stop } from "@phylo/engine";
+import { play, stop } from "@phyllo/engine";
 import "./App.css";
 
 const DEMO = 'note("c3 [e3,g3] a2 [f3,a3]").s("sawtooth").lpf(800).slow(2)';
@@ -25,7 +25,7 @@ function App() {
 
   return (
     <main className="container">
-      <h1>Phylo</h1>
+      <h1>Phyllo</h1>
       <button type="button" onClick={toggle}>
         {playing ? "Stop" : "Play"}
       </button>
