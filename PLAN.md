@@ -87,7 +87,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 ### M5 Projects
 | id | owner | owns | deps | acceptance | status |
 |---|---|---|---|---|---|
-| T5.1 | organism agent | GrooveBrowser | T3.1, M2 | SPEC §6.7 | active |
+| T5.1 | organism agent | GrooveBrowser | T3.1, M2 | SPEC §6.7 | done |
 | T5.2 | organism agent | StarterPicker | T3.1, M2 | SPEC §6.2 | done |
 | T5.3 | organism agent | SettingsLayout, AccentPicker | T3.1, M2 | SPEC §6.6, offline sounds download | active |
 | T5.4 | organism agent | ExportDialog + export pipeline + engine note query | F3, T6.3 | SPEC §6.5 all tabs, notification | todo |
@@ -106,3 +106,5 @@ T7.1 shortcuts (SPEC §7) · T7.2 a11y pass (SPEC §8) · T7.3 screenshot parity
 - B3 Orbit rule in `code/replace`: deleting `.orbit(2)` in code is reverted (incoming default keeps existing orbit) — from F2.
 - B4 MIDI input → selected track notes / CC map → inspector knobs (state layer, uses T6.2 events) — from T3.1.
 - B5 Tag manage: rename/merge/delete across files; recolor needs a model field — from T3.1/T5.1.
+- B6 Audition another program without replacing the open project (GrooveBrowser tile play, StarterPicker preview): generalize StarterPicker's `useAudition` (load as non-dirty, restore on stop) into a shared hook, or add an engine audition slot; then enable GrooveCard play (needs a `disabled`/`previewing` prop) — from T5.1/T5.2.
+- B7 Molecule gaps: GrooveCard `selected` row + play `disabled`; Readout caption action + cell popover (key menu); StatusDot `tone="plain"`; SegmentedControl compact padding; Chip code `selected`; IconButton/TextField/Select 40 px size — from T3.2/T3.4/T5.1/T5.2.
