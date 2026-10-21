@@ -8,6 +8,7 @@ import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { native } from "./native";
 import { SETTINGS_HASH } from "./native/browser";
+import { runSelftestIfEnabled } from "./selftest";
 import { PhylloProvider, createAppStores } from "./state";
 import { AppThemeProvider } from "./ui/shell";
 
@@ -44,3 +45,8 @@ createRoot(root).render(
     </PhylloProvider>
   </StrictMode>,
 );
+
+// In-app self-test (T7.5a): runs only when launched with PHYLLO_SELFTEST=1 (scripts/selftest.sh), then quits.
+if (desktop && !settingsOnly) {
+  void runSelftestIfEnabled(stores).catch((e: unknown) => console.warn("[phyllo] self-test", e));
+}
