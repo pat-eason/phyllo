@@ -124,16 +124,3 @@ export function parseTypedValue(text: string): number | null {
 
 /** MIME type for dragging a modifier template (payload = template code) onto the modifier list. */
 export const MODIFIER_DRAG_MIME = "application/x-phyllo-modifier";
-
-/**
- * Strudel's mini-notation parser speaks Peggy ("Expected "!", "(", … but "\"" found."); turn it into one short line.
- * The pattern sits inside quotes, so a found `"` means the pattern ended while something was still open.
- */
-export function friendlyPatternError(error: { message: string; column: number }): string {
-  const found = / but (.+) found\.?$/.exec(error.message)?.[1];
-  let detail: string;
-  if (found === undefined) detail = error.message;
-  else if (found === '"\\""' || found === "end of input") detail = "it ends before a bracket is closed";
-  else detail = `unexpected ${found}`;
-  return `Can’t read this pattern at column ${error.column}: ${detail}. The last valid pattern keeps playing.`;
-}

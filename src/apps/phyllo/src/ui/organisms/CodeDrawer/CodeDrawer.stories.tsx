@@ -66,8 +66,14 @@ export const GuidedExpandedByUser: Story = {
   parameters: { stores: { initialSettings: { codeDrawer: { open: true } } } satisfies MockStoresOptions },
 };
 
-/** Pro default: open, whole song with `arrange()` wrappers. */
+/** Pro default: open on "This section" (the loop start's section while stopped). */
+export const ProDefault: Story = {
+  parameters: { stores: pro() },
+};
+
+/** Whole song with `arrange()` wrappers. */
 export const ProSongScope: Story = {
+  args: { scope: "song" },
   parameters: { stores: pro() },
 };
 

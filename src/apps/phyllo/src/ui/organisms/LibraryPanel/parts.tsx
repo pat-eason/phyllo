@@ -2,6 +2,7 @@ import { SOUND_DRAG_MIME, Chip, SoundRow } from "@phyllo/ui";
 import type { SoundRef } from "@phyllo/ui";
 import { baseName, drumPreview, drumRef, notePreview, sampleRef, synthRef } from "./soundRefs";
 import type { DrumSound, InstrumentSound, SynthSound, UiMode } from "@phyllo/model";
+import { useLayoutEffect, useRef, useState } from "react";
 import type { DragEvent, KeyboardEvent, ReactNode } from "react";
 import type { SampleFile } from "../../../native/types";
 import type { LibraryActions } from "./useLibraryActions";
@@ -80,6 +81,43 @@ export function ChipList({ label, entries, actions }: ChipListProps) {
   );
 }
 
+const ROVING_KEYS = new Set(["ArrowDown", "ArrowUp", "Home", "End"]);
+
+/**
+ * Roving tabindex for a list of SoundRows: the list is one tab stop (the last row used), ↑/↓/Home/End move
+ * between rows. Each row's preview button leaves the tab order (SoundRow doesn't take a prop for it, so it is
+ * set on the DOM after render); it stays clickable and Space on the row previews.
+ */
+function useRovingRows(count: number) {
+  const list = useRef<HTMLUListElement>(null);
+  const [active, setActive] = useState(0);
+  const current = Math.min(active, Math.max(0, count - 1));
+
+  useLayoutEffect(() => {
+    list.current?.querySelectorAll<HTMLElement>(":scope > li button").forEach((button) => {
+      button.tabIndex = -1;
+    });
+  });
+
+  function onKeyDown(event: KeyboardEvent<HTMLUListElement>) {
+    const rows = list.current?.children;
+    const row = event.target instanceof HTMLElement ? event.target : null;
+    if (!rows || !row || row.parentElement !== list.current || !ROVING_KEYS.has(event.key)) return;
+    const index = Array.prototype.indexOf.call(rows, row);
+    let next = index;
+    if (event.key === "ArrowDown") next = Math.min(rows.length - 1, index + 1);
+    else if (event.key === "ArrowUp") next = Math.max(0, index - 1);
+    else if (event.key === "Home") next = 0;
+    else next = rows.length - 1;
+    event.preventDefault();
+    const target = rows[next];
+    if (target instanceof HTMLElement) target.focus();
+  }
+
+  const rowProps = (index: number) => ({ tabIndex: index === current ? 0 : -1, onFocus: () => setActive(index) });
+  return { list, onKeyDown, rowProps };
+}
+
 export interface DrumListProps {
   sounds: readonly DrumSound[];
   /** Bank for a sound; a function because search results can span banks. */
@@ -90,9 +128,12 @@ export interface DrumListProps {
 }
 
 export function DrumList({ sounds, bankFor, mode, actions, label }: DrumListProps) {
+  const { list, onKeyDown, rowProps } = useRovingRows(sounds.length);
   return (
-    <ul className={styles["rows"]} aria-label={label}>
-      {sounds.map((sound) => {
+    // ↑/↓ move between the focusable rows (roving tabindex); the rows themselves are the interactive elements.
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
+    <ul ref={list} className={styles["rows"]} aria-label={label} onKeyDown={onKeyDown}>
+      {sounds.map((sound, index) => {
         const bank = bankFor(sound);
         const ref = drumRef(sound, bank);
         const key = `bank:${bank}:${sound.code}`;
@@ -106,6 +147,7 @@ export function DrumList({ sounds, bankFor, mode, actions, label }: DrumListProp
             onPreview={() => actions.preview(key, drumPreview(sound, bank))}
             dragData={ref}
             onInsert={() => actions.insertSound(ref)}
+            {...rowProps(index)}
           />
         );
       })}
@@ -121,9 +163,11 @@ export interface SampleListProps {
 }
 
 export function SampleList({ files, mode, actions, label }: SampleListProps) {
+  const { list, onKeyDown, rowProps } = useRovingRows(files.length);
   return (
-    <ul className={styles["rows"]} aria-label={label}>
-      {files.map((file) => {
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
+    <ul ref={list} className={styles["rows"]} aria-label={label} onKeyDown={onKeyDown}>
+      {files.map((file, index) => {
         const ref = sampleRef(file);
         const key = `sample:${file.path}`;
         return (
@@ -136,6 +180,7 @@ export function SampleList({ files, mode, actions, label }: SampleListProps) {
             onPreview={() => actions.preview(key, { s: file.name })}
             dragData={ref}
             onInsert={() => actions.insertSound(ref)}
+            {...rowProps(index)}
           />
         );
       })}

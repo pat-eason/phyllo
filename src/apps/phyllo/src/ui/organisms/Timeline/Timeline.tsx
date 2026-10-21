@@ -49,6 +49,8 @@ export function Timeline({ tool = "select", snap = DEFAULT_SNAP, onEditPattern, 
   }));
   const trackErrors = useStore(stores.engine, (s) => s.trackErrors);
   const tipHighlight = useStore(stores.tips, (s) => s.highlight);
+  // Re-renders the lanes on play/stop only (meters read 0 when stopped), never per frame.
+  const playing = useStore(stores.transport, (s) => s.playing);
   const [dropNew, setDropNew] = useState(false);
   const scroller = useRef<HTMLDivElement>(null);
   const zoomAnchor = useRef<{ bar: number; offsetX: number } | null>(null);
@@ -169,6 +171,7 @@ export function Timeline({ tool = "select", snap = DEFAULT_SNAP, onEditPattern, 
                 tipAnchors={index === 0}
                 tipHighlight={index === 0 ? tipHighlight : null}
                 meterSubscribe={meterFor(track.id)}
+                meterStopped={!playing}
                 actions={actions}
                 onEditPattern={onEditPattern ? openEditor : undefined}
               />

@@ -1,4 +1,4 @@
-import { generate, parseMiniPatternError } from "@phyllo/engine";
+import { generate, validatePattern } from "@phyllo/engine";
 import { explainPattern } from "@phyllo/model";
 import type { Track } from "@phyllo/model";
 import { PatternField } from "@phyllo/ui";
@@ -31,8 +31,9 @@ export function CodeView({ track, onPatternCommit }: CodeViewProps) {
   const editable = track.kind !== "code";
 
   function check(text: string): string | undefined {
-    const err = parseMiniPatternError(text);
-    return err ? `Column ${err.column}: ${err.message}` : undefined;
+    const result = validatePattern(text, track.source.type);
+    if (result.ok) return undefined;
+    return result.column === undefined ? result.message : `Column ${result.column}: ${result.message}`;
   }
 
   return (

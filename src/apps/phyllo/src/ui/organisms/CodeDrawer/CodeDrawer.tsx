@@ -4,7 +4,8 @@ import { Button, Icon, SegmentedControl } from "@phyllo/ui";
 import type { SegmentedOption } from "@phyllo/ui";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { HTMLAttributes } from "react";
-import { useCodeDrawer, useEngine, useProject, useSelection, useTips, useUiMode } from "../../../hooks";
+import { useStore } from "zustand";
+import { useAppStores, useCodeDrawer, useEngine, useProject, useSelection, useTips, useUiMode } from "../../../hooks";
 import {
   describeLines,
   errorBannerText,
@@ -35,6 +36,12 @@ const COPY_FEEDBACK_MS = 2500;
 const SHARE_TIP_STEP = 5;
 
 /**
+ * Engines whose scope already got the Pro default ("This section", mockup 02) or a user's pick. Keyed by the
+ * engine's stable `setScope`, so remounting the drawer (switching screens) never overrides the user's choice.
+ */
+const scopeDefaulted = new WeakSet<(scope: CodeScope) => void>();
+
+/**
  * The always-available view of the Strudel code Phyllo generates (SPEC §6.1 "Code drawer"), pinned at the
  * bottom of the center column. Collapsed by default in Guided, open in Pro; the user's Show/Hide overrides that.
  * Open: scope switch, strudel.cc link, status, line-numbered colored code with the selected track highlighted,
@@ -50,6 +57,20 @@ export function CodeDrawer({ defaultHeight = DEFAULT_HEIGHT, className, ...rest 
   const { trackId: selectedTrackId } = useSelection();
   const { complete } = useTips();
   const { height, handleProps } = useResizableHeight(defaultHeight);
+  const { transport } = useAppStores();
+  const playing = useStore(transport, (s) => s.playing);
+
+  // Pro opens on "This section" (mockup 02); the engine store starts every consumer on the whole song.
+  useEffect(() => {
+    if (mode !== "pro" || scopeDefaulted.has(setScope)) return;
+    scopeDefaulted.add(setScope);
+    if (scope === "song") setScope("section");
+  }, [mode, scope, setScope]);
+
+  const chooseScope = (next: CodeScope) => {
+    scopeDefaulted.add(setScope);
+    setScope(next);
+  };
 
   const [editSeed, setEditSeed] = useState<string | null>(null);
   const [copyState, setCopyState] = useState<CopyState>("idle");
@@ -92,7 +113,7 @@ export function CodeDrawer({ defaultHeight = DEFAULT_HEIGHT, className, ...rest 
 
   // Edit code always works on the whole song: `applyCode` replaces every track, so section code would drop the rest.
   const startEditing = () => {
-    setScope("song");
+    chooseScope("song");
     setEditSeed(generate(project, { scope: "song" }).code);
   };
 
@@ -100,7 +121,7 @@ export function CodeDrawer({ defaultHeight = DEFAULT_HEIGHT, className, ...rest 
 
   const summary =
     mode === "guided" && !open ? (
-      guidedSummary(project.tracks)
+      guidedSummary(project.tracks, playing)
     ) : (
       <>
         {scopeSummary(project, scope, sectionBar)} · <EvaluatedAgo evaluatedAt={status.evaluatedAt} /> ·{" "}
@@ -110,6 +131,11 @@ export function CodeDrawer({ defaultHeight = DEFAULT_HEIGHT, className, ...rest 
       </>
     );
 
+  // The summary truncates when the header is tight (one row with the tools); hovering shows it whole.
+  const summaryTitle =
+    mode === "guided" && !open
+      ? undefined
+      : `${scopeSummary(project, scope, sectionBar)} · ${errorSummary(status.error, project.tracks, errorLocation)}`;
   const classes = className ? `${styles["drawer"]} ${className}` : styles["drawer"];
 
   return (
@@ -118,11 +144,12 @@ export function CodeDrawer({ defaultHeight = DEFAULT_HEIGHT, className, ...rest 
       <div className={styles["header"]}>
         <Icon name="code" size={16} className={styles["codeIcon"]} />
         <span className={styles["title"]}>Code</span>
-        <span className={styles["summary"]}>{summary}</span>
-        <span className={styles["spacer"]} />
+        <span className={styles["summary"]} title={summaryTitle}>
+          {summary}
+        </span>
         {open ? (
           <div className={styles["tools"]}>
-            <SegmentedControl label="Code scope" size="sm" options={scopeOptions} value={scope} onChange={setScope} />
+            <SegmentedControl label="Code scope" size="sm" options={scopeOptions} value={scope} onChange={chooseScope} />
             {mode === "pro" && !editing ? (
               <Button size="sm" variant="ghost" iconStart="draw" onClick={startEditing}>
                 Edit code

@@ -37,9 +37,11 @@ function clampRange(start: number, end: number, lengthBars: number): LoopRange {
 }
 
 /**
- * Ruler (Timeline doc): section chips, loop band, bar numbers. Click or drag on it seeks (snapped); ⇧-drag
- * draws a new loop region; drag the loop band's body to move it and its edges to resize (snapped, one undo
- * step). The loop band is also a button: ←/→ move it, ⇧←/→ change its length.
+ * Ruler (Timeline doc): section chips, loop band, bar numbers. A click (no movement) anywhere on it seeks
+ * (snapped), inside the loop band too, and dragging over it scrubs; ⇧-drag draws a new loop region. Only the
+ * band's top border strip (drag to move) and its edge handles (drag to resize) edit the loop (snapped, one undo
+ * step); the rest of the band lets pointer events through to the ruler. The band is also a button: ←/→ move
+ * it, ⇧←/→ change its length.
  */
 export const Ruler = memo(function Ruler({ lengthBars, barWidth, sections, loop, snap, summary, marker, actions }: RulerProps) {
   const track = useRef<HTMLDivElement>(null);
@@ -103,9 +105,13 @@ export const Ruler = memo(function Ruler({ lengthBars, barWidth, sections, loop,
     };
     startDrag(event, {
       onMove: (dx) => setDraft(next(dx)),
-      onEnd: (dx, moved) => {
+      onEnd: (dx, moved, e) => {
         setDraft(null);
-        if (!moved) return;
+        // A press without movement on a grip is a click on the ruler: seek, like anywhere else.
+        if (!moved) {
+          seekTo(e.clientX);
+          return;
+        }
         const range = next(dx);
         if (range.startBar !== loop.startBar || range.endBar !== loop.endBar) actions.setLoop(range);
       },
@@ -146,10 +152,10 @@ export const Ruler = memo(function Ruler({ lengthBars, barWidth, sections, loop,
             style={{ left: (shown.startBar - 1) * barWidth, width: (shown.endBar - shown.startBar + 1) * barWidth }}
             aria-label={loopLabel}
             aria-keyshortcuts="ArrowLeft ArrowRight Shift+ArrowLeft Shift+ArrowRight"
-            title="Drag to move the loop, drag an edge to resize. Arrow keys move it, ⇧ + arrow keys resize."
-            onPointerDown={(event) => onLoopPointerDown("move", event)}
+            title="Drag the top edge to move the loop, drag a side to resize. Arrow keys move it, ⇧ + arrow keys resize."
             onKeyDown={onLoopKeyDown}
           >
+            <span className={styles["loopGrip"]} aria-hidden="true" data-testid="loop-grip" onPointerDown={(e) => onLoopPointerDown("move", e)} />
             <span className={styles["loopEdge"]} data-edge="start" aria-hidden="true" onPointerDown={(e) => onLoopPointerDown("start", e)} />
             <span className={styles["loopEdge"]} data-edge="end" aria-hidden="true" onPointerDown={(e) => onLoopPointerDown("end", e)} />
           </button>

@@ -1,8 +1,7 @@
-import { parseMiniPatternError } from "@phyllo/engine";
+import { validatePattern } from "@phyllo/engine";
 import type { Track } from "@phyllo/model";
 import { useId, useMemo, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
-import { friendlyMiniError } from "./codeModel";
 import type { CodeLine, ErrorLocation, PatternLiteral as Literal } from "./codeModel";
 import { PatternLiteral } from "./PatternLiteral";
 import styles from "./CodeDrawer.module.css";
@@ -46,8 +45,13 @@ function selectAllOnCommandA(event: KeyboardEvent<HTMLPreElement>) {
 export function CodeView({ lines, literals, tracks, selectedTrackId, error, onSetPattern }: CodeViewProps) {
   const id = useId();
   const [edit, setEdit] = useState<LiteralEdit | null>(null);
-  const draftError = useMemo(() => (edit ? parseMiniPatternError(edit.draft) : null), [edit]);
   const names = useMemo(() => new Map(tracks.map((t) => [t.id, t.name])), [tracks]);
+  // Parses and evaluates the draft (`bd*lm` parses but can't play); an invalid draft is never committed.
+  const draftError = useMemo(() => {
+    if (!edit) return null;
+    const result = validatePattern(edit.draft, tracks.find((t) => t.id === edit.trackId)?.source.type);
+    return result.ok ? null : result;
+  }, [edit, tracks]);
   const patterns = useMemo(() => new Map(tracks.map((t) => [t.id, t.pattern])), [tracks]);
   const literalErrorId = `${id}-pattern-error`;
   const evalErrorId = `${id}-eval-error`;
@@ -130,7 +134,9 @@ export function CodeView({ lines, literals, tracks, selectedTrackId, error, onSe
       gutter.push(<span key={`${line.number}-p`} className={styles["gutterSpacer"]} />);
       rows.push(
         <span key={`${line.number}-p`} id={literalErrorId} className={styles["errorRow"]}>
-          {caretRow(editedLiteral.start + draftError.column, friendlyMiniError(draftError.message))}
+          {draftError.column === undefined
+            ? draftError.message
+            : caretRow(editedLiteral.start + draftError.column, draftError.message)}
         </span>,
       );
     }

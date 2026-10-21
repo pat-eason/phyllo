@@ -70,8 +70,23 @@
   padding: 0 2px;
 }
 
-.sectionChip {
+/*
+ * A narrow chip drops its bar range before it truncates the name (Break 17–20 at zoom 1, mockup 01): the chip
+ * wraps, each part sits on its own 22 px line, and the clipped second line is hidden. The range may run into
+ * the chip's right padding, as in the mockup. (SectionChip has no option for this; reported as a molecule gap.)
+ */
+.sectionSlot > .sectionChip {
+  flex-wrap: wrap;
+  align-content: flex-start;
   width: 100%;
+}
+
+.sectionSlot > .sectionChip > span {
+  line-height: 22px;
+}
+
+.sectionSlot > .sectionChip > span:last-child {
+  margin-right: -5px;
 }
 
 .loopBand {
@@ -84,11 +99,23 @@
   border: 0;
   border-top: 2px solid var(--ph-accent);
   background: var(--ph-accent-soft);
-  cursor: grab;
+  /* The body passes clicks through to the ruler (seek); only the grip and the edges edit the loop. */
+  pointer-events: none;
   touch-action: none;
 }
 
-.loopBand[data-dragging] {
+/* Hit strip over the top border (plus a little above it, in the gap under the section chips). */
+.loopGrip {
+  position: absolute;
+  top: -5px;
+  right: 3px;
+  left: 3px;
+  height: 8px;
+  cursor: grab;
+  pointer-events: auto;
+}
+
+.loopBand[data-dragging] .loopGrip {
   cursor: grabbing;
 }
 
@@ -99,10 +126,11 @@
 
 .loopEdge {
   position: absolute;
-  top: -2px;
+  top: -5px;
   bottom: 0;
   width: 6px;
   cursor: ew-resize;
+  pointer-events: auto;
 }
 
 .loopEdge[data-edge="start"] {
@@ -180,6 +208,11 @@
   left: 0;
   z-index: 2;
   flex: none;
+}
+
+/* Selected clips show no edge grips (mockup 01); hover, focus and drags still do. Clip draws them on selection. */
+.clipSlot > :global(button[data-selected]:not(:hover, :focus-visible, [data-dragging])) > :global(span[data-edge])::after {
+  opacity: 0;
 }
 
 /* Tip anchors live on TrackHeader's Mute/Solo, outlined while TipCoach "Show me" points at them. */

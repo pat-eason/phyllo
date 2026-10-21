@@ -26,13 +26,18 @@ const getLine = (text: string) =>
 const getSummary = (pattern: RegExp) =>
   screen.getByText((_, element) => element?.tagName === "SPAN" && pattern.test(element.textContent ?? "") && element.children.length > 0);
 
+/** Pro opens on "This section"; these tests look at the whole-song program. */
+async function showWholeSong(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("radio", { name: "Whole song · arrange()" }));
+}
+
 describe("CodeDrawer", () => {
   it("should start collapsed in Guided with the plain-language summary", () => {
     // Arrange / Act
     renderDrawer();
 
     // Assert
-    expect(screen.getByText("Phyllo writes Strudel as you work — 4 patterns playing")).toBeInTheDocument();
+    expect(screen.getByText("Phyllo writes Strudel as you work — 4 patterns ready")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Show code" })).toHaveAttribute("aria-expanded", "false");
     expect(screen.queryByLabelText("Generated Strudel code")).not.toBeInTheDocument();
   });
@@ -46,7 +51,7 @@ describe("CodeDrawer", () => {
     renderDrawer({ initialProject: { ...project, tracks } });
 
     // Assert
-    expect(screen.getByText("Phyllo writes Strudel as you work — 3 patterns playing")).toBeInTheDocument();
+    expect(screen.getByText("Phyllo writes Strudel as you work — 3 patterns ready")).toBeInTheDocument();
   });
 
   it("should open on Show code in Guided and close again on Hide code", async () => {
@@ -63,14 +68,41 @@ describe("CodeDrawer", () => {
     expect(screen.queryByLabelText("Generated Strudel code")).not.toBeInTheDocument();
   });
 
-  it("should start open in Pro with the whole-song status", () => {
+  it("should start open in Pro on This section", () => {
     // Arrange / Act
     renderDrawer(PRO);
 
     // Assert
     expect(screen.getByRole("button", { name: "Hide code" })).toHaveAttribute("aria-expanded", "true");
-    expect(getSummary(/^Whole song · bars 1–32 · evaluated \d+\.\d s ago · no errors$/)).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "This section · Intro" })).toBeChecked();
+    expect(getSummary(/^Intro · bars 1–8 · evaluated \d+\.\d s ago · no errors$/)).toBeInTheDocument();
     expect(getLine("setcpm(124/4)")).toBeInTheDocument();
+  });
+
+  it("should say the patterns are playing in the Guided summary only while playing", () => {
+    // Arrange
+    const { stores } = renderDrawer();
+
+    // Act
+    act(() => stores.transport.setState({ playing: true }));
+
+    // Assert
+    expect(screen.getByText("Phyllo writes Strudel as you work — 4 patterns playing")).toBeInTheDocument();
+  });
+
+  it("should keep the whole-song scope the user picked when the drawer mounts again", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const { stores, unmount } = renderDrawer(PRO);
+    await showWholeSong(user);
+    unmount();
+
+    // Act
+    renderWithStores(<CodeDrawer />, { stores });
+
+    // Assert
+    expect(screen.getByRole("radio", { name: "Whole song · arrange()" })).toBeChecked();
+    expect(getSummary(/^Whole song · bars 1–32 · /)).toBeInTheDocument();
   });
 
   it("should render only the section's tracks after switching to This section", async () => {
@@ -136,9 +168,10 @@ describe("CodeDrawer", () => {
     expect(screen.queryByText("Take it with you")).not.toBeInTheDocument();
   });
 
-  it("should show an evaluation error under its line and in the status", () => {
+  it("should show an evaluation error under its line and in the status", async () => {
     // Arrange / Act
     renderDrawer({ ...PRO, initialProject: projectWithBrokenTrack() });
+    await showWholeSong(userEvent.setup());
 
     // Assert
     expect(getLine('$: s("bd*4").gain(ERROR)')).toHaveAttribute("data-error");
@@ -167,6 +200,7 @@ describe("CodeDrawer", () => {
     // Arrange
     const user = userEvent.setup();
     const { stores } = renderDrawer(PRO);
+    await showWholeSong(user);
     await user.click(screen.getAllByRole("button", { name: 'Edit pattern for Bass: "<a1 a1 c2 g1>*2"' })[0] as HTMLElement);
 
     // Act
@@ -180,6 +214,23 @@ describe("CodeDrawer", () => {
     act(() => stores.project.getState().undo());
     act(() => stores.engine.getState().regenerateNow());
     expect(codeRegion()).toHaveTextContent('note("<a1 a1 c2 g1>*2")');
+  });
+
+  it("should not commit an edited pattern that parses but can't be played", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const { stores } = renderDrawer(PRO);
+    await user.click(screen.getAllByRole("button", { name: 'Edit pattern for Kick: "bd*4"' })[0] as HTMLElement);
+    const input = screen.getByRole("textbox", { name: "Pattern for Kick" });
+
+    // Act
+    await user.clear(input);
+    await user.type(input, "bd*lm{Enter}");
+
+    // Assert
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(input).toHaveAccessibleDescription(/`lm` isn't a number/);
+    expect(stores.project.getState().project.tracks[0]?.pattern).toBe("bd*4");
   });
 
   it("should keep the last valid pattern while the edited one doesn't parse", async () => {

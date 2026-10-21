@@ -118,9 +118,7 @@
   text-align: right;
 }
 
-.feelCode[data-off] {
-  opacity: 0.7;
-}
+/* "off" stays plain --ph-muted: dimming it further failed 4.5:1 in both themes (T3.V). */
 
 /* Slider has no fluid width prop; stretch its track to the card (reported as an atom gap). */
 .slider {

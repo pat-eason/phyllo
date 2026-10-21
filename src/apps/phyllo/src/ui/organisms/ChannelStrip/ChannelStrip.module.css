@@ -173,6 +173,11 @@ button.head:hover .name {
   color: var(--ph-modulated);
 }
 
+/* Amber text on the light panels is 1.37:1; darken it there (≥4.5:1 on panel, hover and selected). Dark unchanged. */
+:global([data-theme="light"]) .insertValue[data-modulated] {
+  color: color-mix(in srgb, var(--ph-solo) 48%, #000);
+}
+
 .insert[data-editing] {
   outline: 2px solid var(--ph-accent);
 }

@@ -28,6 +28,8 @@ export interface LaneProps {
   /** `useTips().highlight` when `tipAnchors`, else null. */
   tipHighlight: TipTarget | null;
   meterSubscribe: MeterSubscribe;
+  /** Transport stopped: the header meter reads 0 (SPEC §6.1). */
+  meterStopped: boolean;
   actions: TimelineActions;
   onEditPattern: ((trackId: string) => void) | undefined;
 }
@@ -80,6 +82,7 @@ export const Lane = memo(function Lane({
   tipAnchors,
   tipHighlight,
   meterSubscribe,
+  meterStopped,
   actions,
   onEditPattern,
 }: LaneProps) {
@@ -243,6 +246,7 @@ export const Lane = memo(function Lane({
         muted={track.mute}
         soloed={track.solo}
         meterSubscribe={meterSubscribe}
+        meterStopped={meterStopped}
         {...(error ? { error } : {})}
         codeTrack={kind === "code"}
         onSelect={() => actions.select(trackId)}
