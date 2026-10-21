@@ -29,6 +29,7 @@ catalog:
   eslint-plugin-jsx-a11y: 6.10.2
   globals: 17.13.0
   "@playwright/test": 1.64.1
+  "@axe-core/playwright": 4.14.0
   # Stories
   storybook: 10.6.3
   "@storybook/react-vite": 10.6.3

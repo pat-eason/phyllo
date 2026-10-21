@@ -29,6 +29,7 @@
     "zustand": "catalog:"
   },
   "devDependencies": {
+    "@axe-core/playwright": "catalog:",
     "@playwright/test": "catalog:",
     "@tauri-apps/cli": "^2",
     "@testing-library/dom": "catalog:",

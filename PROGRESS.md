@@ -22,3 +22,4 @@
 - T2.7 merged (5b7ac12): TipCard, StarterCard, GrooveCard (tile + row), SettingRow, shared Punchcard; ui 380 tests.
 - T1.2 merged (8bca6ce): generate (both scopes, arrange, wrap, LineMap, instrument), modulatedParams/modulationRange, acorn-based parse with Code-track fallback, mini error columns, share codec; engine 1868 tests total. Orchestrator added ParseResult ok/error/buses and code/replace buses/master/lengthBars (+ reducer + test). pnpm check green.
 - T2.5 merged (4364dcf): Readout, TransportControls, TrackHeader, SoundRow, SectionChip, Toast, EmptyState; ui 449 tests.
+- T2.6 merged (1bde935): Clip, ParamKnob, SuggestionButton, ModifierRow, PatternField, StepRow; ui 513 tests, Storybook builds. All 17 molecules done.
