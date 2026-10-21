@@ -1,0 +1,70 @@
+.control {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--ph-line);
+  border-radius: var(--ph-r-lg);
+  background: var(--ph-sunken);
+}
+
+.control[data-stretch] {
+  display: flex;
+  width: 100%;
+}
+
+.segment {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ph-muted);
+  font: var(--ph-text-body);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background var(--ph-dur-fast) var(--ph-ease),
+    color var(--ph-dur-fast) var(--ph-ease);
+}
+
+.control[data-size="sm"] .segment {
+  height: 26px;
+  padding: 0 10px;
+}
+
+.control[data-stretch] .segment {
+  flex: 1 1 0;
+}
+
+.segment:hover:not(:disabled, [data-selected]) {
+  color: var(--ph-text);
+}
+
+/* ---- selected ---- */
+.control[data-tone="neutral"] .segment[data-selected] {
+  background: var(--ph-raised);
+  color: var(--ph-text);
+  box-shadow: var(--ph-shadow-bevel);
+}
+
+.control[data-tone="accent"] .segment[data-selected] {
+  background: var(--ph-accent);
+  color: var(--ph-accent-ink);
+}
+
+.segment:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .segment {
+    transition: none;
+  }
+}

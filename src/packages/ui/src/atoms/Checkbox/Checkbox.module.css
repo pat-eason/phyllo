@@ -1,0 +1,22 @@
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ph-text);
+  font: var(--ph-text-body);
+  cursor: pointer;
+}
+
+.input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--ph-accent);
+  cursor: inherit;
+}
+
+.checkbox[data-disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
