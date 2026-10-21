@@ -10,3 +10,5 @@
 - Dispatched T2.2 (buttons/toggles), T2.3 (form atoms), T2.4 (Knob/Fader/Meter/StepCell) in parallel worktrees.
 - Note: Agent worktrees start from `main`; briefs now require `git merge --ff-only phyllo/build` first.
 - Dispatched T6.2 (MIDI/OSC bridge).
+- T0.2 done: Strudel verification — report + proof scripts in docs/strudel-verification/; decisions V1–V18. T0.3 done: Strudel packages pinned in engine, @strudel/web dropped, ambient types at engine/src/types/strudel.d.ts, Vitest inlines Strudel deps (smoke test passes), acorn + playwright added to engine.
+- T2.3 merged (a8b8440): TextField, Select, Slider, Chip. T2.2 merged (fda8e16): Button, IconButton, TransportKey, ToggleButton, SegmentedControl, Switch, Checkbox. ui: 226 tests green after merge.

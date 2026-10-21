@@ -39,8 +39,8 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | id | owner | owns | deps | acceptance | status |
 |---|---|---|---|---|---|
 | T2.1 | atoms-A | Icon, Logo, Surface, Kbd, StatusDot, Swatch | T0.1 | design-system §8 DoD, stories all states both themes | done |
-| T2.2 | atoms-B | Button, IconButton, TransportKey, ToggleButton, SegmentedControl, Switch, Checkbox | T2.1 | same | active |
-| T2.3 | atoms-C | TextField, Select, Slider, Chip | T2.1 | same | active |
+| T2.2 | atoms-B | Button, IconButton, TransportKey, ToggleButton, SegmentedControl, Switch, Checkbox | T2.1 | same | done |
+| T2.3 | atoms-C | TextField, Select, Slider, Chip | T2.1 | same | done |
 | T2.4 | atoms-D | Knob, Fader, Meter, StepCell | T2.1 | same + slider a11y, value-passing onChange | active |
 | T2.5 | molecules-A | Readout, TransportControls, TrackHeader, SoundRow, SectionChip, Toast, EmptyState | T2.2–T2.4 | same | todo |
 | T2.6 | molecules-B | Clip, ParamKnob, SuggestionButton, ModifierRow, PatternField, StepRow | T2.2–T2.4 | same | todo |

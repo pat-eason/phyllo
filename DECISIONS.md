@@ -56,3 +56,9 @@ One line each: decision — reason — where. Strudel verification results are i
 - V16 Scheduling look-ahead is fixed at 0.1 s in Strudel's Cyclist; the Settings value is applied only if the runtime can construct its own Cyclist, otherwise the control is shown disabled with a note — `repl()` doesn't forward latency — engine/runtime, T5.3.
 - V17 No Strudel package ships types; engine keeps ambient `declare module` files (one per area; ambient declarations merge) — engine/src/types/.
 - V18 Strudel evaluation needs CSP `'unsafe-eval'` and `data:` worklets; Tauri CSP stays `null` until M7 hardening — tauri.conf.json.
+- D28 Red accent: record/mute use magenta via local overrides scoped to `[data-accent='red']` (dark `#E0457B`/ink `#1A0A07`, light `#C2336A`/white for ≥4.5:1) — resolves SPEC §2.3 / §10 Q6 — atoms/TransportKey, ToggleButton.
+- D29 Record TransportKey flips its label ("Record"/"Stop recording") without `aria-pressed`; Loop uses `aria-pressed`; Play flips Play/Pause — avoids double announcement — atoms/TransportKey.
+- D30 ToggleButton `onChange(pressed, event)` passes the event second so parents can read ⌥/⌘ modifiers — Solo exclusive-click etc. — atoms/ToggleButton.
+- D31 Form atoms (TextField, Select, Slider) put `className` on the wrapper and `ref`/native props on the inner control — wrapper carries label/description, consumers need the input — atoms/TextField, Select, Slider.
+- D32 Removable Chip's accessible name is "Remove <text>" (override via `removeLabel`) — generic, reads naturally — atoms/Chip.
+- D33 Literal radii 9 px (fields) / 7 px (chips) / 12 px (plates) where tokens.css has no matching radius — Kit values; tokens unchanged — atoms.
