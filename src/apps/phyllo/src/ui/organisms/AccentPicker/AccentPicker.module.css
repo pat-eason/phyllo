@@ -1,0 +1,95 @@
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: var(--ph-s-6);
+  border: 1px solid var(--ph-line);
+  border-radius: var(--ph-r-xl);
+  background: var(--ph-panel);
+  color: var(--ph-text);
+  font: var(--ph-text-body);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ph-s-4) var(--ph-s-6);
+}
+
+.row[data-align="start"] {
+  align-items: flex-start;
+}
+
+.row[data-divider] {
+  gap: var(--ph-s-5) var(--ph-s-6);
+  padding-top: var(--ph-s-6);
+  border-top: 1px solid var(--ph-line-soft);
+}
+
+.rowLabel {
+  flex: 0 0 80px;
+  font-weight: 600;
+}
+
+.accentLabel {
+  padding-top: var(--ph-s-5);
+}
+
+.accentColumn {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: var(--ph-s-4);
+  min-width: 0;
+}
+
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ph-s-4);
+}
+
+.note {
+  max-width: 460px;
+  margin: 0;
+  color: var(--ph-muted);
+  font: var(--ph-text-small);
+}
+
+/* The wrapper carries its own data-theme, so it paints the chosen theme's panel even when the app is in the
+   other theme. The negative margin cancels the padding so a matching theme lines up with the row above. */
+.preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin: calc(-1 * var(--ph-s-4)) calc(-1 * var(--ph-s-5));
+  padding: var(--ph-s-4) var(--ph-s-5);
+  border-radius: var(--ph-r-lg);
+  background: var(--ph-panel);
+  color: var(--ph-text);
+}
+
+.steps {
+  display: flex;
+  gap: var(--ph-s-1);
+}
+
+/* The preview draws steps smaller than the sequencer's cells (22 x 28). */
+.steps > button {
+  width: 22px;
+  height: 28px;
+}
+
+.code {
+  padding: var(--ph-s-2) var(--ph-s-4);
+  border-radius: var(--ph-r-md);
+  background: var(--ph-bg);
+  font: var(--ph-text-code);
+  line-height: 1.4;
+}
+
+.keyword {
+  color: var(--ph-code-kw);
+}

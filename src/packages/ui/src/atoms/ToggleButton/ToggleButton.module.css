@@ -1,0 +1,85 @@
+.toggle {
+  /* Mute shifts to magenta in the red accent theme so it stays distinct from the accent (SPEC 2.3).
+     tokens.css has no such token, so it is a local override. Dark/light follow color-scheme. */
+  --toggle-rec: var(--ph-rec);
+  --toggle-rec-ink: var(--ph-rec-ink);
+
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--ph-line);
+  border-radius: var(--ph-r-sm);
+  background: var(--ph-btn-grad);
+  box-shadow: var(--ph-shadow-btn);
+  color: var(--ph-muted);
+  font: 700 11px/1 var(--ph-font-ui);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background var(--ph-dur-fast) var(--ph-ease),
+    color var(--ph-dur-fast) var(--ph-ease),
+    box-shadow var(--ph-dur-fast) var(--ph-ease),
+    transform var(--ph-dur-fast) var(--ph-ease);
+}
+
+:global([data-accent="red"]) .toggle {
+  --toggle-rec: light-dark(#c2336a, #e0457b);
+  --toggle-rec-ink: light-dark(#ffffff, #1a0a07);
+}
+
+.toggle[data-size="30"] {
+  width: 30px;
+  height: 30px;
+}
+
+.toggle[data-full-width] {
+  width: 100%;
+}
+
+.toggle:hover:not(:disabled, [data-pressed]) {
+  filter: brightness(1.06);
+}
+
+.toggle:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: var(--ph-shadow-bevel);
+}
+
+/* ---- on ---- */
+.toggle[data-pressed] {
+  box-shadow: none;
+}
+
+.toggle[data-pressed][data-kind="mute"] {
+  background: var(--toggle-rec);
+  color: var(--toggle-rec-ink);
+}
+
+.toggle[data-pressed][data-kind="solo"] {
+  background: var(--ph-solo);
+  color: var(--ph-clip-ink);
+}
+
+.toggle[data-pressed][data-kind="custom"] {
+  background: var(--ph-accent);
+  color: var(--ph-accent-ink);
+}
+
+.toggle:disabled {
+  opacity: 0.5;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toggle {
+    transition: none;
+  }
+
+  .toggle:active:not(:disabled) {
+    transform: none;
+  }
+}

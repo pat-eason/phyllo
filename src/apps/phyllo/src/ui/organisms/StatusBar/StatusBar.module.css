@@ -1,0 +1,73 @@
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 18px;
+  box-sizing: border-box;
+  min-height: 30px;
+  padding: 4px 16px;
+  border-top: 1px solid var(--ph-line);
+  background: var(--ph-chrome);
+  color: var(--ph-muted);
+  font-size: 11.5px;
+  line-height: 1.35;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.engine,
+.save {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.engine {
+  gap: 10px;
+}
+
+/* MIDI notices: a one-liner with a small dismiss button, accent-tinted so it reads as news, not chrome. */
+.notice {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--ph-accent-text);
+}
+
+/* Clickable status items read as text; they get a hover underline and a focus ring. */
+.link {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ph-r-xs);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.link:hover {
+  color: var(--ph-text);
+  text-decoration: underline;
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--ph-accent);
+  outline-offset: 2px;
+}
+
+/* Status dots read as plain muted text here (png/01); only the dot itself carries the colour.
+   The label is the atom's second child span, whose own class isn't reachable from here. */
+.bar .dot > span:not(:first-child) {
+  color: inherit;
+  font: inherit;
+}
+
+.bar .dot[data-status="error"] > span:not(:first-child) {
+  color: var(--ph-rec-text);
+}

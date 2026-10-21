@@ -1,8 +1,8 @@
 [package]
 name = "phyllo"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "Phyllo: a DAW-style UI around Strudel"
+authors = []
 edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -18,11 +18,60 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = [] }
+tauri = { version = "2", features = ["protocol-asset", "tray-icon"] }
 tauri-plugin-opener = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+tauri-plugin-store = "2"
+tauri-plugin-notification = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+thiserror = "2"
+notify = "8"
+trash = "5"
+walkdir = "2"
+dirs = "7"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+midir = "0.11.1"
+rosc = "0.11.4"
+hound = "3.5.1"
+midly = "0.5.3"
+flacenc = "0.5.1"
+mp3lame-encoder = "0.2.5"
+# Offline sound cache (T6.6): rustls only, no OpenSSL. tokio/url are already in the tree through tauri.
+reqwest = { version = "0.13", default-features = false, features = ["rustls-no-provider", "http2", "system-proxy"] }
+# ring provider (no aws-lc / cmake / NASM), installed once in sound_cache.rs.
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+tokio = { version = "1", features = ["fs", "sync", "rt", "time"] }
+url = "2"
 
+[dev-dependencies]
+claxon = "0.4.3"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
+tempfile = "3"
+# Same version Tauri already links; only used to parse menu accelerators in tests.
+muda = { version = "0.20.0", default-features = false }
+
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-global-shortcut = "2"
+# A second launch (`phyllo <file>`) hands its files to the running instance (D96).
+tauri-plugin-single-instance = "2.5.4"
+
+# Media keys / Now Playing (MPRemoteCommandCenter, MPNowPlayingInfoCenter).
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6.5"
+block2 = "0.6.2"
+objc2-foundation = { version = "0.3.2", default-features = false, features = ["std", "NSString", "NSDictionary", "NSValue", "NSObject"] }
+objc2-media-player = { version = "0.3.2", default-features = false, features = [
+  "std",
+  "block2",
+  "MPMediaItem",
+  "MPNowPlayingInfoCenter",
+  "MPRemoteCommand",
+  "MPRemoteCommandCenter",
+  "MPRemoteCommandEvent",
+] }
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration
 [profile.release]

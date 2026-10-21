@@ -11,3 +11,13 @@ coverage
 
 src/apps/phyllo/src-tauri/target
 src/apps/phyllo/src-tauri/gen
+
+# Test / story output
+playwright-report
+test-results
+storybook-static
+*.tsbuildinfo
+
+# agent worktrees / tool scratch
+.claude/worktrees/
+.playwright-mcp/

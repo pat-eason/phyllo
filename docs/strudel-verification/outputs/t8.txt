@@ -1,0 +1,3 @@
+core has voicing? false | core has chord? true | Pattern.prototype.voicing before tonal: undefined
+after tonal import: function
+core has: setcpm? false repl? true hush? false code2hash? true getTime true getCps true

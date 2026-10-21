@@ -1,0 +1,105 @@
+.root {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  min-height: 0;
+  background: var(--ph-bg);
+  color: var(--ph-text);
+  font: var(--ph-text-body);
+}
+
+.root > aside {
+  flex: 1 1 232px;
+  max-width: 100%;
+}
+
+.main {
+  display: flex;
+  flex: 999 1 640px;
+  flex-direction: column;
+  gap: var(--ph-s-5);
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 18px var(--ph-s-8);
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ph-s-2);
+  min-height: 28px;
+}
+
+.count {
+  font-weight: 600;
+}
+
+.clearAll {
+  height: 26px;
+  padding: 0 var(--ph-s-2);
+  border: 0;
+  border-radius: var(--ph-r-sm);
+  background: transparent;
+  color: var(--ph-muted);
+  font: var(--ph-text-small);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.clearAll:hover {
+  color: var(--ph-text);
+}
+
+.clearAll:focus-visible {
+  outline: 2px solid var(--ph-accent);
+  outline-offset: 1px;
+}
+
+.bulkBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ph-s-2);
+  padding: var(--ph-s-2) var(--ph-s-3);
+  border: 1px solid var(--ph-accent);
+  border-radius: var(--ph-r-xl);
+  background: color-mix(in srgb, var(--ph-accent) 8%, transparent);
+}
+
+.bulkCount {
+  margin-right: var(--ph-s-2);
+  font-weight: 600;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ph-s-4);
+}
+
+/* GrooveCard has no disabled prop; the browser marks Play unavailable until previews exist. */
+.content button[aria-label^="Play "][aria-disabled="true"] {
+  opacity: 0.55;
+}
+
+.problem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ph-s-3);
+  color: var(--ph-rec-text);
+}
+
+.quiet {
+  margin: 0;
+  color: var(--ph-muted);
+  font: var(--ph-text-small);
+}
+
+.emptyStack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--ph-s-2);
+}

@@ -1,0 +1,76 @@
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  box-sizing: border-box;
+  min-height: 60px;
+  padding: 10px 16px 10px var(--ph-titlebar-inset);
+  border-bottom: 1px solid var(--ph-line);
+  background: var(--ph-chrome);
+  color: var(--ph-text);
+  font: var(--ph-text-body);
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header[data-variant="compact"] .identity {
+  gap: 16px;
+}
+
+.projectName {
+  color: var(--ph-muted);
+  font-weight: 600;
+}
+
+.tabs {
+  display: flex;
+  align-items: center;
+  margin-inline-start: 14px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-inline-start: auto;
+}
+
+.transportSection {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-inline: auto;
+}
+
+.switchesSection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Export is the one inverse primary in the bar; the tip coach can point at it. */
+.exportButton[data-tip-highlight] {
+  outline: 2px solid var(--ph-accent);
+  outline-offset: 3px;
+  animation: tip-pulse 1.4s var(--ph-ease) infinite;
+}
+
+@keyframes tip-pulse {
+  50% {
+    outline-offset: 6px;
+    outline-color: color-mix(in srgb, var(--ph-accent) 40%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exportButton[data-tip-highlight] {
+    animation: none;
+  }
+}

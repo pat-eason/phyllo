@@ -1,0 +1,138 @@
+.root {
+  --thumb: 16px;
+  --track: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ph-s-3);
+}
+
+.root[data-fill] {
+  display: flex;
+  width: 100%;
+}
+
+.root[data-fill] > .control {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.disabled {
+  opacity: 0.5;
+}
+
+.glyph {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  color: var(--ph-muted);
+}
+
+.control {
+  position: relative;
+  flex: none;
+  height: 20px;
+}
+
+.input {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  /* The ring would otherwise be a 20px-high band; draw it around the thumb instead. */
+  outline: none;
+}
+
+.input:disabled {
+  cursor: not-allowed;
+}
+
+.input::-webkit-slider-runnable-track {
+  height: var(--track);
+  border-radius: 3px;
+  /* The thumb centre travels from half a thumb in to half a thumb short of the end, so the fill stop does too. */
+  background: linear-gradient(
+    to right,
+    var(--ph-accent) 0,
+    var(--ph-accent) calc(var(--thumb) / 2 + (100% - var(--thumb)) * var(--ph-slider-fraction)),
+    var(--ph-raised) calc(var(--thumb) / 2 + (100% - var(--thumb)) * var(--ph-slider-fraction)),
+    var(--ph-raised) 100%
+  );
+}
+
+.input::-webkit-slider-thumb {
+  width: var(--thumb);
+  height: var(--thumb);
+  margin-top: calc((var(--track) - var(--thumb)) / 2);
+  border: 0;
+  border-radius: 50%;
+  background: var(--ph-text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  appearance: none;
+  -webkit-appearance: none;
+  transition: transform var(--ph-dur-fast) var(--ph-ease);
+}
+
+.input::-moz-range-track {
+  height: var(--track);
+  border-radius: 3px;
+  background: var(--ph-raised);
+}
+
+.input::-moz-range-progress {
+  height: var(--track);
+  border-radius: 3px;
+  background: var(--ph-accent);
+}
+
+.input::-moz-range-thumb {
+  width: var(--thumb);
+  height: var(--thumb);
+  border: 0;
+  border-radius: 50%;
+  background: var(--ph-text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  transition: transform var(--ph-dur-fast) var(--ph-ease);
+}
+
+.input:not(:disabled):active::-webkit-slider-thumb {
+  transform: scale(1.1);
+}
+
+.input:not(:disabled):active::-moz-range-thumb {
+  transform: scale(1.1);
+}
+
+.input:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--ph-accent);
+  outline-offset: 2px;
+}
+
+.input:focus-visible::-moz-range-thumb {
+  outline: 2px solid var(--ph-accent);
+  outline-offset: 2px;
+}
+
+.mark {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--thumb) / 2 + (100% - var(--thumb)) * var(--ph-slider-mark));
+  width: 4px;
+  height: 4px;
+  margin: -2px 0 0 -2px;
+  border-radius: 50%;
+  background: var(--ph-muted);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .input::-webkit-slider-thumb,
+  .input::-moz-range-thumb {
+    transition: none;
+  }
+}

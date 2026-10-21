@@ -1,0 +1,109 @@
+.root {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--ph-s-2);
+  min-width: 0;
+}
+
+.label {
+  font: var(--ph-text-small);
+  font-weight: 600;
+  color: var(--ph-muted);
+}
+
+.inlineLabel {
+  flex: none;
+  color: var(--ph-muted);
+  white-space: nowrap;
+  cursor: inherit;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--ph-s-3);
+  padding: 0 var(--ph-s-5);
+  border: 1px solid var(--ph-line);
+  border-radius: 9px;
+  background: var(--ph-field-bg, var(--ph-bg));
+  color: var(--ph-text);
+  cursor: pointer;
+  transition: border-color var(--ph-dur-fast) var(--ph-ease);
+}
+
+.sm {
+  height: 32px;
+}
+
+.s40 {
+  height: 40px;
+}
+
+.md {
+  height: 38px;
+}
+
+.box:hover:not(.disabled) {
+  border-color: var(--ph-muted);
+}
+
+.box:has(.select:focus-visible) {
+  outline: 2px solid var(--ph-accent);
+  outline-offset: 2px;
+}
+
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.select {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: inherit;
+  appearance: none;
+  text-overflow: ellipsis;
+}
+
+/* Popup rows are drawn by the OS but follow these colors where the platform allows. */
+.select option {
+  background: var(--ph-panel);
+  color: var(--ph-text);
+}
+
+.mono .select {
+  font-family: var(--ph-font-mono);
+  font-size: 12.5px;
+}
+
+.chevron {
+  flex: none;
+  color: var(--ph-muted);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .box {
+    transition: none;
+  }
+}

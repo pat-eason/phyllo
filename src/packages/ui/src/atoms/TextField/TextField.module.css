@@ -1,0 +1,134 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ph-s-2);
+  min-width: 0;
+}
+
+.label {
+  font: var(--ph-text-small);
+  font-weight: 600;
+  color: var(--ph-muted);
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.box {
+  display: flex;
+  align-items: center;
+  gap: var(--ph-s-3);
+  width: 100%;
+  padding: 0 var(--ph-s-5);
+  border: 1px solid var(--ph-line);
+  border-radius: 9px;
+  background: var(--ph-field-bg, var(--ph-bg));
+  color: var(--ph-text);
+  transition: border-color var(--ph-dur-fast) var(--ph-ease);
+}
+
+.md {
+  height: 36px;
+}
+
+.lg {
+  height: 42px;
+}
+
+.s40 {
+  height: 40px;
+}
+
+.box:hover:not(.disabled) {
+  border-color: var(--ph-muted);
+}
+
+/* The ring wraps the whole box; a bare input outline would sit inside the padding. */
+.box:has(.input:focus-visible) {
+  outline: 2px solid var(--ph-accent);
+  outline-offset: 2px;
+}
+
+.code,
+.code:hover:not(.disabled) {
+  border-color: var(--ph-accent);
+}
+
+.invalid,
+.invalid:hover:not(.disabled),
+.code.invalid {
+  border-color: var(--ph-rec);
+}
+
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.lead {
+  flex: none;
+  color: var(--ph-muted);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  appearance: none;
+}
+
+.code .input {
+  font-family: var(--ph-font-mono);
+  font-size: 12.5px;
+}
+
+.input::placeholder {
+  color: var(--ph-muted);
+  opacity: 1;
+}
+
+.input::-webkit-search-cancel-button,
+.input::-webkit-search-decoration {
+  appearance: none;
+}
+
+.input:disabled {
+  cursor: not-allowed;
+}
+
+.trailing {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+}
+
+.description {
+  margin: 0;
+  font: var(--ph-text-small);
+  color: var(--ph-muted);
+}
+
+.descriptionInvalid {
+  color: var(--ph-rec-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .box {
+    transition: none;
+  }
+}

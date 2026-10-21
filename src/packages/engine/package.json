@@ -6,12 +6,26 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
-    "lint": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run --passWithNoTests",
+    "e2e": "playwright test"
   },
   "dependencies": {
-    "@strudel/web": "1.3.0"
+    "@phyllo/model": "workspace:*",
+    "@strudel/core": "catalog:",
+    "@strudel/mini": "catalog:",
+    "@strudel/soundfonts": "catalog:",
+    "@strudel/tonal": "catalog:",
+    "@strudel/transpiler": "catalog:",
+    "@strudel/webaudio": "catalog:",
+    "acorn": "catalog:"
   },
   "devDependencies": {
-    "typescript": "~6.0.3"
+    "@playwright/test": "catalog:",
+    "@types/node": "catalog:",
+    "jsdom": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

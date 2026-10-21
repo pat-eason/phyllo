@@ -1,0 +1,8 @@
+/* The window: every screen fills it; screens decide what scrolls (SPEC §2.8). */
+.app {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--ph-bg);
+  color: var(--ph-text);
+}

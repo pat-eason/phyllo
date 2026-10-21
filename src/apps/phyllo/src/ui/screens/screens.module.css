@@ -1,0 +1,119 @@
+/* Screens (design-system/components/screens.md): thin layouts that place organisms. */
+
+/* Fixed to the window height; regions scroll on their own (SPEC §2.8). */
+.screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--ph-bg);
+  color: var(--ph-text);
+}
+
+/* Onboarding, Settings and the Library page scroll as a whole. */
+.page {
+  height: 100%;
+  overflow: auto;
+  background: var(--ph-bg);
+  color: var(--ph-text);
+}
+
+/* Panels wrap (stack) in narrow windows instead of overflowing; the body then scrolls. */
+.body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Header, toolbar, tips, drawer and status bar keep their height; when the header wraps in a narrow window the
+   body gives up the space instead of the header collapsing over it. */
+.chrome {
+  flex: none;
+}
+
+.center {
+  display: flex;
+  flex: 999 1 480px;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--ph-s-3);
+}
+
+.tempo {
+  color: var(--ph-muted);
+  font-family: var(--ph-font-mono);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.mixer {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.library {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Settings: a minimal title bar — a transparent window-drag strip over the layout's top padding (clear of the
+   macOS traffic lights), plus Done when Settings is a route in the main window. */
+.settingsPage {
+  position: relative;
+}
+
+.settingsHeader {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  box-sizing: border-box;
+  height: 40px;
+  padding: 6px 16px 0 var(--ph-titlebar-inset);
+}
+
+/* Heading for screen readers where the design shows none (every screen has one h1). */
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Library header with no open project: the "Library" title stands where the view tabs would be. */
+.libraryTitle {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  margin: 0;
+  padding: 0 14px;
+  border-radius: var(--ph-r-md);
+  background: var(--ph-raised);
+  color: var(--ph-text);
+  font: inherit;
+  font-weight: 600;
+}
+
+.boot {
+  height: 100%;
+  background: var(--ph-bg);
+}

@@ -1,0 +1,78 @@
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ph-s-5);
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 14px;
+  border: 2px solid var(--ph-line);
+  border-radius: var(--ph-r-xl);
+  background: var(--ph-panel);
+  color: var(--ph-text);
+  font: var(--ph-text-body);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--ph-dur-fast) var(--ph-ease),
+    box-shadow var(--ph-dur-fast) var(--ph-ease);
+}
+
+.card:hover {
+  border-color: var(--ph-grid-strong);
+}
+
+.card[data-selected],
+.card[data-selected]:hover {
+  border-color: var(--ph-accent);
+  box-shadow: var(--ph-shadow-card);
+}
+
+.preview {
+  display: block;
+  padding: var(--ph-s-4);
+  border-radius: 9px;
+  background: var(--ph-sunken);
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.name {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.description {
+  color: var(--ph-muted);
+  font-size: 12.5px;
+  text-wrap: pretty;
+}
+
+.meta {
+  display: flex;
+  gap: var(--ph-s-2);
+}
+
+.check {
+  position: absolute;
+  top: var(--ph-s-4);
+  right: var(--ph-s-4);
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--ph-accent);
+  color: var(--ph-accent-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+}

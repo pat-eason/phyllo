@@ -1,0 +1,357 @@
+/* ---- page: nav column + content ---- */
+.root {
+  display: flex;
+  flex-wrap: wrap;
+  min-height: 100vh;
+  background: var(--ph-bg);
+  color: var(--ph-text);
+  font: var(--ph-text-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Stretches to the page height so the chrome fill and divider run the full length; the nav inside sticks. */
+.navColumn {
+  flex: 1 1 240px;
+  box-sizing: border-box;
+  border-right: 1px solid var(--ph-line);
+  background: var(--ph-chrome);
+}
+
+.nav {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-sizing: border-box;
+  padding: 56px var(--ph-s-5) var(--ph-s-7);
+}
+
+.navTitle {
+  margin: 0 var(--ph-s-4) var(--ph-s-6);
+  font: var(--ph-text-title);
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: -0.015em;
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 var(--ph-s-5);
+  border-radius: 9px;
+  color: var(--ph-muted);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.navLink:hover {
+  color: var(--ph-text);
+}
+
+.navLink[aria-current="true"] {
+  background: var(--ph-sel);
+  color: var(--ph-text);
+}
+
+.main {
+  flex: 999 1 640px;
+  box-sizing: border-box;
+  min-width: 0;
+  padding: var(--ph-s-10) var(--ph-s-10) 48px;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 860px;
+}
+
+/* ---- sections ---- */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ph-s-5);
+  /* Anchor scrolling stops a little below the top edge. */
+  scroll-margin-top: var(--ph-s-8);
+}
+
+.sectionHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--ph-s-3);
+}
+
+.sectionText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font: var(--ph-text-heading);
+}
+
+.sectionDescription {
+  color: var(--ph-muted);
+}
+
+.inlineCode {
+  font-family: var(--ph-font-mono);
+}
+
+/* Group card: rows separated by soft dividers. */
+.group {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--ph-line);
+  border-radius: var(--ph-r-xl);
+  background: var(--ph-panel);
+}
+
+.groupPadded {
+  gap: var(--ph-s-5);
+  padding: 14px var(--ph-s-6);
+}
+
+.controlRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--ph-s-4);
+}
+
+.readout {
+  min-width: 52px;
+  color: var(--ph-muted);
+  font: var(--ph-text-code);
+  text-align: right;
+}
+
+.note {
+  margin: 0;
+  color: var(--ph-muted);
+  font: var(--ph-text-small);
+}
+
+.pathText {
+  max-width: 340px;
+  overflow: hidden;
+  font: var(--ph-text-code);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- tables (MIDI devices, shortcuts) ---- */
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--ph-line);
+  border-radius: var(--ph-r-xl);
+  background: var(--ph-panel);
+}
+
+.table {
+  width: 100%;
+  min-width: 620px;
+  border-collapse: collapse;
+}
+
+.table th {
+  padding: var(--ph-s-5) var(--ph-s-3);
+  border-bottom: 1px solid var(--ph-line);
+  color: var(--ph-muted);
+  font: var(--ph-text-label);
+  letter-spacing: 0.08em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.table td {
+  padding: var(--ph-s-5) var(--ph-s-3);
+  border-bottom: 1px solid var(--ph-line-soft);
+  vertical-align: middle;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.table th:first-child,
+.table td:first-child {
+  padding-inline-start: var(--ph-s-6);
+}
+
+.table th:last-child,
+.table td:last-child {
+  padding-inline-end: var(--ph-s-6);
+  text-align: right;
+}
+
+.cellStack {
+  display: flex;
+  flex-direction: column;
+}
+
+.cellName {
+  font-weight: 600;
+}
+
+.cellSub {
+  color: var(--ph-muted);
+  font-size: 11.5px;
+}
+
+.cellMuted {
+  color: var(--ph-muted);
+}
+
+.cellCode {
+  color: var(--ph-muted);
+  font-family: var(--ph-font-mono);
+  font-size: 11px;
+}
+
+.emptyCell {
+  padding: var(--ph-s-7) var(--ph-s-6);
+  color: var(--ph-muted);
+  text-align: center;
+}
+
+.tableWrap .table td.emptyCell {
+  text-align: center;
+}
+
+.fieldRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ph-s-5);
+}
+
+.field {
+  width: 150px;
+}
+
+.fieldPort {
+  width: 100px;
+}
+
+.mapSummary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ph-s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mapChip {
+  padding: 2px var(--ph-s-3);
+  border-radius: var(--ph-r-md);
+  background: var(--ph-raised);
+  font: var(--ph-text-code);
+  line-height: 1.6;
+}
+
+/* ---- sample folders ---- */
+.folderList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ph-s-3);
+}
+
+.folderRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ph-s-3) 14px;
+  padding: var(--ph-s-5) var(--ph-s-6);
+  border: 1px solid var(--ph-line);
+  border-radius: var(--ph-r-xl);
+  background: var(--ph-panel);
+}
+
+.folderPath {
+  flex: 1 1 220px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-family: var(--ph-font-mono);
+  font-size: 12.5px;
+}
+
+.folderCount {
+  color: var(--ph-muted);
+}
+
+.folderStatus {
+  color: var(--ph-accent-text);
+  font-weight: 600;
+}
+
+.linkButton {
+  align-self: flex-start;
+}
+
+/* ---- offline sounds ---- */
+.progress {
+  display: flex;
+  flex: 1 1 100%;
+  flex-direction: column;
+  gap: var(--ph-s-2);
+}
+
+.progressTrack {
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--ph-r-full);
+  background: var(--ph-sunken);
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: var(--ph-r-full);
+  background: var(--ph-accent);
+  transition: width var(--ph-dur-fast) var(--ph-ease);
+}
+
+.error {
+  margin: 0;
+  color: var(--ph-rec-text);
+  font: var(--ph-text-small);
+}
+
+/* ---- shortcuts ---- */
+.shortcutGroup {
+  margin: 0;
+  color: var(--ph-muted);
+  font: var(--ph-text-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.shortcutKeys {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--ph-s-2);
+  justify-content: flex-end;
+}
+
+.shortcutTable {
+  min-width: 0;
+}
+
+.shortcutTable td {
+  padding-block: var(--ph-s-3);
+}
+
+.shortcutCaption {
+  padding: var(--ph-s-5) var(--ph-s-6) 0;
+  color: var(--ph-text);
+  font: var(--ph-text-subheading);
+  text-align: left;
+}

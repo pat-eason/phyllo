@@ -1,0 +1,437 @@
+/* Timeline (organisms/Timeline.md). Geometry comes from --bar-w / --song-w set on the root. */
+
+.root {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  background: var(--ph-bg);
+  color: var(--ph-text);
+  overscroll-behavior: contain;
+}
+
+.content {
+  position: relative;
+  width: max-content;
+}
+
+/* ── Ruler ───────────────────────────────────────────────────────────────── */
+
+.ruler {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  border-bottom: 1px solid var(--ph-line);
+  background: var(--ph-chrome);
+}
+
+.rulerCorner {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  flex: none;
+  align-items: flex-end;
+  box-sizing: border-box;
+  width: var(--ph-track-header-w);
+  padding: 0 12px 6px;
+  border-right: 1px solid var(--ph-line);
+  background: var(--ph-chrome);
+  color: var(--ph-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.rulerTrack {
+  position: relative;
+  flex: none;
+  width: var(--song-w);
+  height: 50px;
+  cursor: text;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.sections {
+  position: absolute;
+  top: 4px;
+  right: 0;
+  left: 0;
+  height: 22px;
+}
+
+.sectionSlot {
+  position: absolute;
+  top: 0;
+  box-sizing: border-box;
+  height: 22px;
+  padding: 0 2px;
+}
+
+.loopBand {
+  position: absolute;
+  top: 30px;
+  box-sizing: border-box;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-top: 2px solid var(--ph-accent);
+  background: var(--ph-accent-soft);
+  /* The body passes clicks through to the ruler (seek); only the grip and the edges edit the loop. */
+  pointer-events: none;
+  touch-action: none;
+}
+
+/* Hit strip over the top border (plus a little above it, in the gap under the section chips). */
+.loopGrip {
+  position: absolute;
+  top: -5px;
+  right: 3px;
+  left: 3px;
+  height: 8px;
+  cursor: grab;
+  pointer-events: auto;
+}
+
+.loopBand[data-dragging] .loopGrip {
+  cursor: grabbing;
+}
+
+.loopBand:focus-visible {
+  outline: 2px solid var(--ph-accent);
+  outline-offset: 1px;
+}
+
+.loopEdge {
+  position: absolute;
+  top: -5px;
+  bottom: 0;
+  width: 6px;
+  cursor: ew-resize;
+  pointer-events: auto;
+}
+
+.loopEdge[data-edge="start"] {
+  left: -3px;
+}
+
+.loopEdge[data-edge="end"] {
+  right: -3px;
+}
+
+.barNumber {
+  position: absolute;
+  top: 33px;
+  padding-left: 4px;
+  border-left: 1px solid var(--ph-grid-strong);
+  color: var(--ph-muted);
+  font-family: var(--ph-font-mono);
+  font-size: 10.5px;
+  line-height: 14px;
+  pointer-events: none;
+}
+
+/* Marker in the (sticky) ruler: triangle plus the line's top segment. */
+.playheadMarker {
+  position: absolute;
+  top: 26px;
+  bottom: 0;
+  left: -6px;
+  z-index: 1;
+  width: 12px;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.playheadMarker::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 12px;
+  height: 10px;
+  background: var(--ph-text);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+
+.playheadMarker::after {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 0;
+  left: 5px;
+  width: 2px;
+  background: var(--ph-text);
+}
+
+/* ── Lanes ───────────────────────────────────────────────────────────────── */
+
+.lanes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lane {
+  display: flex;
+  box-sizing: border-box;
+  /* Fixed row height (LANE_ROW_PX in useLaneRange.ts): virtualized lists place spacers by it. */
+  height: calc(var(--ph-lane-h) + 1px);
+  border-bottom: 1px solid var(--ph-line);
+}
+
+.laneGap {
+  display: block;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lane[data-selected] {
+  background: var(--ph-sel);
+}
+
+.header {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  flex: none;
+}
+
+/* Selected clips show no edge grips (mockup 01); hover, focus and drags still do. Clip draws them on selection. */
+.clipSlot > :global(button[data-selected]:not(:hover, :focus-visible, [data-dragging])) > :global(span[data-edge])::after {
+  opacity: 0;
+}
+
+/* Tip anchors live on TrackHeader's Mute/Solo, outlined while TipCoach "Show me" points at them. */
+.header :global([data-tip-active]) {
+  outline: 2px solid var(--ph-accent);
+  outline-offset: 2px;
+  animation: tip-pulse 1.2s var(--ph-ease) infinite;
+}
+
+@keyframes tip-pulse {
+  50% {
+    outline-offset: 5px;
+    outline-color: color-mix(in srgb, var(--ph-accent) 40%, transparent);
+  }
+}
+
+.clipLane {
+  position: relative;
+  flex: none;
+  width: var(--song-w);
+  background-image:
+    linear-gradient(90deg, var(--ph-grid-strong) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ph-grid) 1px, transparent 1px);
+  background-size:
+    calc(var(--bar-w) * 4) 100%,
+    var(--bar-w) 100%;
+  touch-action: none;
+  outline: none;
+}
+
+.clipLane[data-tool="draw"] {
+  cursor: crosshair;
+}
+
+.clipLane[data-tool="split"] .clipSlot > button {
+  cursor: col-resize;
+}
+
+.lane[data-drop] .clipLane {
+  background-color: var(--ph-accent-soft);
+  box-shadow: inset 0 0 0 2px var(--ph-accent);
+}
+
+.clipSlot {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  box-sizing: border-box;
+  padding: 0 1px;
+}
+
+.ghost {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  box-sizing: border-box;
+  border: 1px dashed var(--ph-text);
+  border-radius: var(--ph-r-sm);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.empty {
+  position: sticky;
+  left: 0;
+  box-sizing: border-box;
+  max-width: calc(100vw - 16px);
+  margin: 8px;
+}
+
+/* ── Add track ───────────────────────────────────────────────────────────── */
+
+.addRow {
+  position: relative;
+  display: flex;
+  height: 44px;
+  border-bottom: 1px solid var(--ph-line);
+}
+
+.addButton {
+  display: flex;
+  flex: 1;
+  align-items: stretch;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ph-muted);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.addButton:focus-visible {
+  outline: 2px solid var(--ph-accent);
+  outline-offset: -2px;
+}
+
+.addLabel {
+  position: sticky;
+  left: 0;
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  width: var(--ph-track-header-w);
+  padding: 0 14px;
+  border-right: 1px solid var(--ph-line);
+  background: var(--ph-bg);
+  font-weight: 600;
+}
+
+.addButton:hover .addLabel {
+  color: var(--ph-text);
+}
+
+.dropHint {
+  display: flex;
+  flex: none;
+  align-items: center;
+  box-sizing: border-box;
+  width: calc(var(--song-w) - 12px);
+  margin: 6px;
+  padding: 0 14px;
+  border: 1px dashed var(--ph-line);
+  border-radius: 8px;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition:
+    border-color var(--ph-dur-fast) var(--ph-ease),
+    background-color var(--ph-dur-fast) var(--ph-ease);
+}
+
+.addButton:hover .dropHint {
+  border-color: var(--ph-muted);
+}
+
+.addRow[data-drop] .dropHint {
+  border-color: var(--ph-accent);
+  background: var(--ph-accent-soft);
+  color: var(--ph-accent-text);
+}
+
+.menu {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 8px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 220px;
+  padding: 4px;
+  border: 1px solid var(--ph-line);
+  border-radius: var(--ph-r-md);
+  background: var(--ph-panel);
+  box-shadow: var(--ph-shadow-card);
+  outline: none;
+}
+
+.menuItem {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  margin: 0;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: var(--ph-r-sm);
+  background: transparent;
+  color: var(--ph-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menuItem:hover,
+.menuItem:focus-visible {
+  background: var(--ph-raised);
+  outline: none;
+}
+
+.menuItem:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--ph-accent);
+}
+
+.menuLabel {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.menuHint {
+  color: var(--ph-muted);
+  font-size: 11.5px;
+}
+
+/* ── Playhead ────────────────────────────────────────────────────────────── */
+
+.playheadLayer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--ph-track-header-w);
+  z-index: 1;
+  width: var(--song-w);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.playheadLine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -1px;
+  width: 2px;
+  background: var(--ph-text);
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header :global([data-tip-active]) {
+    animation: none;
+  }
+
+  .dropHint {
+    transition: none;
+  }
+}

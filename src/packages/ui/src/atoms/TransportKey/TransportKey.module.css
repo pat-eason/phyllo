@@ -1,0 +1,118 @@
+.key {
+  /* In the red accent theme record shifts to magenta so it stays distinct from the accent (SPEC 2.3).
+     tokens.css has no such token, so it is a local override. Dark/light follow color-scheme. */
+  --key-rec: var(--ph-rec);
+  --key-rec-ink: var(--ph-rec-ink);
+
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ph-r-md);
+  background: transparent;
+  color: var(--ph-text);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background var(--ph-dur-fast) var(--ph-ease),
+    color var(--ph-dur-fast) var(--ph-ease),
+    box-shadow var(--ph-dur-fast) var(--ph-ease),
+    transform var(--ph-dur-fast) var(--ph-ease);
+}
+
+:global([data-accent="red"]) .key {
+  --key-rec: light-dark(#c2336a, #e0457b);
+  --key-rec-ink: light-dark(#ffffff, #1a0a07);
+}
+
+/* ---- sizes ---- */
+.key[data-size="lg"] {
+  width: 44px;
+  height: 44px;
+}
+
+.key[data-kind="play"] {
+  width: 44px;
+}
+
+.key[data-kind="play"][data-size="lg"] {
+  width: 52px;
+}
+
+/* ---- looks ---- */
+.key:hover:not(:disabled) {
+  background: var(--ph-raised);
+}
+
+.key[data-kind="play"] {
+  background: var(--ph-accent);
+  color: var(--ph-accent-ink);
+  box-shadow: var(--ph-shadow-key);
+}
+
+.key[data-kind="play"]:hover:not(:disabled) {
+  background: var(--ph-accent);
+  filter: brightness(1.04);
+}
+
+.key[data-kind="record"] {
+  color: var(--key-rec);
+}
+
+.key[data-kind="record"][data-active],
+.key[data-kind="record"][data-active]:hover:not(:disabled) {
+  background: var(--key-rec);
+  color: var(--key-rec-ink);
+  animation: pulse 1.8s ease-in-out infinite;
+}
+
+.key[data-kind="loop"] {
+  color: var(--ph-muted);
+}
+
+.key[data-kind="loop"][data-active],
+.key[data-kind="loop"][data-active]:hover:not(:disabled) {
+  background: var(--ph-accent-soft);
+  color: var(--ph-accent-text);
+}
+
+/* ---- pressed: nudge down, inner shadow only ---- */
+.key:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: var(--ph-shadow-inset);
+}
+
+.key:disabled {
+  opacity: 0.5;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--key-rec) 45%, transparent);
+  }
+
+  50% {
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--key-rec) 0%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .key {
+    transition: none;
+  }
+
+  .key:active:not(:disabled) {
+    transform: none;
+  }
+
+  .key[data-kind="record"][data-active],
+  .key[data-kind="record"][data-active]:hover:not(:disabled) {
+    animation: none;
+  }
+}

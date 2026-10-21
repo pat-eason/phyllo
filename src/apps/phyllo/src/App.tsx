@@ -1,37 +1,16 @@
-import { useState } from "react";
-import { play, stop } from "@phyllo/engine";
-import "./App.css";
+import styles from "./App.module.css";
+import { AppShell, SettingsWindow } from "./ui/shell";
+import type { AppShellProps } from "./ui/shell";
 
-const DEMO = 'note("c3 [e3,g3] a2 [f3,a3]").s("sawtooth").lpf(800).slow(2)';
-
-function App() {
-  const [playing, setPlaying] = useState(false);
-  const [error, setError] = useState<string>();
-
-  async function toggle() {
-    try {
-      setError(undefined);
-      if (playing) {
-        stop();
-        setPlaying(false);
-      } else {
-        await play(DEMO);
-        setPlaying(true);
-      }
-    } catch (e) {
-      setError(String(e));
-    }
-  }
-
-  return (
-    <main className="container">
-      <h1>Phyllo</h1>
-      <button type="button" onClick={toggle}>
-        {playing ? "Stop" : "Play"}
-      </button>
-      {error && <pre>{error}</pre>}
-    </main>
-  );
+export interface AppProps extends AppShellProps {
+  /**
+   * This window shows only Settings: the desktop Settings window (label ≠ `main`) or the browser's `#/settings`
+   * popup. Decided once at launch (main.tsx). Default false.
+   */
+  settingsOnly?: boolean;
 }
 
-export default App;
+/** Root component; render under `<PhylloProvider>` and `<AppThemeProvider>`. */
+export function App({ settingsOnly = false, ...shellProps }: AppProps) {
+  return <div className={styles["app"]}>{settingsOnly ? <SettingsWindow /> : <AppShell {...shellProps} />}</div>;
+}

@@ -1,0 +1,60 @@
+.toast {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  gap: 10px;
+  width: 340px;
+  max-width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--ph-line);
+  border-radius: 14px;
+  background: var(--ph-raised);
+  box-shadow: var(--ph-shadow-card);
+  color: var(--ph-text);
+}
+
+.errorTile,
+.tile {
+  flex: none;
+}
+
+.text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.title {
+  font: 700 13px/1.35 var(--ph-font-ui);
+}
+
+.detail {
+  overflow: hidden;
+  color: var(--ph-muted);
+  font: 400 12px/1.35 var(--ph-font-ui);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Reveal is a flat 28 px outline button (Kit). Toast.md says "Button(secondary sm)", whose gradient and bevel the
+   Kit does not draw here; the Kit is the visual target, so those are flattened. [data-variant] outranks the
+   Button's own variant rules, including :active. */
+.toast .action[data-variant] {
+  flex: none;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--ph-line);
+  border-radius: var(--ph-r-md);
+  background: transparent;
+  box-shadow: none;
+}
+
+.toast .action[data-variant]:hover:not(:disabled) {
+  background: var(--ph-sel);
+  filter: none;
+}
+
+.toast .action[data-variant]:active:not(:disabled) {
+  box-shadow: none;
+}

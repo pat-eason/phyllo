@@ -1,0 +1,409 @@
+/* Inspector (organisms/Inspector.md): right column, walnut cheek right, own scroll. */
+.inspector {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 var(--ph-inspector-w);
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  /* 16 32 16 16 in the doc includes the 16 px cheek, which the panel already pads for. */
+  padding: var(--ph-s-6);
+}
+
+/* ---- header ---- */
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--ph-s-5);
+}
+
+.tile {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--ph-r-lg);
+}
+
+.titles {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.name {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.nameButton {
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ph-r-xs);
+  background: none;
+  color: var(--ph-text);
+  font: inherit;
+  text-align: left;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  cursor: text;
+}
+
+.nameButton:focus-visible {
+  outline: 2px solid var(--ph-accent);
+  outline-offset: 2px;
+}
+
+.renameField {
+  width: 100%;
+}
+
+.friendly {
+  overflow: hidden;
+  font: var(--ph-text-small);
+  color: var(--ph-muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ---- sections ---- */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ph-s-3);
+  min-width: 0;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ph-s-3);
+  min-height: 14px;
+}
+
+.legend {
+  margin: 0;
+  font: var(--ph-text-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ph-legend);
+}
+
+.codeLabel {
+  font-family: var(--ph-font-mono);
+  font-size: 11px;
+  color: var(--ph-muted);
+}
+
+.note {
+  margin: 0;
+  padding: var(--ph-s-4) var(--ph-s-5);
+  border: 1px dashed var(--ph-line);
+  border-radius: 9px;
+  font: var(--ph-text-small);
+  color: var(--ph-muted);
+}
+
+.rawCode {
+  margin: 0;
+  padding: var(--ph-s-4) var(--ph-s-5);
+  border: 1px solid var(--ph-line);
+  border-radius: 9px;
+  background: var(--ph-bg);
+  font: var(--ph-text-code);
+  color: var(--ph-text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ---- sound picker ---- */
+.anchor {
+  position: relative;
+  display: block;
+}
+
+.sectionHead .anchor {
+  display: inline-flex;
+}
+
+.picker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ph-s-3);
+  width: 100%;
+  height: 38px;
+  padding: 0 var(--ph-s-5);
+  border: 1px solid var(--ph-line);
+  border-radius: 9px;
+  background: var(--ph-bg);
+  color: var(--ph-text);
+  font-family: var(--ph-font-mono);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.picker:hover {
+  border-color: var(--ph-muted);
+}
+
+.picker:focus-visible {
+  outline: 2px solid var(--ph-accent);
+  outline-offset: 2px;
+}
+
+.pickerCode {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ---- search popover (sound picker, + modifier) ---- */
+.popover {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + var(--ph-s-1));
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ph-s-3);
+  min-width: 248px;
+  padding: var(--ph-s-3);
+  border: 1px solid var(--ph-line);
+  border-radius: var(--ph-r-xl);
+  background: var(--ph-panel);
+  box-shadow: var(--ph-shadow-card);
+}
+
+.sectionHead .popover {
+  left: auto;
+  right: 0;
+  width: 256px;
+}
+
+.popoverList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 280px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.popoverItem {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  width: 100%;
+  padding: var(--ph-s-2) var(--ph-s-3);
+  border: 0;
+  border-radius: var(--ph-r-md);
+  background: none;
+  color: var(--ph-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.popoverItem:hover,
+.popoverItem:focus-visible {
+  background: var(--ph-sel);
+}
+
+.popoverItem:focus-visible {
+  outline: 2px solid var(--ph-accent);
+  outline-offset: -2px;
+}
+
+.popoverItem[aria-current="true"] {
+  background: var(--ph-accent-soft);
+}
+
+.popoverCode {
+  font-family: var(--ph-font-mono);
+  font-size: 12px;
+}
+
+.popoverText {
+  font: var(--ph-text-small);
+  color: var(--ph-muted);
+}
+
+.popoverEmpty {
+  padding: var(--ph-s-3);
+  font: var(--ph-text-small);
+  color: var(--ph-muted);
+}
+
+/* ---- pattern ---- */
+.patternWrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ph-s-2);
+  border-radius: var(--ph-r-lg);
+}
+
+.engineError {
+  margin: 0;
+  font: var(--ph-text-small);
+  color: var(--ph-rec-text);
+}
+
+/* ---- knobs ---- */
+.plate {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ph-s-5) var(--ph-s-2);
+  padding: 14px var(--ph-s-3) var(--ph-s-4);
+}
+
+.plate[data-columns="4"] {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.knobCell {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+.paramKnob {
+  border-radius: var(--ph-r-lg);
+}
+
+.ccBadge {
+  display: block;
+  width: max-content;
+  margin: 2px auto 0;
+  padding: 0 var(--ph-s-1);
+  border: 1px solid var(--ph-line);
+  border-radius: var(--ph-r-sm);
+  background: var(--ph-bg);
+  font-family: var(--ph-font-mono);
+  font-size: 9.5px;
+  line-height: 14px;
+  color: var(--ph-muted);
+}
+
+.valueEntry {
+  position: absolute;
+  z-index: 5;
+  left: 50%;
+  bottom: 0;
+  width: 96px;
+  transform: translateX(-50%);
+}
+
+.valueField {
+  width: 100%;
+}
+
+.unit {
+  font-family: var(--ph-font-mono);
+  font-size: 11px;
+  color: var(--ph-muted);
+}
+
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ph-s-3);
+  padding: var(--ph-s-4) var(--ph-s-5);
+  border: 1px solid var(--ph-modulated);
+  border-radius: 9px;
+  background: var(--ph-panel);
+}
+
+.confirmText {
+  margin: 0;
+  font: var(--ph-text-small);
+  color: var(--ph-text);
+}
+
+.confirmValue {
+  display: block;
+  font-family: var(--ph-font-mono);
+  color: var(--ph-muted);
+}
+
+.confirmActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--ph-s-3);
+}
+
+/* ---- try one ---- */
+.suggestions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ph-s-2);
+}
+
+.more {
+  align-self: flex-start;
+}
+
+/* ---- modifiers ---- */
+.modifiers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ph-s-3);
+  border-radius: var(--ph-r-lg);
+}
+
+.modifiers[data-dropping] {
+  outline: 2px dashed var(--ph-accent);
+  outline-offset: 4px;
+}
+
+.emptyMods {
+  margin: 0;
+  padding: var(--ph-s-4) var(--ph-s-5);
+  border: 1px dashed var(--ph-line);
+  border-radius: 9px;
+  font: var(--ph-text-small);
+  color: var(--ph-muted);
+}
+
+/* ---- tips "Show me" ---- */
+[data-tip-highlight] {
+  outline: 2px solid var(--ph-accent);
+  outline-offset: 4px;
+  animation: tip-pulse 1.2s var(--ph-ease) infinite;
+}
+
+@keyframes tip-pulse {
+  0%,
+  100% {
+    outline-color: var(--ph-accent);
+  }
+  50% {
+    outline-color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-tip-highlight] {
+    animation: none;
+  }
+}

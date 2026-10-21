@@ -1,0 +1,77 @@
+.note {
+  margin: 0;
+  color: var(--ph-muted);
+  font: var(--ph-text-small);
+}
+
+.error {
+  margin: 0;
+  color: var(--ph-rec-text);
+  font: var(--ph-text-small);
+}
+
+.versions {
+  display: flex;
+  flex-direction: column;
+  max-height: 360px;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+  border: 1px solid var(--ph-line);
+  border-radius: 12px;
+}
+
+.version {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ph-s-3);
+  padding: var(--ph-s-2) var(--ph-s-3);
+}
+
+.version + .version {
+  border-top: 1px solid var(--ph-line);
+}
+
+.versionTime {
+  display: flex;
+  align-items: center;
+  gap: var(--ph-s-2);
+  font-family: var(--ph-font-mono);
+  font-size: 13px;
+}
+
+.latest {
+  padding: 1px 6px;
+  border-radius: 7px;
+  background: var(--ph-accent-soft);
+  color: var(--ph-accent-text);
+  font-family: var(--ph-font-ui);
+  font-size: 11px;
+}
+
+.shortcuts {
+  display: flex;
+  flex-direction: column;
+  max-height: 420px;
+  margin: 0;
+  overflow: auto;
+}
+
+.shortcut {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ph-s-3);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--ph-line);
+}
+
+.shortcut dt {
+  margin: 0;
+}
+
+.shortcut dd {
+  margin: 0;
+}

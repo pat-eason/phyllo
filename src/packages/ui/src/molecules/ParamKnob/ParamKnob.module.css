@@ -1,0 +1,40 @@
+.paramKnob {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 78px;
+  max-width: 100%;
+  padding: var(--ph-s-1) 0;
+  color: var(--ph-text);
+  text-align: center;
+}
+
+.legend {
+  max-width: 100%;
+  margin-top: 2px;
+  overflow: hidden;
+  font: var(--ph-text-legend);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--ph-legend);
+}
+
+.paramKnob[data-mode="pro"] .legend {
+  font-family: var(--ph-font-mono);
+}
+
+.caption {
+  max-width: 100%;
+  font-family: var(--ph-font-mono);
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--ph-muted);
+  overflow-wrap: break-word;
+}
+
+.paramKnob[data-mode="guided"] .caption {
+  white-space: nowrap;
+}

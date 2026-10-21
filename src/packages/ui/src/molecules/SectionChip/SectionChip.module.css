@@ -1,0 +1,84 @@
+.chip {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  gap: 6px;
+  min-width: 0;
+  height: 22px;
+  margin: 0;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--ph-raised);
+  color: var(--ph-text);
+  font: 600 11.5px/1 var(--ph-font-ui);
+  white-space: nowrap;
+  overflow: hidden;
+  text-align: left;
+}
+
+button.chip {
+  cursor: pointer;
+  transition:
+    background-color var(--ph-dur-fast) var(--ph-ease),
+    color var(--ph-dur-fast) var(--ph-ease);
+}
+
+button.chip:hover:not([data-current]) {
+  filter: brightness(1.08);
+}
+
+/* Inverted: the text colour becomes the chip, the ground colour becomes its text. */
+.chip[data-current] {
+  background: var(--ph-text);
+  color: var(--ph-bg);
+}
+
+.name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.range {
+  flex: none;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+/*
+ * dropRangeFirst: the chip wraps, each part sits on its own 22 px line and the clipped second line is hidden, so a
+ * narrow chip loses its bar range before its name is truncated. The range may run into the right padding.
+ */
+.chip[data-drop-range] {
+  flex-wrap: wrap;
+  align-content: flex-start;
+  width: 100%;
+}
+
+.chip[data-drop-range] > .name,
+.chip[data-drop-range] > .range {
+  line-height: 22px;
+}
+
+.chip[data-drop-range] > .range {
+  margin-right: -5px;
+}
+
+.input {
+  min-width: 4ch;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid currentcolor;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button.chip {
+    transition: none;
+  }
+}

@@ -1,0 +1,75 @@
+.cell {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-width: 26px;
+  height: 44px;
+  min-height: 26px;
+  padding: 0;
+  border: 1px solid var(--ph-line);
+  border-radius: 7px;
+  background: var(--ph-step-off);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--ph-dur-fast) var(--ph-ease),
+    border-color var(--ph-dur-fast) var(--ph-ease);
+}
+
+.cell[data-beat] {
+  background: var(--ph-step-beat);
+}
+
+.cell[data-row-selected]:not([data-on]) {
+  border-color: color-mix(in srgb, var(--ph-accent) 40%, var(--ph-line));
+}
+
+.cell:not([data-on]):not(:disabled):hover {
+  border-color: color-mix(in srgb, var(--ph-muted) 55%, var(--ph-line));
+}
+
+/* On: the fill is a layer so velocity can fade it without fading the border. */
+.cell[data-on] {
+  border-color: var(--step-color);
+}
+
+.cell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+  background: var(--step-color);
+  opacity: 0;
+  transition: opacity var(--ph-dur-fast) var(--ph-ease);
+}
+
+.cell[data-on]::before {
+  opacity: var(--step-alpha, 1);
+}
+
+/* Playhead: 2 px inner ring above the fill. */
+.cell[data-playing]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 2px var(--ph-text);
+  pointer-events: none;
+}
+
+.cell:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.cell[data-readonly] {
+  cursor: default;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cell,
+  .cell::before {
+    transition: none;
+  }
+}

@@ -12,13 +12,36 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "Phyllo",
-        "width": 800,
-        "height": 600
+        "width": 1440,
+        "height": 900,
+        "minWidth": 1100,
+        "minHeight": 720,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "backgroundThrottling": "disabled"
       }
     ],
     "security": {
-      "csp": null
+      "csp": {
+        "default-src": "'self'",
+        "script-src": "'self' 'unsafe-eval' 'wasm-unsafe-eval' data:",
+        "worker-src": "'self' data: blob:",
+        "connect-src": "'self' ipc: http://ipc.localhost asset: http://asset.localhost https://strudel.b-cdn.net https://raw.githubusercontent.com https://felixroos.github.io https://github.com https://*.githubusercontent.com",
+        "img-src": "'self' asset: http://asset.localhost data: blob:",
+        "media-src": "'self' asset: http://asset.localhost data: blob:",
+        "style-src": "'self' 'unsafe-inline'",
+        "font-src": "'self' data:",
+        "object-src": "'none'",
+        "base-uri": "'self'",
+        "form-action": "'none'"
+      },
+      "dangerousDisableAssetCspModification": ["style-src"],
+      "assetProtocol": {
+        "enable": true,
+        "scope": ["$HOME/Music/Phyllo/**"]
+      }
     }
   },
   "bundle": {
@@ -30,6 +53,32 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
+    ],
+    "fileAssociations": [
+      {
+        "ext": ["phyllo"],
+        "name": "Phyllo project",
+        "description": "Phyllo project",
+        "role": "Editor",
+        "rank": "Owner",
+        "mimeType": "application/x-phyllo+json",
+        "exportedType": {
+          "identifier": "com.phyllo.project",
+          "conformsTo": ["public.json"]
+        }
+      },
+      {
+        "ext": ["strudel"],
+        "name": "Strudel pattern",
+        "description": "Strudel pattern",
+        "role": "Editor",
+        "rank": "Default",
+        "mimeType": "text/x-strudel",
+        "exportedType": {
+          "identifier": "com.phyllo.strudel",
+          "conformsTo": ["public.plain-text"]
+        }
+      }
     ]
   }
 }

@@ -1,0 +1,44 @@
+/* ViewToolbar (organisms/ViewToolbar.md): row above the ruler. */
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  min-height: 48px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--ph-line);
+  background: var(--ph-bg);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.tools {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--ph-line);
+  border-radius: 9px;
+}
+
+.tool {
+  height: 28px;
+  border-radius: 6px;
+}
+
+.zoom {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.zoomLevel {
+  min-width: 40px;
+  color: var(--ph-muted);
+  font-family: var(--ph-font-mono);
+  font-size: 11px;
+  text-align: center;
+}
