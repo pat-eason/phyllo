@@ -12,6 +12,10 @@ const CODES: ReadonlySet<string> = new Set<NativeErrorCode>([
   'osc',
   'unsupported_format',
   'encode',
+  'menu',
+  'window',
+  'tray',
+  'notification',
   'internal',
   'unknown',
 ]);

@@ -17,6 +17,10 @@ export type NativeErrorCode =
   | 'osc'
   | 'unsupported_format'
   | 'encode'
+  | 'menu'
+  | 'window'
+  | 'tray'
+  | 'notification'
   | 'internal'
   /** The command never reached Rust, or rejected with something that is not `{ code, message }`. */
   | 'unknown';
@@ -263,6 +267,103 @@ export interface MidiFileResult {
   bytes: number;
 }
 
+// ── System integration (SPEC §5, §6.6 System, §7) ──────────────────────────
+
+/**
+ * Every custom item of the native menu bar, with its accelerator (muda syntax, `CmdOrCtrl` = ⌘ on macOS, Ctrl
+ * elsewhere). Mirrors `ACTIONS` in `src-tauri/src/menu.rs`; a test parses that file to keep the two equal.
+ *
+ * In the desktop app the menu owns these accelerators: a click or key emits `menu://action` to the main window, so
+ * JS must not also bind them (it would run twice). In the browser there is no menu; a keyboard layer can map the
+ * accelerators to the same ids. `native: true` items are handled by Rust and never arrive as events.
+ * Transport items have no accelerator on purpose: Space / Enter / L / R are JS-handled with focus checks (SPEC §7).
+ */
+export const MENU_ACTIONS = {
+  'app.settings': { accelerator: 'CmdOrCtrl+,', native: true },
+  'app.quit': { accelerator: 'CmdOrCtrl+Q', native: true },
+  'file.new': { accelerator: 'CmdOrCtrl+N', native: false },
+  'file.open': { accelerator: 'CmdOrCtrl+O', native: false },
+  'file.save': { accelerator: 'CmdOrCtrl+S', native: false },
+  'file.saveAs': { accelerator: 'Shift+CmdOrCtrl+S', native: false },
+  'file.history': { accelerator: null, native: false },
+  'file.import': { accelerator: null, native: false },
+  'file.export': { accelerator: 'CmdOrCtrl+E', native: false },
+  'file.recent.clear': { accelerator: null, native: false },
+  'view.arrange': { accelerator: 'CmdOrCtrl+1', native: false },
+  'view.pattern': { accelerator: 'CmdOrCtrl+2', native: false },
+  'view.mixer': { accelerator: 'CmdOrCtrl+3', native: false },
+  'view.library': { accelerator: 'Shift+CmdOrCtrl+L', native: false },
+  'view.codeDrawer': { accelerator: 'CmdOrCtrl+/', native: false },
+  'view.uiMode': { accelerator: 'Shift+CmdOrCtrl+G', native: false },
+  'view.theme.dark': { accelerator: null, native: false },
+  'view.theme.light': { accelerator: null, native: false },
+  'view.theme.system': { accelerator: null, native: false },
+  'transport.playPause': { accelerator: null, native: false },
+  'transport.stop': { accelerator: null, native: false },
+  'transport.backToStart': { accelerator: null, native: false },
+  'transport.loop': { accelerator: null, native: false },
+  'transport.record': { accelerator: null, native: false },
+  'window.main': { accelerator: null, native: true },
+  'help.shortcuts': { accelerator: null, native: false },
+  'help.strudel': { accelerator: null, native: false },
+} as const satisfies Record<string, { accelerator: string | null; native: boolean }>;
+
+/** Sent with `path` when an entry of File › Open Recent is chosen. */
+export const MENU_OPEN_RECENT = 'file.openRecent';
+
+export type MenuItemId = keyof typeof MENU_ACTIONS;
+export type MenuActionId = MenuItemId | typeof MENU_OPEN_RECENT;
+
+/** `menu://action`, delivered to the main window (menu bar and tray menu alike). */
+export interface MenuActionEvent {
+  id: MenuActionId;
+  /** Only for `file.openRecent`. */
+  path?: string;
+}
+
+/** Partial update of one menu item; omitted fields stay as they are. `checked` only applies to check items. */
+export interface MenuItemState {
+  id: MenuItemId;
+  enabled?: boolean;
+  checked?: boolean;
+  /** New label, e.g. "Pause" for `transport.playPause` while playing. */
+  text?: string;
+}
+
+export interface RecentItem {
+  path: string;
+  /** Label shown in File › Open Recent. */
+  name: string;
+}
+
+/** `media://command`: hardware media keys / Control Center (macOS) or `navigator.mediaSession` (fallback). */
+export type MediaCommand = 'play' | 'pause' | 'toggle' | 'stop' | 'next' | 'previous';
+
+export interface MediaCommandEvent {
+  command: MediaCommand;
+}
+
+export interface NowPlaying {
+  /** Project name. */
+  title: string;
+  playing: boolean;
+}
+
+/** `app://open-files`: `.phyllo` / `.strudel` files the OS asked Phyllo to open (absolute paths). */
+export interface OpenFilesEvent {
+  paths: string[];
+}
+
+/** File extensions Phyllo is registered for (`bundle.fileAssociations`). */
+export const OPENABLE_EXTENSIONS = ['phyllo', 'strudel'] as const;
+
+export interface ExportFinishedNotification {
+  title: string;
+  body: string;
+  /** The exported file; the notification's Reveal action shows it in Finder / Explorer. */
+  path: string;
+}
+
 // ── Command and event names (single source of truth for tauri.ts and its tests) ──
 
 export const COMMANDS = {
@@ -296,6 +397,16 @@ export const COMMANDS = {
   exportFinish: 'export_finish',
   exportCancel: 'export_cancel',
   midiFileWrite: 'midi_file_write',
+  menuSetState: 'menu_set_state',
+  menuSetRecent: 'menu_set_recent',
+  openSettingsWindow: 'open_settings_window',
+  traySetEnabled: 'tray_set_enabled',
+  traySetPlaying: 'tray_set_playing',
+  appSetKeepRunning: 'app_set_keep_running',
+  mediaSetEnabled: 'media_set_enabled',
+  mediaSetNowPlaying: 'media_set_now_playing',
+  takePendingOpenFiles: 'take_pending_open_files',
+  notifyExportFinished: 'notify_export_finished',
 } as const;
 
 export const EVENTS = {
@@ -303,4 +414,13 @@ export const EVENTS = {
   samplesChanged: 'samples://changed',
   midiMessage: 'midi://message',
   midiPortsChanged: 'midi://ports-changed',
+  /** Emitted to the main window only. */
+  menuAction: 'menu://action',
+  /** Emitted to the main window only. */
+  mediaCommand: 'media://command',
+  /** Emitted to the main window only. */
+  openFiles: 'app://open-files',
 } as const;
+
+/** Prefix of the cross-window events behind `NativeApi.broadcast` (`broadcast://<channel>`). */
+export const BROADCAST_EVENT_PREFIX = 'broadcast://';

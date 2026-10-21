@@ -8,10 +8,14 @@ import { createTauriApi } from './tauri';
 export const native: NativeApi = isTauri() ? createTauriApi() : createBrowserApi();
 
 export type { NativeApi, SettingsStore } from './api';
-export { createBrowserApi } from './browser';
-export type { BrowserApiOptions } from './browser';
+export { BROADCAST_CHANNEL_NAME, SETTINGS_HASH, createBrowserApi } from './browser';
+export type { BroadcastChannelLike, BrowserApiOptions } from './browser';
+export { broadcastEventName } from './broadcast';
 export { NativeError, isNativeError, toNativeError } from './errors';
+export { createMediaSessionBridge } from './mediaSession';
+export type { MediaSessionBridge, MediaSessionLike } from './mediaSession';
 export { createTauriApi } from './tauri';
+export type { TauriApiOptions } from './tauri';
 export { DEFAULT_CHUNK_SECONDS, formatExportNotification, interleave, streamAudioBuffer } from './export';
 export type { AudioBufferLike, ExportProgress, StreamExportOptions } from './export';
 export { assignPortIds, createWebMidiBridge, parseMidiMessage } from './webmidi';

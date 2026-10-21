@@ -5,14 +5,22 @@ mod export;
 mod fsutil;
 mod history;
 mod library;
+mod media;
+mod menu;
 mod midi;
 mod midifile;
+mod notifications;
+mod open_files;
 mod osc;
 mod paths;
 mod project;
 mod samples;
 mod trash;
+mod tray;
 mod watch;
+mod windows;
+
+use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -25,15 +33,29 @@ pub fn run() {
         .manage(commands::Watchers::default())
         .manage(midi::MidiHub::default())
         .manage(osc::OscState::default())
-        .manage(export::ExportSessions::default());
+        .manage(export::ExportSessions::default())
+        .manage(menu::MenuState::default())
+        .manage(tray::TrayState::default())
+        .manage(media::MediaState::default())
+        .manage(windows::KeepRunning::default())
+        .manage(open_files::OpenFileQueue::default());
 
     // Global shortcuts exist on desktop only.
     #[cfg(desktop)]
     let builder = builder.plugin(tauri_plugin_global_shortcut::Builder::new().build());
 
-    builder
+    let app = builder
+        .on_menu_event(|app, event| menu::handle_event(app, event.id().as_ref()))
+        .on_window_event(windows::on_window_event)
         .setup(|app| {
+            let menu = menu::build(app.handle(), &app.state::<menu::MenuState>())?;
+            app.set_menu(menu)?;
             commands::start_midi(app.handle());
+            // Windows/Linux file associations launch `phyllo <file>`; macOS delivers files through `Opened` instead.
+            commands::deliver_open_files(
+                app.handle(),
+                open_files::paths_from_args(std::env::args_os()),
+            );
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -67,7 +89,34 @@ pub fn run() {
             commands::export_finish,
             commands::export_cancel,
             commands::midi_file_write,
+            commands::menu_set_state,
+            commands::menu_set_recent,
+            commands::open_settings_window,
+            commands::tray_set_enabled,
+            commands::tray_set_playing,
+            commands::app_set_keep_running,
+            commands::media_set_enabled,
+            commands::media_set_now_playing,
+            commands::take_pending_open_files,
+            commands::notify_export_finished,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application");
+
+    app.run(|app, event| match event {
+        // Finder "Open With" / double-click, including the one that launched the app (buffered until JS asks).
+        #[cfg(target_os = "macos")]
+        tauri::RunEvent::Opened { urls } => {
+            commands::deliver_open_files(app, open_files::paths_from_urls(&urls));
+        }
+        // Dock icon clicked while the main window is hidden ("keep running" hid it on close).
+        #[cfg(target_os = "macos")]
+        tauri::RunEvent::Reopen {
+            has_visible_windows: false,
+            ..
+        } => windows::show_main(app),
+        _ => {
+            let _ = app;
+        }
+    });
 }

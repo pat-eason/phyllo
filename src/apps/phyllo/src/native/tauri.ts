@@ -1,18 +1,29 @@
 import { convertFileSrc, invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
+import { emit, listen } from '@tauri-apps/api/event';
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification';
 import { revealItemInDir } from '@tauri-apps/plugin-opener';
 import { load } from '@tauri-apps/plugin-store';
 
 import type { NativeApi } from './api';
+import { broadcastEventName, isEnvelope } from './broadcast';
 import { toNativeError } from './errors';
+import {
+  type MediaSessionBridge,
+  createMediaSessionBridge,
+  defaultMediaMetadata,
+  defaultMediaSession,
+} from './mediaSession';
 import { COMMANDS, EVENTS } from './types';
 import type {
   ExportResult,
   ExportSession,
   LibraryScan,
+  MediaCommandEvent,
+  MenuActionEvent,
   MidiFileResult,
+  OpenFilesEvent,
   MidiMessageEvent,
   MidiPortInfo,
   PhylloPaths,
@@ -53,6 +64,18 @@ async function subscribe<T>(event: string, callback: (payload: T) => void) {
   }
 }
 
+/**
+ * Listen on this window only. Rust sends `menu://action`, `media://command` and `app://open-files` to the main
+ * window with `emit_to`; a global `listen` would match them in every window (its target is "any").
+ */
+async function subscribeWindow<T>(event: string, callback: (payload: T) => void) {
+  try {
+    return await getCurrentWebviewWindow().listen<T>(event, (e) => callback(e.payload));
+  } catch (err) {
+    throw toNativeError(err);
+  }
+}
+
 async function guard<T>(work: () => Promise<T>): Promise<T> {
   try {
     return await work();
@@ -61,8 +84,17 @@ async function guard<T>(work: () => Promise<T>): Promise<T> {
   }
 }
 
-export function createTauriApi(): NativeApi {
+export interface TauriApiOptions {
+  /** `navigator.mediaSession` stand-in, used where native media keys are unavailable (Windows/Linux). */
+  mediaSession?: MediaSessionBridge;
+}
+
+export function createTauriApi(options: TauriApiOptions = {}): NativeApi {
   const settings = () => load(SETTINGS_FILE, { autoSave: false });
+  const webMedia = options.mediaSession ?? createMediaSessionBridge(defaultMediaSession(), defaultMediaMetadata());
+  /** Which side answers now-playing updates: native after `media_set_enabled` returned true, else the web view. */
+  let nativeMedia = false;
+  const label = () => getCurrentWebviewWindow().label;
 
   return {
     kind: 'tauri',
@@ -122,6 +154,53 @@ export function createTauriApi(): NativeApi {
         return true;
       }),
     convertFileSrc: (path) => convertFileSrc(path),
+
+    onMenuAction: (callback) => subscribeWindow<MenuActionEvent>(EVENTS.menuAction, callback),
+    menuSetState: (item) => call<void>(COMMANDS.menuSetState, { item }),
+    menuSetRecent: (items) => call<void>(COMMANDS.menuSetRecent, { items }),
+
+    openSettingsWindow: () => call<void>(COMMANDS.openSettingsWindow),
+    broadcast: (channel, payload) =>
+      guard(async () => {
+        await emit(broadcastEventName(channel), { source: label(), payload });
+      }),
+    onBroadcast: (channel, callback) =>
+      guard(async () => {
+        const event = broadcastEventName(channel);
+        const self = label();
+        return subscribe<unknown>(event, (envelope) => {
+          if (isEnvelope(envelope) && envelope.source !== self) callback(envelope.payload);
+        });
+      }),
+
+    traySetEnabled: (enabled) => call<boolean>(COMMANDS.traySetEnabled, { enabled }),
+    traySetPlaying: (playing) => call<void>(COMMANDS.traySetPlaying, { playing }),
+    appSetKeepRunning: (keep) => call<void>(COMMANDS.appSetKeepRunning, { keep }),
+
+    mediaSetEnabled: async (enabled) => {
+      nativeMedia = (await call<boolean>(COMMANDS.mediaSetEnabled, { enabled })) === true;
+      if (nativeMedia) {
+        // Native handlers own the keys; make sure the web view's session doesn't answer too.
+        webMedia.setEnabled(false);
+        return true;
+      }
+      return webMedia.setEnabled(enabled);
+    },
+    mediaSetNowPlaying: async (info) =>
+      nativeMedia ? call<boolean>(COMMANDS.mediaSetNowPlaying, { info }) : webMedia.setNowPlaying(info),
+    onMediaCommand: async (callback) => {
+      const offNative = await subscribeWindow<MediaCommandEvent>(EVENTS.mediaCommand, callback);
+      const offWeb = webMedia.onCommand(callback);
+      return () => {
+        offNative();
+        offWeb();
+      };
+    },
+
+    takePendingOpenFiles: () => call<string[]>(COMMANDS.takePendingOpenFiles),
+    onOpenFiles: (callback) => subscribeWindow<OpenFilesEvent>(EVENTS.openFiles, callback),
+
+    notifyExportFinished: (notification) => call<boolean>(COMMANDS.notifyExportFinished, { notification }),
 
     settingsStore: {
       load: () =>
