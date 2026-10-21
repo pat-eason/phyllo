@@ -112,8 +112,8 @@ export async function renderPatternOffline(pattern: Pattern, cps: number, p: Off
 /**
  * While the context is swapped, live voices that end schedule their cleanup through superdough's global
  * context and throw "different audio context" from `onended` (and offline voices do the same once the
- * live context is back). Those cleanups only release nodes; the engine installs this window listener to
- * swallow the noise (it fires from `onended`, possibly after the render resolved).
+ * live context is back). Those cleanups only release nodes. They are stopped at the source by
+ * `guardEndedHandlers` (ended-guard.ts); this window listener is only a backstop for any that slip past.
  */
 export function suppressCrossContextErrors(e: ErrorEvent): void {
   if (/different audio context/i.test(e.message ?? "")) e.preventDefault();

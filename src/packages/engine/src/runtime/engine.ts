@@ -6,7 +6,10 @@
  *   `Cyclist` so the look-ahead is configurable (V16) and the transport (seek, loop, song end) lives in a
  *   wrapper pattern (V6) whose song pattern is swapped atomically after a strict query guard (V8).
  * - Heard playhead from the Cyclist anchors minus latency at `getOutputTimestamp` (V7).
- * - Master chain: destinationGain → [limiter] → analysers/capture → destination (V10).
+ * - Master chain: destinationGain → transport gate → [limiter + clip] → analysers/capture → destination (V10).
+ *   Stop/pause close the gate and cut superdough's voices; the limiter is on by default.
+ * - Strudel log lines meaning a hap was dropped (`[voicing]: unknown chord …`) become runtime errors on the
+ *   track whose block emits them, found by querying each block on its own while capturing logs.
  */
 import * as core from "@strudel/core";
 import {
@@ -16,6 +19,7 @@ import {
   TimeSpan,
   evalScope,
   getTrigger,
+  logger as strudelLogger,
   register,
   repl,
   reset_state,
@@ -44,9 +48,10 @@ import {
 } from "@strudel/webaudio";
 import type { EngineError, EngineStatus, GeneratedProgram, MeterLevel } from "@phyllo/model";
 import { startCaptureTap } from "./capture";
-import { attributeEvalError, attributeHapError, attributeQueryError } from "./errors";
-import type { AttributionContext } from "./errors";
-import { createMasterChain, createOrbitMeters, readMonoAnalyser, SILENT } from "./master";
+import { guardEndedHandlers } from "./ended-guard";
+import { attributeEvalError, attributeHapError, attributeLogIssue, attributeQueryError, silencingLog } from "./errors";
+import type { AttributionContext, SilencingLog } from "./errors";
+import { createMasterChain, createOrbitMeters, GATE_RAMP_SEC, readMonoAnalyser, SILENT } from "./master";
 import type { MasterChain } from "./master";
 import { hapToMidiMessages, midiPortName } from "./midi";
 import { renderPatternOffline, suppressCrossContextErrors } from "./offline";
@@ -81,6 +86,28 @@ const MAX_LOOKAHEAD_MS = 1000;
 const PRELOAD_CYCLES = 64;
 const PRELOAD_TIMEOUT_MS = 4000;
 const WATCHDOG_MS = 40;
+/** After the stop ramp, superdough's orbits are rebuilt to cut scheduled voices and reverb/delay tails. */
+const STOP_CUT_MS = Math.ceil(GATE_RAMP_SEC * 1000) + 10;
+/** Logged (silently) to reset Strudel's 1 s duplicate-message debounce around log captures. */
+const LOG_SENTINEL = "[phyllo] log capture";
+
+/**
+ * Strudel's `logger` drops a message identical to the previous one within 1 s. Logging a different message
+ * resets that, so captures see every message; console output of the sentinel is suppressed.
+ */
+function resetLogDebounce(): void {
+  const original = console.log;
+  console.log = () => undefined;
+  try {
+    strudelLogger(LOG_SENTINEL, "debug");
+  } finally {
+    console.log = original;
+  }
+}
+
+interface QueryLogCapture {
+  messages: string[];
+}
 
 interface LiveProgram {
   program: GeneratedProgram;
@@ -204,7 +231,8 @@ export function createEngine(options: EngineOptions = {}): PhylloEngine {
   let latency = clampLookahead(options.lookaheadMs ?? DEFAULT_LOOKAHEAD_MS) / 1000;
   let chain: MasterChain | undefined;
   let orbitMeters: ReturnType<typeof createOrbitMeters> | undefined;
-  let limiterOn = false;
+  /** On by default, like a new project's `master.limiter` (D46). */
+  let limiterOn = true;
   let rendering = false;
   let pendingProgram: GeneratedProgram | undefined;
   const pendingSampleNames: string[] = [];
@@ -218,7 +246,15 @@ export function createEngine(options: EngineOptions = {}): PhylloEngine {
 
   let current: LiveProgram | undefined;
   let previous: LiveProgram | undefined;
-  let runtimeErrorReported = false;
+  /** Runtime issues already reported for the current evaluation, keyed `trackId␀message` (dedupe). */
+  let reportedIssues = new Set<string>();
+  /** Silencing log messages already probed live for the current evaluation. */
+  let probedLogs = new Set<string>();
+  /** Set while a query runs whose Strudel log lines must be collected instead of probed live. */
+  let logCapture: QueryLogCapture | undefined;
+  let uninstallEndedGuard: (() => void) | undefined;
+  let stopCut: ReturnType<typeof setTimeout> | undefined;
+  let cutAfterRender = false;
 
   // transport
   let playing = false;
@@ -243,6 +279,96 @@ export function createEngine(options: EngineOptions = {}): PhylloEngine {
   const reportError = (error: EngineError) => {
     setStatus({ ok: false, evaluatedAt: status.evaluatedAt, error });
     log(`${error.kind ?? "error"}${error.trackId ? ` in ${error.trackId}` : ""}: ${error.message}`, "warn");
+  };
+
+  /**
+   * Reports a runtime issue of the playing program once per (track, message) per evaluation. The status has
+   * one error slot, so an error already showing (a newer program's eval error while the last good one keeps
+   * playing, or this evaluation's first issue) stays; later issues are only logged.
+   */
+  const reportIssue = (error: EngineError) => {
+    const key = `${error.trackId ?? ""}\u0000${error.message}`;
+    if (reportedIssues.has(key)) return;
+    reportedIssues.add(key);
+    if (!status.ok) {
+      // one error slot: keep what is showing (an eval error of newer code, or this evaluation's first issue)
+      log(`runtime${error.trackId ? ` in ${error.trackId}` : ""}: ${error.message}`, "warn");
+      return;
+    }
+    reportError(error);
+  };
+
+  /** Runs `fn` collecting every Strudel log line it emits (Strudel logs synchronously from queries). */
+  const captureLogs = (fn: () => void): string[] => {
+    const outer = logCapture;
+    const capture: QueryLogCapture = { messages: [] };
+    logCapture = capture;
+    resetLogDebounce();
+    try {
+      fn();
+    } catch {
+      // strict-query failures are handled by the guard; here only the log lines matter
+    } finally {
+      logCapture = outer;
+      resetLogDebounce();
+    }
+    outer?.messages.push(...capture.messages);
+    return capture.messages;
+  };
+
+  /**
+   * Finds which evaluated blocks emit silencing log lines over `spans` (each block queried on its own) and
+   * turns them into track-attributed runtime errors. Messages no block reproduces stay unattributed.
+   */
+  const probeIssues = (prog: LiveProgram, spans: readonly [number, number][], expected: readonly SilencingLog[]): EngineError[] => {
+    const ctxAttr = attribution(prog.program);
+    const issues: EngineError[] = [];
+    const found = new Set<string>();
+    prog.blocks.forEach((block, i) => {
+      const messages = captureLogs(() => {
+        for (const [b, e] of spans) for (let c = Math.floor(b); c < e; c++) block.queryArc(c, Math.min(c + 1, e), { _cps: prog.cps });
+      });
+      const seen = new Set<string>();
+      for (const m of messages) {
+        const s = silencingLog(m);
+        if (!s || seen.has(s.message)) continue;
+        seen.add(s.message);
+        found.add(s.message);
+        issues.push(attributeLogIssue(s, ctxAttr, i));
+      }
+    });
+    for (const s of expected) if (!found.has(s.message)) issues.push({ kind: "runtime", message: s.message });
+    return issues;
+  };
+
+  const silencingLogsOf = (messages: readonly string[]): SilencingLog[] => {
+    const out = new Map<string, SilencingLog>();
+    for (const m of messages) {
+      const s = silencingLog(m);
+      if (s && !out.has(s.message)) out.set(s.message, s);
+    }
+    return [...out.values()];
+  };
+
+  /** A silencing log line from a live (scheduler) query: find the block around the playhead, once per message. */
+  const onLiveSilencingLog = (log: SilencingLog) => {
+    if (probedLogs.has(log.message) || rendering) return;
+    probedLogs.add(log.message);
+    const program = current;
+    setTimeout(() => {
+      if (!program || program !== current) return;
+      const at = (s: number) => {
+        const seg = segmentAt(segments, s);
+        return seg ? mapCycle(seg, s).u : position;
+      };
+      const begin = at(cyclist?.lastBegin ?? 0);
+      const end = at(cyclist?.lastEnd ?? 0);
+      const spans: [number, number][] = [
+        [Math.max(0, Math.floor(begin) - 1), Math.floor(begin) + 1],
+        [Math.max(0, Math.floor(end)), Math.floor(end) + 1],
+      ];
+      for (const issue of probeIssues(program, spans, [log])) reportIssue(issue);
+    }, 0);
   };
 
   // ── transport segments ────────────────────────────────────────────────────
@@ -332,10 +458,7 @@ export function createEngine(options: EngineOptions = {}): PhylloEngine {
     try {
       await webaudioOutput(hap, deadline, duration, cps, t);
     } catch (err) {
-      if (!runtimeErrorReported && current) {
-        runtimeErrorReported = true;
-        reportError(attributeHapError(err, attribution(current.program), hap.context.locations));
-      }
+      if (current) reportIssue(attributeHapError(err, attribution(current.program), hap.context.locations));
     }
   };
 
@@ -442,25 +565,52 @@ export function createEngine(options: EngineOptions = {}): PhylloEngine {
     const pos = getCycle();
     const spans: [number, number][] = [[0, 2]];
     if (pos >= 2) spans.push([Math.floor(pos), Math.floor(pos) + 2]);
+    const scanEnd = Math.min(Number.isFinite(songLength) ? songLength : PRELOAD_CYCLES, PRELOAD_CYCLES);
+    const scanSpans: [number, number][] = [[0, Math.max(1, scanEnd)]];
+    if (pos >= scanEnd) scanSpans.push([Math.floor(pos), Math.floor(pos) + 8]);
+    if (loop.enabled && loop.start >= scanEnd) scanSpans.push([loop.start, loop.end]);
+
+    // The guard and the preload scan query the new song; collect the log lines they emit (SPEC §4.4: logs like
+    // `[voicing]: unknown chord` mean a track is silent and must show as an error).
+    const scanLog: QueryLogCapture = { messages: [] };
+    const outerCapture = logCapture;
+    logCapture = scanLog;
+    resetLogDebounce();
+    let guardError: { err: unknown } | undefined;
+    const requests: ReturnType<typeof soundsInRange> = [];
     try {
-      for (const [b, e] of spans) strictQuery(pattern, b, e, cps);
-    } catch (err) {
+      try {
+        for (const [b, e] of spans) strictQuery(pattern, b, e, cps);
+      } catch (err) {
+        guardError = { err };
+      }
+      if (!guardError) for (const [b, e] of scanSpans) requests.push(...soundsInRange(pattern, b, e, cps));
+    } finally {
+      logCapture = outerCapture;
+      resetLogDebounce();
+    }
+    if (guardError) {
       live.restoreCps(current?.cps ?? cyclist?.cps ?? cps);
-      reportError(attributeQueryError(err, attribution(program), failingBlock(blocks, spans, cps)));
+      reportError(attributeQueryError(guardError.err, attribution(program), failingBlock(blocks, spans, cps)));
       return status;
     }
-
-    const scanEnd = Math.min(Number.isFinite(songLength) ? songLength : PRELOAD_CYCLES, PRELOAD_CYCLES);
-    const requests = soundsInRange(pattern, 0, Math.max(1, scanEnd), cps);
-    if (pos >= scanEnd) requests.push(...soundsInRange(pattern, Math.floor(pos), Math.floor(pos) + 8, cps));
-    if (loop.enabled && loop.start >= scanEnd) requests.push(...soundsInRange(pattern, loop.start, loop.end, cps));
     await withTimeout(preloadSounds(requests, ctx), PRELOAD_TIMEOUT_MS);
 
+    const next: LiveProgram = { program, pattern, blocks, cps };
+    const silencing = silencingLogsOf(scanLog.messages);
+    const issues = silencing.length ? probeIssues(next, scanSpans, silencing) : [];
     previous = current;
-    current = { program, pattern, blocks, cps };
-    runtimeErrorReported = false;
+    current = next;
+    reportedIssues = new Set();
+    probedLogs = new Set(silencing.map((s) => s.message));
     cyclist?.setCps(cps);
-    setStatus({ ok: true, evaluatedAt: Date.now() });
+    const ok: EngineStatus = { ok: true, evaluatedAt: Date.now() };
+    if (!issues.length) {
+      setStatus(ok);
+      return status;
+    }
+    status = ok;
+    for (const issue of issues) reportIssue(issue);
     return status;
   };
 
@@ -481,7 +631,7 @@ export function createEngine(options: EngineOptions = {}): PhylloEngine {
     }
     if (playing) return;
     if (ctx.state !== "running") void ctx.resume();
-    ensureChain();
+    openGate();
     segments = restSegments(position); // the Cyclist restarts at scheduler cycle 0
     anchors = undefined;
     playing = true;
@@ -490,8 +640,42 @@ export function createEngine(options: EngineOptions = {}): PhylloEngine {
     emitTransport();
   };
 
+  /**
+   * Cuts every voice superdough has scheduled (up to the look-ahead ahead) plus reverb/delay tails: resetting
+   * the controller disconnects all orbits and rebuilds the output, which the master chain re-wires.
+   */
+  const cutVoices = () => {
+    if (stopCut) clearTimeout(stopCut);
+    stopCut = undefined;
+    if (rendering) {
+      cutAfterRender = true; // superdough's controller is the offline one right now
+      return;
+    }
+    cutAfterRender = false;
+    try {
+      getSuperdoughAudioController().reset();
+    } catch (err) {
+      log(`voice cut failed: ${String(err)}`, "debug");
+    }
+    ensureChain();
+  };
+
+  /** Opens the transport gate, first cutting voices left over from a stop that is still ramping. */
+  const openGate = () => {
+    if (stopCut) cutVoices();
+    ensureChain();
+    chain?.setGate(true, 0);
+  };
+
   const halt = (nextPosition: number) => {
-    if (playing) cyclist?.stop(); // Strudel's pause keeps counting while silent, so pause = stop + anchor
+    if (playing) {
+      cyclist?.stop(); // Strudel's pause keeps counting while silent, so pause = stop + anchor
+      // Stop releases sound (T1.V #11): ramp the master to 0, then cut the voices still scheduled and the
+      // tails; the gate stays closed until play()/preview() so nothing left over leaks out.
+      chain?.setGate(false, GATE_RAMP_SEC);
+      if (stopCut) clearTimeout(stopCut);
+      stopCut = setTimeout(cutVoices, STOP_CUT_MS);
+    }
     playing = false;
     position = Math.max(0, nextPosition);
     segments = restSegments(position);
@@ -522,6 +706,18 @@ export function createEngine(options: EngineOptions = {}): PhylloEngine {
 
   // ── init ──────────────────────────────────────────────────────────────────
 
+  /** Voice cleanups that failed across contexts (see ended-guard.ts): harmless, coalesced into one debug line. */
+  let crossContextCount = 0;
+  let crossContextTimer: ReturnType<typeof setTimeout> | undefined;
+  const onCrossContextCleanup = () => {
+    crossContextCount++;
+    crossContextTimer ??= setTimeout(() => {
+      log(`skipped ${crossContextCount} voice cleanup(s) across audio contexts (offline render)`, "debug");
+      crossContextCount = 0;
+      crossContextTimer = undefined;
+    }, 500);
+  };
+
   const init = (): Promise<void> => {
     if (disposed) return Promise.reject(new Error("engine disposed"));
     if (initPromise) {
@@ -532,6 +728,7 @@ export function createEngine(options: EngineOptions = {}): PhylloEngine {
     const c = new AudioContext({ latencyHint: "interactive" });
     ctx = c;
     const resumed = c.resume();
+    uninstallEndedGuard = guardEndedHandlers(onCrossContextCleanup);
     initPromise = (async () => {
       setAudioContext(c);
       setSuperdoughAudioController(null);
@@ -559,9 +756,15 @@ export function createEngine(options: EngineOptions = {}): PhylloEngine {
       if (typeof document !== "undefined") {
         logListener = (e: Event) => {
           const detail = (e as CustomEvent<{ message?: string; type?: string }>).detail;
-          if (!detail?.message) return;
+          if (!detail?.message || detail.message === LOG_SENTINEL) return;
           const level: LogLevel = detail.type === "error" ? "error" : detail.type === "warning" ? "warn" : "debug";
           options.logger?.(detail.message, level);
+          if (logCapture) {
+            logCapture.messages.push(detail.message);
+            return;
+          }
+          const silencing = silencingLog(detail.message);
+          if (silencing) onLiveSilencingLog(silencing);
         };
         document.addEventListener("strudel.log", logListener);
       }
@@ -647,7 +850,7 @@ export function createEngine(options: EngineOptions = {}): PhylloEngine {
       if (sound.n !== undefined) value["n"] = sound.n;
       const key = soundKey(value);
       if (key) await preloadSounds([{ key, value: { ...value } }], ctx);
-      ensureChain();
+      openGate(); // closed while stopped
       await superdough(value, ctx.currentTime + 0.05, durationSec);
     },
 
@@ -730,11 +933,14 @@ export function createEngine(options: EngineOptions = {}): PhylloEngine {
           warn: (m) => log(m, "warn"),
           onLiveRestored: () => {
             rendering = false; // live playback resumes while the offline context renders
+            if (cutAfterRender && !playing) cutVoices();
           },
         });
       } finally {
         rendering = false;
         restoreGlobals();
+        if (cutAfterRender && !playing) cutVoices();
+        cutAfterRender = false;
         ensureChain();
       }
     },
@@ -750,6 +956,10 @@ export function createEngine(options: EngineOptions = {}): PhylloEngine {
       uninstallUrlResolver?.();
       halt(0);
       cyclist?.stop();
+      if (stopCut) clearTimeout(stopCut);
+      stopCut = undefined;
+      if (crossContextTimer) clearTimeout(crossContextTimer);
+      uninstallEndedGuard?.();
       if (logListener && typeof document !== "undefined") document.removeEventListener("strudel.log", logListener);
       if (crossContextListener && typeof window !== "undefined") window.removeEventListener("error", crossContextListener, true);
       orbitMeters?.dispose();

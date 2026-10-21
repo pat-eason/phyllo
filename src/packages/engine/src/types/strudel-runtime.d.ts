@@ -68,6 +68,11 @@ declare module "@strudel/webaudio" {
   ): { url: string; index: number; label: string; playbackRate: number };
   export function setMaxPolyphony(n?: number): void;
   export const DEFAULT_MAX_POLYPHONY: number;
+
+  export interface SuperdoughAudioController {
+    /** Disconnects every orbit and bus (cutting all voices and tails) and rebuilds the output (superdough.mjs). */
+    reset(): void;
+  }
 }
 
 declare module "@strudel/soundfonts" {
