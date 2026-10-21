@@ -74,7 +74,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | T3.4 | organism agent | LibraryPanel | T3.1, M2 | same | done |
 | T3.5 | organism agent | CodeDrawer, TipCoach | T3.1, M2 | same + inline pattern edit, Edit code mode | done |
 | T3.6 | organism agent | Inspector | T3.1, M2 | same | done |
-| T3.7 | screen agent | `screens/ArrangeScreen`, routing/app shell | T3.2–T3.6 | SPEC §6.1 acceptance criteria | todo |
+| T3.7 | shell agent | App/main, router, all screens (Arrange, Pattern, Mixer, Library, GuidedStart, Settings), shortcuts, menu/media/open-file glue, unsaved/history dialogs, e2e flows | all organisms | SPEC §6.1 acceptance + §7; e2e flows | active |
 | T3.V | verifier | read-only | T3.7 | §6.1 checklist + screenshot parity 01/02/accent-* | todo |
 
 ### M4 Pattern editor and Mixer
@@ -82,7 +82,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 |---|---|---|---|---|---|
 | T4.1 | organism agent | StepSequencer, PatternTools | T3.1, M2 | SPEC §4.3, §6.3; steps/velocity/live code/Euclid/feel/piano roll | done |
 | T4.2 | organism agent | ChannelStrip, MixerStrips | T3.1, M2 | SPEC §6.4; track/bus/master strips, Rec output | done |
-| T4.3 | screen agent | PatternEditorScreen, MixerScreen | T4.1, T4.2, T3.2 | screens.md layouts | todo |
+| T4.3 | (folded into T3.7) | PatternEditorScreen, MixerScreen | | | done |
 | T4.V | verifier | read-only | T4.3 | png 04/05 parity, §6.3/§6.4 | todo |
 
 ### M5 Projects
@@ -92,11 +92,14 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | T5.2 | organism agent | StarterPicker | T3.1, M2 | SPEC §6.2 | done |
 | T5.3 | organism agent | SettingsLayout, AccentPicker | T3.1, M2 | SPEC §6.6, offline sounds download | done |
 | T5.4 | organism agent | ExportDialog + export pipeline + engine note query | F3, T6.3 | SPEC §6.5 all tabs, notification | active |
-| T5.5 | agent | version history UI, screens Library/GuidedStart/Settings window, routing | T5.1–T5.3 | screens.md | todo |
+| T5.5 | (folded into T3.7) | version history UI, screens Library/GuidedStart/Settings | | | done |
 | T5.V | verifier | read-only | T5.5 | png 03/06/07/08* parity | todo |
 
 ### M6b Native wiring
-T6.5 wire MIDI/OSC/sample folders/media keys/tray into stores + Settings · T6.V verifier.
+| id | owner | owns | deps | acceptance | status |
+|---|---|---|---|---|---|
+| T6.5 | wiring agent | state/sampleFolders, midiInput, recorder; engine stopPreview | T3.1, T6.1–T6.2 | B1, B2, B4 + MIDI record | active |
+| T6.V | verifier | read-only | T6.5, T3.7 | native features in `tauri dev` | todo |
 
 ### M7 Polish
 T7.1 shortcuts (SPEC §7) · T7.2 a11y pass (SPEC §8) · T7.3 screenshot parity fixes · T7.4 performance (no React re-render for playhead/meters) · T7.5 `pnpm tauri build` packaging + end-to-end smoke (open, play starter, edit, save, reopen, export WAV) · T7.V final verifier against SPEC §6 + DoD.
