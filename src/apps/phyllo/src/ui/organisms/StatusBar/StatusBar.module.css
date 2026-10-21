@@ -69,5 +69,5 @@
 }
 
 .bar .dot[data-status="error"] > span:not(:first-child) {
-  color: var(--ph-rec);
+  color: var(--ph-rec-text);
 }

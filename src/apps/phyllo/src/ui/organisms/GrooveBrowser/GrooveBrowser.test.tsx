@@ -542,7 +542,7 @@ describe("GrooveBrowser", () => {
     // Assert
     await waitFor(() => expect(within(dialog).getByText("mellow")).toBeInTheDocument());
     expect(within(dialog).queryByText("lo-fi")).not.toBeInTheDocument();
-    expect(within(dialog).getByRole("button", { name: "Recolor mellow" })).toBeDisabled();
+    expect(within(dialog).getByRole("button", { name: "Color mellow" })).toBeDisabled();
   });
 
   it("should merge and delete tags from Manage", async () => {

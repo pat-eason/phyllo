@@ -89,7 +89,7 @@ export function ManageTagsDialog({ tags, onRewrite, onClose }: ManageTagsDialogP
                   >
                     Merge
                   </Button>
-                  <Button size="sm" variant="ghost" aria-label={`Recolor ${tag.name}`} disabled title={COLOR_UNAVAILABLE}>
+                  <Button size="sm" variant="ghost" aria-label={`Color ${tag.name}`} disabled title={COLOR_UNAVAILABLE}>
                     Color
                   </Button>
                   <Button size="sm" variant="ghost" aria-label={`Delete ${tag.name}`} onClick={() => open(tag.name, "delete")}>

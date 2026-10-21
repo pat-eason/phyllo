@@ -283,7 +283,7 @@
 
 .problem {
   margin: 0;
-  color: var(--ph-rec);
+  color: var(--ph-rec-text);
   font-size: 12.5px;
 }
 
