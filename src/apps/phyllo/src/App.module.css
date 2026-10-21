@@ -1,15 +1,8 @@
-.shell {
+/* The window: every screen fills it; screens decide what scrolls (SPEC §2.8). */
+.app {
   height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  min-height: 0;
+  overflow: hidden;
   background: var(--ph-bg);
-  color: var(--ph-text);
-}
-
-.wordmark {
-  margin: 0;
-  font: var(--ph-text-wordmark);
-  font-size: 48px;
   color: var(--ph-text);
 }
