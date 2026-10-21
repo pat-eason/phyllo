@@ -41,6 +41,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 |---|---|---|---|---|---|
 | F1 | orchestrator | content/starters | T1.V | lofi chords voice in all keys (T1.V #1) | done |
 | F2 | fix agent | model reducer/serialize, engine parse/codegen | T1.V | T1.V #2–#9, #13–#18; verifier fuzz passes | done |
+| F4 | fix agent | @phyllo/ui atoms/molecules/tokens/stories | T2.V | T2.V defects 1–20; axe clean except documented by-design rules | active |
 | F3 | fix agent | engine runtime | T1.V, T6.6 | T1.V #10 unknown chord → error, #11 stop releases voices, #12 limiter default on + ceiling, #19 offline error flood, #20 pattern error column | active |
 
 ### M2 Atoms, then molecules
@@ -53,7 +54,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | T2.5 | molecules-A | Readout, TransportControls, TrackHeader, SoundRow, SectionChip, Toast, EmptyState | T2.2–T2.4 | same | done |
 | T2.6 | molecules-B | Clip, ParamKnob, SuggestionButton, ModifierRow, PatternField, StepRow | T2.2–T2.4 | same | done |
 | T2.7 | molecules-C | TipCard, StarterCard, GrooveCard, SettingRow | T2.2–T2.4 | same | done |
-| T2.V | verifier | read-only + `e2e/stories/**` | T2.5–T2.7 | screenshots vs `png/kit.png` both themes, 2 accents; defects filed | active |
+| T2.V | verifier | read-only + `e2e/stories/**` | T2.5–T2.7 | screenshots vs `png/kit.png` both themes, 2 accents; defects filed | done |
 
 ### M6a Native core (Rust, starts early, parallel with M1/M2)
 | id | owner | owns | deps | acceptance | status |
