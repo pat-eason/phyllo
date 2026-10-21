@@ -88,7 +88,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | T4.1 | organism agent | StepSequencer, PatternTools | T3.1, M2 | SPEC §4.3, §6.3; steps/velocity/live code/Euclid/feel/piano roll | done |
 | T4.2 | organism agent | ChannelStrip, MixerStrips | T3.1, M2 | SPEC §6.4; track/bus/master strips, Rec output | done |
 | T4.3 | (folded into T3.7) | PatternEditorScreen, MixerScreen | | | done |
-| T4.V | verifier | read-only | T4.3 | png 04/05 parity, §6.3/§6.4 | todo |
+| T4.V | (covered by T3.V) | read-only | T4.3 | png 04/05 parity, §6.3/§6.4 | done |
 
 ### M5 Projects
 | id | owner | owns | deps | acceptance | status |
@@ -98,13 +98,13 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | T5.3 | organism agent | SettingsLayout, AccentPicker | T3.1, M2 | SPEC §6.6, offline sounds download | done |
 | T5.4 | organism agent | ExportDialog + export pipeline + engine note query | F3, T6.3 | SPEC §6.5 all tabs, notification | done |
 | T5.5 | (folded into T3.7) | version history UI, screens Library/GuidedStart/Settings | | | done |
-| T5.V | verifier | read-only | T5.5 | png 03/06/07/08* parity | todo |
+| T5.V | (covered by T3.V) | read-only | T5.5 | png 03/06/07/08* parity | done |
 
 ### M6b Native wiring
 | id | owner | owns | deps | acceptance | status |
 |---|---|---|---|---|---|
 | T6.5 | wiring agent | state/sampleFolders, midiInput, recorder; engine stopPreview | T3.1, T6.1–T6.2 | B1, B2, B4 + MIDI record | done |
-| T6.V | verifier | read-only | T6.5, T3.7 | native features in `tauri dev` | todo |
+| T6.V | (covered by T7.5a selftest + T6.4 dev-run) | read-only | T6.5, T3.7 | fs/library/history/export/cache/notifications/CSP verified in the release app; tray, media keys, real MIDI hardware need a human/device | done |
 
 ### M7 Polish
 | id | owner | owns | deps | acceptance | status |
