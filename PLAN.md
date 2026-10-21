@@ -77,10 +77,22 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | T3.V | verifier | read-only | T3.7 | §6.1 checklist + screenshot parity 01/02/accent-* | todo |
 
 ### M4 Pattern editor and Mixer
-T4.1 StepSequencer+PatternTools+PatternEditorScreen · T4.2 ChannelStrip (track/bus/master)+MixerScreen · T4.V verifier.
+| id | owner | owns | deps | acceptance | status |
+|---|---|---|---|---|---|
+| T4.1 | organism agent | StepSequencer, PatternTools | T3.1, M2 | SPEC §4.3, §6.3; steps/velocity/live code/Euclid/feel/piano roll | active |
+| T4.2 | organism agent | ChannelStrip, MixerStrips | T3.1, M2 | SPEC §6.4; track/bus/master strips, Rec output | active |
+| T4.3 | screen agent | PatternEditorScreen, MixerScreen | T4.1, T4.2, T3.2 | screens.md layouts | todo |
+| T4.V | verifier | read-only | T4.3 | png 04/05 parity, §6.3/§6.4 | todo |
 
 ### M5 Projects
-T5.1 GrooveBrowser+LibraryScreen · T5.2 StarterPicker+GuidedStartScreen · T5.3 SettingsLayout+AccentPicker+settings window · T5.4 ExportDialog + capture pipeline (uses T6.3) · T5.5 autosave + version history UI · T5.V verifier.
+| id | owner | owns | deps | acceptance | status |
+|---|---|---|---|---|---|
+| T5.1 | organism agent | GrooveBrowser | T3.1, M2 | SPEC §6.7 | active |
+| T5.2 | organism agent | StarterPicker | T3.1, M2 | SPEC §6.2 | active |
+| T5.3 | organism agent | SettingsLayout, AccentPicker | T3.1, M2 | SPEC §6.6, offline sounds download | active |
+| T5.4 | organism agent | ExportDialog + export pipeline + engine note query | F3, T6.3 | SPEC §6.5 all tabs, notification | todo |
+| T5.5 | agent | version history UI, screens Library/GuidedStart/Settings window, routing | T5.1–T5.3 | screens.md | todo |
+| T5.V | verifier | read-only | T5.5 | png 03/06/07/08* parity | todo |
 
 ### M6b Native wiring
 T6.5 wire MIDI/OSC/sample folders/media keys/tray into stores + Settings · T6.V verifier.
