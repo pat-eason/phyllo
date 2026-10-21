@@ -26,6 +26,10 @@ export interface TrackHeaderProps extends Omit<ComponentPropsWithoutRef<"div">, 
   level?: number;
   /** Live meter feed (see `Meter`'s `subscribe`). */
   meterSubscribe?: MeterSubscribe;
+  /** Peak-hold tick on the meter (see `Meter`'s `hold`). */
+  meterHold?: boolean;
+  /** Transport stopped: the meter drops to 0 at once instead of falling (see `Meter`'s `stopped`). */
+  meterStopped?: boolean;
   /**
    * Evaluation error for this track: shows a red dot (tooltip and image name = the message) and adds the message to the
    * name button's `aria-describedby`, so keyboard and screen-reader users hear it when they focus the track.
@@ -59,6 +63,8 @@ export const TrackHeader = forwardRef<HTMLDivElement, TrackHeaderProps>(function
     soloed,
     level,
     meterSubscribe,
+    meterHold = false,
+    meterStopped = false,
     error,
     codeTrack = false,
     codeLabel = "Code track",
@@ -114,6 +120,8 @@ export const TrackHeader = forwardRef<HTMLDivElement, TrackHeaderProps>(function
   const meterProps = {
     ...(level === undefined ? {} : { level }),
     ...(meterSubscribe === undefined ? {} : { subscribe: meterSubscribe }),
+    hold: meterHold,
+    stopped: meterStopped,
   };
 
   return (

@@ -31,7 +31,32 @@ describe("Punchcard", () => {
 
     // Assert
     expect(container.querySelectorAll("[data-on]")).toHaveLength(1);
-    expect(container.querySelectorAll("span")).toHaveLength(16);
+    expect(container.querySelectorAll("span")).toHaveLength(48);
+  });
+
+  it.each([0, 1, 2, 3])("should always draw 3 rows, padding %i given rows with empty ones", (given) => {
+    // Arrange
+    const rows = rowsFromPatterns(Array.from({ length: given }, () => "xxxxxxxxxxxxxxxx"));
+
+    // Act
+    const { container } = render(<Punchcard rows={rows} />);
+
+    // Assert
+    expect(container.firstElementChild?.children).toHaveLength(3);
+    expect(container.querySelectorAll("[data-on]")).toHaveLength(given * 16);
+  });
+
+  it("should not drop rows beyond the minimum, and honour rowCount", () => {
+    // Arrange
+    const four = rowsFromPatterns(["x", "x", "x", "x"]);
+
+    // Act
+    const many = render(<Punchcard rows={four} />);
+    const few = render(<Punchcard rows={[]} rowCount={2} />);
+
+    // Assert
+    expect(many.container.firstElementChild?.children).toHaveLength(4);
+    expect(few.container.firstElementChild?.children).toHaveLength(2);
   });
 
   it("should apply size, className and forward the ref", () => {

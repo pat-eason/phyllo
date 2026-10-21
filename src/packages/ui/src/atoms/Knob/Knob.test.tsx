@@ -326,6 +326,108 @@ describe("Knob", () => {
     expect(container.querySelector('[data-part="pointer"]')).toBeNull();
   });
 
+  describe("modulated with onBlockedChange", () => {
+    it("should still call onChange for keys when no interceptor is given", async () => {
+      // Arrange
+      const user = userEvent.setup();
+      const { onChange, slider } = renderKnob({ modulated: true, value: 0.5 });
+      slider.focus();
+
+      // Act
+      await user.keyboard("{ArrowUp}");
+
+      // Assert
+      expect(onChange).toHaveBeenCalledWith(0.51);
+    });
+
+    it.each([
+      ["{ArrowUp}", 1, 0.51],
+      ["{ArrowRight}", 1, 0.51],
+      ["{ArrowDown}", -1, 0.49],
+      ["{PageUp}", 1, 0.6],
+      ["{PageDown}", -1, 0.4],
+      ["{Shift>}{ArrowUp}{/Shift}", 1, 0.6],
+      ["{Home}", -1, 0],
+      ["{End}", 1, 1],
+    ])("should report %s to onBlockedChange instead of onChange", async (keys, direction, value) => {
+      // Arrange
+      const user = userEvent.setup();
+      const onBlockedChange = vi.fn();
+      const { onChange, slider } = renderKnob({ modulated: true, value: 0.5, onBlockedChange });
+      slider.focus();
+
+      // Act
+      await user.keyboard(keys);
+
+      // Assert
+      expect(onBlockedChange).toHaveBeenCalledWith(direction, value);
+      expect(onChange).not.toHaveBeenCalled();
+    });
+
+    it("should intercept the wheel and a double-click reset too", async () => {
+      // Arrange
+      const user = userEvent.setup();
+      const onBlockedChange = vi.fn();
+      const { onChange, slider } = renderKnob({ modulated: true, value: 0.5, defaultValue: 0.2, onBlockedChange });
+
+      // Act
+      fireEvent.wheel(slider, { deltaY: -100 });
+      await user.dblClick(slider);
+
+      // Assert
+      expect(onBlockedChange).toHaveBeenNthCalledWith(1, 1, 0.51);
+      expect(onBlockedChange).toHaveBeenNthCalledWith(2, -1, 0.2);
+      expect(onChange).not.toHaveBeenCalled();
+    });
+
+    it("should say nothing when the step would not change the value", async () => {
+      // Arrange
+      const user = userEvent.setup();
+      const onBlockedChange = vi.fn();
+      const { slider } = renderKnob({ modulated: true, value: 1, onBlockedChange });
+      slider.focus();
+
+      // Act
+      await user.keyboard("{ArrowUp}{End}");
+
+      // Assert
+      expect(onBlockedChange).not.toHaveBeenCalled();
+    });
+
+    it("should not intercept when the knob is not modulated", async () => {
+      // Arrange
+      const user = userEvent.setup();
+      const onBlockedChange = vi.fn();
+      const { onChange, slider } = renderKnob({ value: 0.5, onBlockedChange });
+      slider.focus();
+
+      // Act
+      await user.keyboard("{ArrowUp}");
+
+      // Assert
+      expect(onChange).toHaveBeenCalledWith(0.51);
+      expect(onBlockedChange).not.toHaveBeenCalled();
+    });
+
+    it("should not intercept drags", () => {
+      // Arrange
+      stubFrames();
+      const onBlockedChange = vi.fn();
+      const onChangeStart = vi.fn();
+      const { onChange, slider } = renderKnob({ modulated: true, value: 0.5, onBlockedChange, onChangeStart });
+
+      // Act
+      fireEvent.pointerDown(slider, { pointerId: 1, button: 0, clientY: 200 });
+      fireEvent.pointerMove(slider, { pointerId: 1, clientY: 100 });
+      fireEvent.pointerUp(slider, { pointerId: 1, clientY: 100 });
+
+      // Assert
+      expect(onChangeStart).toHaveBeenCalledTimes(1);
+      expect(onChange).toHaveBeenLastCalledWith(1);
+      expect(onBlockedChange).not.toHaveBeenCalled();
+    });
+  });
+
   it("should accept className and native props on the root", () => {
     // Arrange / Act
     renderKnob({ className: "extra", id: "k1" });

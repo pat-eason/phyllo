@@ -96,6 +96,110 @@ describe("ThemeProvider", () => {
     expect(html().dataset.accent).toBe("teal");
   });
 
+  describe("data-theme-switching", () => {
+    /** Manual animation frames so the two-frame lifetime can be stepped. */
+    function stubFrames() {
+      const callbacks = new Map<number, FrameRequestCallback>();
+      let nextId = 0;
+      vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => {
+        callbacks.set(++nextId, cb);
+        return nextId;
+      });
+      vi.stubGlobal("cancelAnimationFrame", (id: number) => {
+        callbacks.delete(id);
+      });
+      return () => {
+        const pending = [...callbacks.values()];
+        callbacks.clear();
+        pending.forEach((cb) => cb(0));
+      };
+    }
+    const switching = () => html().hasAttribute("data-theme-switching");
+
+    beforeEach(() => {
+      delete html().dataset.themeSwitching;
+    });
+
+    it("is not set by the first mount", () => {
+      mockMatchMedia(true);
+      stubFrames();
+      renderWith("dark", "green");
+      expect(switching()).toBe(false);
+    });
+
+    it("is set when the theme changes and removed after two animation frames", () => {
+      mockMatchMedia(true);
+      const step = stubFrames();
+      const { update } = renderWith("dark", "green");
+
+      update("light");
+      expect(html().dataset.theme).toBe("light");
+      expect(switching()).toBe(true);
+
+      step();
+      expect(switching()).toBe(true);
+      step();
+      expect(switching()).toBe(false);
+    });
+
+    it("is set when only the accent changes", () => {
+      mockMatchMedia(true);
+      const step = stubFrames();
+      const { update } = renderWith("dark", "green");
+
+      update("dark", "red");
+      expect(switching()).toBe(true);
+      step();
+      step();
+      expect(switching()).toBe(false);
+    });
+
+    it("restarts the two frames when another change lands mid-switch", () => {
+      mockMatchMedia(true);
+      const step = stubFrames();
+      const { update } = renderWith("dark", "green");
+
+      update("light");
+      step();
+      update("light", "blue");
+      step();
+      expect(switching()).toBe(true);
+      step();
+      expect(switching()).toBe(false);
+    });
+
+    it("is not set by a re-render that changes nothing", () => {
+      mockMatchMedia(true);
+      stubFrames();
+      const { update } = renderWith("dark", "green");
+
+      update("dark", "green");
+      expect(switching()).toBe(false);
+    });
+
+    it("is set when the OS preference flips in system mode", () => {
+      const mq = mockMatchMedia(true);
+      const step = stubFrames();
+      renderWith("system");
+
+      act(() => mq.setDark(false));
+      expect(switching()).toBe(true);
+      step();
+      step();
+      expect(switching()).toBe(false);
+    });
+
+    it("is cleared when the provider unmounts mid-switch", () => {
+      mockMatchMedia(true);
+      stubFrames();
+      const { update, unmount } = renderWith("dark", "green");
+
+      update("light");
+      unmount();
+      expect(switching()).toBe(false);
+    });
+  });
+
   it("unsubscribes from the media query on unmount", () => {
     const mq = mockMatchMedia(true);
     const { unmount } = renderWith("system");

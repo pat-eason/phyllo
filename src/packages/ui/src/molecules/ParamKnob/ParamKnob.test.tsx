@@ -79,6 +79,22 @@ describe("ParamKnob", () => {
     expect(container).toHaveTextContent("~400–1.4k");
   });
 
+  it("should send keyboard steps on a modulated knob to onBlockedChange in real units", async () => {
+    // Arrange: the fixture gain spec is linear 0 to 1 on the knob
+    const user = userEvent.setup();
+    const onBlockedChange = vi.fn();
+    const { knob, onChange } = renderKnob({ param: "gain", spec: FIXTURE_SPECS.gain, value: 0.5, modulated: true, onBlockedChange });
+    knob.focus();
+
+    // Act
+    await user.keyboard("{End}{ArrowDown}");
+
+    // Assert
+    expect(onBlockedChange).toHaveBeenNthCalledWith(1, 1, 1);
+    expect(onBlockedChange).toHaveBeenNthCalledWith(2, -1, 0.49);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
   it("should treat a patterned string value as modulated with the pattern as its value", () => {
     // Arrange / Act
     const { knob, container } = renderKnob({ param: "gain", spec: FIXTURE_SPECS.gain, value: "[.45 .7]*4", mode: "pro" });

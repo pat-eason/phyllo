@@ -19,6 +19,11 @@ export interface ParamKnobProps extends Omit<ComponentPropsWithoutRef<"div">, "o
   mode: "guided" | "pro";
   /** A modifier drives this control: amber ring, value text becomes `modulationText`. */
   modulated?: boolean;
+  /**
+   * While modulated: keyboard, wheel and double-click changes call this (direction, new value in real units) instead of
+   * `onChange`, so the organism can show its "replace the modifier?" confirm. Drags still go through `onChange`.
+   */
+  onBlockedChange?: (direction: 1 | -1, value: number) => void;
   /** Shown as the value while modulated, e.g. `~400–1.4k`. */
   modulationText?: string;
   /**
@@ -56,6 +61,7 @@ export const ParamKnob = forwardRef<HTMLDivElement, ParamKnobProps>(function Par
     onChange,
     mode,
     modulated = false,
+    onBlockedChange,
     modulationText,
     valueText: valueTextOverride,
     "aria-label": ariaLabel,
@@ -98,6 +104,14 @@ export const ParamKnob = forwardRef<HTMLDivElement, ParamKnobProps>(function Par
         label={ariaLabel ?? legend}
         valueText={valueText}
         modulated={isModulated}
+        onBlockedChange={
+          onBlockedChange
+            ? (direction, position) => {
+                const next = spec.fromKnob(position);
+                if (next !== numeric) onBlockedChange(direction, next);
+              }
+            : undefined
+        }
         bipolar={bipolar ?? param === "pan"}
         disabled={disabled}
         onRequestEdit={onRequestEdit}

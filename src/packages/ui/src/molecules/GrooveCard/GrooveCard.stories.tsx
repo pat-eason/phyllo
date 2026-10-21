@@ -103,6 +103,22 @@ export const TileSizes: Story = {
   ),
 };
 
+const TWO_TRACKS: GrooveCardData = { ...NIGHT_BUS, name: "Two tracks", trackCount: 2, preview: NIGHT_BUS_PREVIEW.slice(0, 2) };
+
+/** A 2-track and a 3-track groove at each tile step: both covers are three rows tall, and the play button never clips. */
+export const TwoAndThreeTracks: Story = {
+  render: (args) => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {([1, 2, 3, 4, 5] as const).map((size) => (
+        <div key={size} style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
+          <SizeColumn {...args} groove={TWO_TRACKS} size={size} />
+          <SizeColumn {...args} groove={NIGHT_BUS} size={size} />
+        </div>
+      ))}
+    </div>
+  ),
+};
+
 /** Auto-fill grid like the library, with the second tile previewing. */
 export const Grid: Story = {
   render: (args) => (

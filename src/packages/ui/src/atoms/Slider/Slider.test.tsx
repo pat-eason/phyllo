@@ -54,6 +54,30 @@ describe("Slider", () => {
     expect(screen.getByRole("slider")).toHaveAttribute("aria-valuetext", "Medium");
   });
 
+  it("should accept a plain string as the spoken value", () => {
+    // Arrange / Act
+    render(<Harness {...TILE} valueText="Roughly a third" />);
+
+    // Assert
+    expect(screen.getByRole("slider")).toHaveAttribute("aria-valuetext", "Roughly a third");
+  });
+
+  it("should leave aria-valuetext off without valueText", () => {
+    // Arrange / Act
+    render(<Harness />);
+
+    // Assert
+    expect(screen.getByRole("slider")).not.toHaveAttribute("aria-valuetext");
+  });
+
+  it("should format a feel value through the function form", () => {
+    // Arrange / Act
+    render(<Harness value={1 / 6} valueText={(v) => `${Math.round(v * 100)}%`} />);
+
+    // Assert
+    expect(screen.getByRole("slider")).toHaveAttribute("aria-valuetext", "17%");
+  });
+
   it("should pass a number, not the event, on every input event", () => {
     // Arrange
     const onValue = vi.fn();
