@@ -2,3 +2,4 @@
 export * from "./types";
 export * from "./selectors";
 export * from "./model";
+export * from "./content";
