@@ -16,6 +16,7 @@ const CODES: ReadonlySet<string> = new Set<NativeErrorCode>([
   'window',
   'tray',
   'notification',
+  'network',
   'internal',
   'unknown',
 ]);

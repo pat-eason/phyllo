@@ -2,7 +2,8 @@
 //! The logic lives in the sibling modules, which take explicit paths and are unit-tested with tempdirs.
 
 use std::path::PathBuf;
-use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 use notify::RecommendedWatcher;
@@ -21,6 +22,7 @@ use crate::open_files::{self, OpenFileQueue};
 use crate::osc::{OscConfig, OscMessageIn, OscState};
 use crate::paths::{self, PhylloPaths};
 use crate::samples::{self, SampleScan};
+use crate::sound_cache::{self, CacheStatus, Progress, SoundCache};
 use crate::tray::{self, TrayState};
 use crate::windows::{self, KeepRunning};
 use crate::{project, trash, watch};
@@ -400,4 +402,89 @@ pub fn deliver_open_files(app: &AppHandle, paths: Vec<PathBuf>) {
             serde_json::json!({ "paths": paths }),
         );
     }
+}
+
+// ── Offline sound cache (T6.6) ─────────────────────────────────────────────
+
+/// The downloader (built on first use) and whether the cache directory is already on the asset-protocol scope.
+#[derive(Default)]
+pub struct SoundCacheState {
+    cache: Mutex<Option<Arc<SoundCache>>>,
+    scope_granted: AtomicBool,
+}
+
+#[derive(serde::Serialize)]
+pub struct SoundCacheFetched {
+    path: String,
+}
+
+impl SoundCacheState {
+    fn cache(&self) -> Result<Arc<SoundCache>> {
+        let mut slot = self.cache.lock().unwrap_or_else(|e| e.into_inner());
+        if let Some(cache) = slot.as_ref() {
+            return Ok(Arc::clone(cache));
+        }
+        let cache = Arc::new(SoundCache::new()?);
+        *slot = Some(Arc::clone(&cache));
+        Ok(cache)
+    }
+
+    /// Resolve (and create) the cache directory and allow it on the asset protocol so `convertFileSrc` URLs load.
+    /// Needed explicitly: the static scope's `**` does not match the hidden `.cache` folder.
+    fn dir(&self, app: &AppHandle) -> Result<PathBuf> {
+        let dir = sound_cache::cache_dir(&paths::root()?);
+        paths::ensure_dir(&dir)?;
+        if !self.scope_granted.load(Ordering::Acquire) {
+            app.asset_protocol_scope()
+                .allow_directory(&dir, true)
+                .map_err(|e| Error::Internal(format!("asset scope: {e}")))?;
+            self.scope_granted.store(true, Ordering::Release);
+        }
+        Ok(dir)
+    }
+}
+
+/// Make sure `url` (an allowlisted Strudel sound URL) is in the cache and return the cached file's path.
+/// Download failures reject with `network`; a disallowed URL with `invalid_argument`.
+#[tauri::command]
+pub async fn sound_cache_fetch(
+    app: AppHandle,
+    state: State<'_, SoundCacheState>,
+    url: String,
+) -> Result<SoundCacheFetched> {
+    let cache = state.cache()?;
+    cache.policy().check(&url)?;
+    let dir = state.dir(&app)?;
+    let path = cache.fetch(&dir, &url).await?;
+    Ok(SoundCacheFetched {
+        path: path.display().to_string(),
+    })
+}
+
+#[tauri::command]
+pub async fn sound_cache_status() -> Result<CacheStatus> {
+    blocking(|| sound_cache::status(&sound_cache::cache_dir(&paths::root()?))).await
+}
+
+#[tauri::command]
+pub async fn sound_cache_clear() -> Result<()> {
+    blocking(|| sound_cache::clear(&sound_cache::cache_dir(&paths::root()?))).await
+}
+
+/// Download `urls` (max 6 at a time), emitting `sound-cache://progress` `{ done, total, failed }` as files finish.
+/// Resolves with the final counts; per-file failures are counted, not thrown.
+#[tauri::command]
+pub async fn sound_cache_prefetch(
+    app: AppHandle,
+    state: State<'_, SoundCacheState>,
+    urls: Vec<String>,
+) -> Result<Progress> {
+    let cache = state.cache()?;
+    let dir = state.dir(&app)?;
+    let emitter = app.clone();
+    cache
+        .prefetch(&dir, &urls, move |progress| {
+            let _ = emitter.emit(sound_cache::EVENT_PROGRESS, progress);
+        })
+        .await
 }

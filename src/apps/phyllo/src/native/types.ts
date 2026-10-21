@@ -21,6 +21,8 @@ export type NativeErrorCode =
   | 'window'
   | 'tray'
   | 'notification'
+  /** A download failed (offline, HTTP error, redirect to a disallowed host). */
+  | 'network'
   | 'internal'
   /** The command never reached Rust, or rejected with something that is not `{ code, message }`. */
   | 'unknown';
@@ -364,6 +366,26 @@ export interface ExportFinishedNotification {
   path: string;
 }
 
+// ── Offline sound cache (DECISIONS V15, T6.6) ───────────────────────────────
+
+export interface SoundCacheFetchResult {
+  /** Absolute path of the cached file; load it with `NativeApi.convertFileSrc`. In the browser, the URL itself. */
+  path: string;
+}
+
+export interface SoundCacheStatus {
+  /** Finished files under `~/Music/Phyllo/.cache/sounds/`. */
+  files: number;
+  bytes: number;
+}
+
+/** `sound-cache://progress`, and the result of `soundCachePrefetch`. `done` counts finished files, failures included. */
+export interface SoundCacheProgress {
+  done: number;
+  total: number;
+  failed: number;
+}
+
 // ── Command and event names (single source of truth for tauri.ts and its tests) ──
 
 export const COMMANDS = {
@@ -407,6 +429,10 @@ export const COMMANDS = {
   mediaSetNowPlaying: 'media_set_now_playing',
   takePendingOpenFiles: 'take_pending_open_files',
   notifyExportFinished: 'notify_export_finished',
+  soundCacheFetch: 'sound_cache_fetch',
+  soundCacheStatus: 'sound_cache_status',
+  soundCacheClear: 'sound_cache_clear',
+  soundCachePrefetch: 'sound_cache_prefetch',
 } as const;
 
 export const EVENTS = {
@@ -420,6 +446,8 @@ export const EVENTS = {
   mediaCommand: 'media://command',
   /** Emitted to the main window only. */
   openFiles: 'app://open-files',
+  /** Emitted to every window while `soundCachePrefetch` runs. */
+  soundCacheProgress: 'sound-cache://progress',
 } as const;
 
 /** Prefix of the cross-window events behind `NativeApi.broadcast` (`broadcast://<channel>`). */

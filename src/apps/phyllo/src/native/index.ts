@@ -14,6 +14,8 @@ export { broadcastEventName } from './broadcast';
 export { NativeError, isNativeError, toNativeError } from './errors';
 export { createMediaSessionBridge } from './mediaSession';
 export type { MediaSessionBridge, MediaSessionLike } from './mediaSession';
+export { SOUND_CACHE_HOSTS, createCachedUrlResolver, isCacheableSoundUrl } from './soundCache';
+export type { CachedUrlResolverOptions, UrlResolver } from './soundCache';
 export { createTauriApi } from './tauri';
 export type { TauriApiOptions } from './tauri';
 export { DEFAULT_CHUNK_SECONDS, formatExportNotification, interleave, streamAudioBuffer } from './export';

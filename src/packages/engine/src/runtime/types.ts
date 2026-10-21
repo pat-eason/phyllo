@@ -30,6 +30,13 @@ export interface EngineOptions {
   logger?: EngineLogger;
   /** Load Strudel's default drum machines / piano / VCSL maps from the CDN at init (default true; DECISIONS V15). */
   loadDefaultSamples?: boolean;
+  /**
+   * Maps every URL the runtime fetches for built-in sounds (sample-map JSON, each sample file, soundfont `.js`) to the
+   * URL to load instead, e.g. a locally cached copy (DECISIONS V15, T6.6). Identity when absent; must return its input
+   * for URLs it doesn't handle. Installed by wrapping `fetch` until `dispose()`, because Strudel fetches with the
+   * global `fetch` and has no hook.
+   */
+  resolveUrl?: (url: string) => string | Promise<string>;
   /** Scheduler look-ahead in ms (default 100, Strudel's fixed value; DECISIONS V16). */
   lookaheadMs?: number;
 }

@@ -122,6 +122,20 @@ describe('tauri native: command names and arguments', () => {
     ],
     ['exportCancel', () => api.exportCancel('s1'), 'export_cancel', { sessionId: 's1' }],
     [
+      'soundCacheFetch',
+      () => api.soundCacheFetch('https://strudel.b-cdn.net/piano.json'),
+      'sound_cache_fetch',
+      { url: 'https://strudel.b-cdn.net/piano.json' },
+    ],
+    ['soundCacheStatus', () => api.soundCacheStatus(), 'sound_cache_status', undefined],
+    ['soundCacheClear', () => api.soundCacheClear(), 'sound_cache_clear', undefined],
+    [
+      'soundCachePrefetch',
+      () => api.soundCachePrefetch(['https://strudel.b-cdn.net/a.wav', 'https://strudel.b-cdn.net/b.wav']),
+      'sound_cache_prefetch',
+      { urls: ['https://strudel.b-cdn.net/a.wav', 'https://strudel.b-cdn.net/b.wav'] },
+    ],
+    [
       'midiFileWrite',
       () =>
         api.midiFileWrite('beat.mid', {
@@ -224,6 +238,36 @@ describe('tauri native: events', () => {
     await api.onSamplesChanged(cb);
     expect(mocks.listen).toHaveBeenCalledWith('samples://changed', expect.any(Function));
     expect(cb).toHaveBeenCalledWith({ folder: '/samples' });
+  });
+});
+
+describe('tauri native: sound cache', () => {
+  it('passes sound-cache://progress payloads through and unsubscribes', async () => {
+    const unlisten = vi.fn();
+    const progress = { done: 3, total: 10, failed: 1 };
+    mocks.listen.mockImplementation((_event: string, handler: (e: { payload: unknown }) => void) => {
+      handler({ payload: progress });
+      return Promise.resolve(unlisten);
+    });
+    const cb = vi.fn();
+    const off = await api.onSoundCacheProgress(cb);
+    expect(mocks.listen).toHaveBeenCalledWith('sound-cache://progress', expect.any(Function));
+    expect(EVENTS.soundCacheProgress).toBe('sound-cache://progress');
+    expect(cb).toHaveBeenCalledWith(progress);
+    off();
+    expect(unlisten).toHaveBeenCalled();
+  });
+
+  it('surfaces a download failure as a network NativeError', async () => {
+    mocks.invoke.mockRejectedValue({ code: 'network', message: 'network error: https://x: dns error' });
+    const err = await api.soundCacheFetch('https://strudel.b-cdn.net/x.wav').catch((e: unknown) => e);
+    expect(isNativeError(err, 'network')).toBe(true);
+  });
+
+  it('rejects a disallowed URL with invalid_argument', async () => {
+    mocks.invoke.mockRejectedValue({ code: 'invalid_argument', message: 'sound URL not allowed' });
+    const err = await api.soundCacheFetch('https://evil.example/x.wav').catch((e: unknown) => e);
+    expect(isNativeError(err, 'invalid_argument')).toBe(true);
   });
 });
 

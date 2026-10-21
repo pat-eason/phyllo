@@ -23,8 +23,10 @@ import type {
   PhylloPaths,
   SamplesChangedEvent,
   SnapshotInfo,
+  SoundCacheProgress,
   Unsubscribe,
 } from './types';
+import { isCacheableSoundUrl } from './soundCache';
 
 /**
  * In-memory implementation of `NativeApi` for plain-browser runs (Vite dev, Playwright, Storybook).
@@ -73,6 +75,8 @@ export interface BrowserApiOptions {
    * Messages a channel posts never come back to the same channel object.
    */
   broadcastChannel?: BroadcastChannelLike | null;
+  /** Used by `soundCachePrefetch` to warm the browser's HTTP cache; defaults to `globalThis.fetch`. */
+  fetch?: (url: string) => Promise<unknown>;
 }
 
 export type BroadcastChannelLike = Pick<BroadcastChannel, 'postMessage' | 'addEventListener' | 'removeEventListener'>;
@@ -102,6 +106,19 @@ function defaultNavigateTo(hash: string): void {
   } catch {
     /* no location (tests, workers) */
   }
+}
+
+const SOUND_PREFETCH_CONCURRENCY = 6;
+
+/** Same rule as the Rust command, so code that works in a browser run doesn't break on desktop. */
+function requireCacheable(url: string): void {
+  if (!isCacheableSoundUrl(url)) throw new NativeError('invalid_argument', `sound URL not allowed: ${url}`);
+}
+
+async function defaultFetch(url: string): Promise<unknown> {
+  const response = await globalThis.fetch(url);
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.arrayBuffer();
 }
 
 function defaultStorage(): Pick<Storage, 'getItem' | 'setItem'> | null {
@@ -208,6 +225,7 @@ export function createBrowserApi(options: BrowserApiOptions = {}): NativeApi {
   // ── events ──
   const libraryListeners = new Set<() => void>();
   const sampleListeners = new Set<(event: SamplesChangedEvent) => void>();
+  const soundCacheListeners = new Set<(progress: SoundCacheProgress) => void>();
   const emitLibraryChanged = () => {
     queueMicrotask(() => {
       for (const listener of [...libraryListeners]) listener();
@@ -441,6 +459,45 @@ export function createBrowserApi(options: BrowserApiOptions = {}): NativeApi {
     notifyExportFinished: async (notification) => {
       log('notify', notification);
       return false;
+    },
+
+    // The browser's HTTP cache already keeps built-in sounds; there is no disk cache to report or clear.
+    soundCacheFetch: async (url) => {
+      requireCacheable(url);
+      return { path: url };
+    },
+    soundCacheStatus: async () => ({ files: 0, bytes: 0 }),
+    soundCacheClear: async () => {},
+    soundCachePrefetch: async (urls) => {
+      const unique = [...new Set(urls)];
+      unique.forEach(requireCacheable);
+      const fetchOne = options.fetch ?? defaultFetch;
+      const progress: SoundCacheProgress = { done: 0, total: unique.length, failed: 0 };
+      const emit = () => {
+        for (const listener of [...soundCacheListeners]) listener({ ...progress });
+      };
+      emit();
+      let next = 0;
+      const worker = async () => {
+        while (next < unique.length) {
+          const url = unique[next++]!;
+          try {
+            await fetchOne(url);
+          } catch {
+            progress.failed += 1;
+          }
+          progress.done += 1;
+          emit();
+        }
+      };
+      await Promise.all(Array.from({ length: Math.min(SOUND_PREFETCH_CONCURRENCY, unique.length) }, worker));
+      return { ...progress };
+    },
+    onSoundCacheProgress: async (callback): Promise<Unsubscribe> => {
+      soundCacheListeners.add(callback);
+      return () => {
+        soundCacheListeners.delete(callback);
+      };
     },
 
     settingsStore: {

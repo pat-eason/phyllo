@@ -27,5 +27,6 @@ export { soloTracks } from "./stems";
 export { hapToMidiMessages } from "./midi";
 export { oscControlsFromHap, oscArgs } from "./osc";
 export { trackAtLine } from "./errors";
-export { DEFAULT_SAMPLE_SOURCES, STRUDEL_CDN } from "./samples";
+export { DEFAULT_SAMPLE_SOURCES, STRUDEL_CDN, SOUNDFONT_BASE, listBuiltInSoundUrls, sampleMapFileUrls } from "./samples";
+export type { BuiltInSoundOptions, UrlResolver } from "./samples";
 export { LIMITER } from "./master";

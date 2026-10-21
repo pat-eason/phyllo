@@ -38,9 +38,16 @@ hound = "3.5.1"
 midly = "0.5.3"
 flacenc = "0.5.1"
 mp3lame-encoder = "0.2.5"
+# Offline sound cache (T6.6): rustls only, no OpenSSL. tokio/url are already in the tree through tauri.
+reqwest = { version = "0.13", default-features = false, features = ["rustls-no-provider", "http2", "system-proxy"] }
+# ring provider (no aws-lc / cmake / NASM), installed once in sound_cache.rs.
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+tokio = { version = "1", features = ["fs", "sync", "rt", "time"] }
+url = "2"
 
 [dev-dependencies]
 claxon = "0.4.3"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
 tempfile = "3"
 # Same version Tauri already links; only used to parse menu accelerators in tests.
 muda = { version = "0.20.0", default-features = false }
