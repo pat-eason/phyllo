@@ -34,7 +34,6 @@ export function isRunnableMenuId(id: MenuActionId): id is RunnableAction & MenuA
  * returned function can be called from any listener.
  */
 export function createShellActions(stores: AppStores, shell: ShellState, env: ShellActionEnv): RunAction {
-  const { native } = stores;
   const transport = () => stores.transport.getState();
   const project = () => stores.project.getState();
   const settings = () => stores.settings.getState();
@@ -79,9 +78,7 @@ export function createShellActions(stores: AppStores, shell: ShellState, env: Sh
     },
     "edit.undo": () => project().undo(),
     "edit.redo": () => project().redo(),
-    "app.settings": () => {
-      native.openSettingsWindow().catch(() => shell.navigate({ screen: "settings" }));
-    },
+    "app.settings": () => shell.navigate({ screen: "settings" }),
     "file.new": () => shell.guardUnsaved(() => shell.navigate({ screen: "start" })),
     "file.open": () => {
       void pickFile(stores)

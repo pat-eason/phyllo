@@ -1,7 +1,6 @@
 export { AppShell } from "./AppShell";
 export type { AppShellProps } from "./AppShell";
 export { AppThemeProvider } from "./AppThemeProvider";
-export { SettingsWindow } from "./SettingsWindow";
 export { ExportSlot } from "./ExportSlot";
 export { formatRoute, navigate, parseHash, useHashRoute } from "./router";
 export type { Route, ScreenName } from "./router";

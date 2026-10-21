@@ -38,8 +38,6 @@ pub enum Error {
     Encode(String),
     #[error("menu error: {0}")]
     Menu(String),
-    #[error("window error: {0}")]
-    Window(String),
     #[error("tray error: {0}")]
     Tray(String),
     #[error("notification error: {0}")]
@@ -67,7 +65,6 @@ impl Error {
             Error::UnsupportedFormat(_) => "unsupported_format",
             Error::Encode(_) => "encode",
             Error::Menu(_) => "menu",
-            Error::Window(_) => "window",
             Error::Tray(_) => "tray",
             Error::Notification(_) => "notification",
             Error::Network(_) => "network",

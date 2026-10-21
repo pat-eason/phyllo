@@ -203,7 +203,7 @@ function AppShellContent({ openUrl = defaultOpenUrl, isMac = detectMac() }: AppS
         {dialog.kind === "unsaved" ? (
           <UnsavedChangesDialog projectName={projectName} saving={dialog.saving} onChoose={(choice) => void chooseUnsaved(choice)} />
         ) : null}
-        <NativeBridge stores={stores} run={run} onOpenHistory={shell.openHistory} recentClearedAt={recentClearedAt} />
+        <NativeBridge stores={stores} run={run} recentClearedAt={recentClearedAt} />
       </LibraryPanelRefContext.Provider>
     </ShellContext.Provider>
   );

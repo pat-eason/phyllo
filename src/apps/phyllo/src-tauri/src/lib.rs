@@ -108,7 +108,6 @@ pub fn run() {
             commands::midi_file_write,
             commands::menu_set_state,
             commands::menu_set_recent,
-            commands::open_settings_window,
             commands::tray_set_enabled,
             commands::tray_set_playing,
             commands::app_set_keep_running,

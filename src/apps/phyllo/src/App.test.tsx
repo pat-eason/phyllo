@@ -51,11 +51,10 @@ interface RenderOptions extends MockStoresOptions {
   library?: Parameters<typeof seedLibrary>[1];
   /** Path of the "last open project" (index into `library`). */
   lastOpen?: number;
-  settingsOnly?: boolean;
 }
 
 async function renderApp(options: RenderOptions = {}) {
-  const { savedSettings = false, library = [], lastOpen, settingsOnly = false, ...storeOptions } = options;
+  const { savedSettings = false, library = [], lastOpen, ...storeOptions } = options;
   stores = createMockStores(storeOptions);
   const paths = await seedLibrary(stores.native, library);
   if (savedSettings) await stores.native.settingsStore.save({ uiMode: "guided" });
@@ -64,7 +63,7 @@ async function renderApp(options: RenderOptions = {}) {
   const result = render(
     <PhylloProvider stores={stores} autoStart={false}>
       <AppThemeProvider>
-        <App settingsOnly={settingsOnly} isMac={false} openUrl={() => undefined} />
+        <App isMac={false} openUrl={() => undefined} />
       </AppThemeProvider>
     </PhylloProvider>,
   );
@@ -412,13 +411,4 @@ describe("App", () => {
     expect(stores.project.getState().canUndo).toBe(false);
   });
 
-  it("should render only Settings in the Settings window", async () => {
-    // Arrange / Act
-    await renderApp({ settingsOnly: true });
-
-    // Assert
-    expect(await screen.findByRole("navigation", { name: "Settings sections" })).toBeInTheDocument();
-    expect(screen.queryByRole("group", { name: "Transport" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Done" })).not.toBeInTheDocument();
-  });
 });

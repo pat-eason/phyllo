@@ -2,15 +2,6 @@ import type { GrooveSummary, ThemeMode } from "@phyllo/model";
 import type { MediaCommand, MenuItemState, RecentItem } from "../../native/types";
 import type { RunAction } from "./actions";
 
-/** Channel the Settings window uses to ask the main window for app-level dialogs (D94). */
-export const SHELL_CHANNEL = "phyllo-shell";
-
-export type ShellMessage = { type: "openHistory" };
-
-export function isShellMessage(value: unknown): value is ShellMessage {
-  return typeof value === "object" && value !== null && (value as { type?: unknown }).type === "openHistory";
-}
-
 /** File › Open Recent: opened grooves, newest first, ignoring those opened before the last "Clear Menu". */
 export function recentItems(grooves: readonly GrooveSummary[], clearedAt: number, limit = 10): RecentItem[] {
   return grooves

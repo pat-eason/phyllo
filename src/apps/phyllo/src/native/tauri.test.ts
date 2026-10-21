@@ -109,7 +109,6 @@ describe('tauri native: command names and arguments', () => {
       'menu_set_recent',
       { items: [{ path: '/p/a.phyllo', name: 'A' }] },
     ],
-    ['openSettingsWindow', () => api.openSettingsWindow(), 'open_settings_window', undefined],
     ['traySetEnabled', () => api.traySetEnabled(true), 'tray_set_enabled', { enabled: true }],
     ['traySetPlaying', () => api.traySetPlaying(false), 'tray_set_playing', { playing: false }],
     ['appSetKeepRunning', () => api.appSetKeepRunning(true), 'app_set_keep_running', { keep: true }],

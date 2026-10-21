@@ -163,7 +163,6 @@ export function createTauriApi(options: TauriApiOptions = {}): NativeApi {
     menuSetState: (item) => call<void>(COMMANDS.menuSetState, { item }),
     menuSetRecent: (items) => call<void>(COMMANDS.menuSetRecent, { items }),
 
-    openSettingsWindow: () => call<void>(COMMANDS.openSettingsWindow),
     broadcast: (channel, payload) =>
       guard(async () => {
         await emit(broadcastEventName(channel), { source: label(), payload });
