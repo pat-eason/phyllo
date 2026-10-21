@@ -112,6 +112,64 @@ describe("App", () => {
     expect(window.location.hash).toBe("#/library");
   });
 
+  it("should show only the Library title and its actions when no project is open", async () => {
+    // Arrange / Act
+    await renderApp({ savedSettings: true, library: [fixtureProject({ name: "Night bus" })] });
+    await screen.findByRole("button", { name: /Open Night bus/ });
+
+    // Assert
+    expect(screen.getByRole("heading", { level: 1, name: "Library" })).toBeInTheDocument();
+    expect(screen.queryByRole("navigation", { name: "Views" })).not.toBeInTheDocument();
+    expect(screen.queryByText(stores?.project.getState().project.name ?? "")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "New groove" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Import…" })).toBeInTheDocument();
+  });
+
+  it("should not open an empty Arrange with ⌘1 while no project is open", async () => {
+    // Arrange
+    const { user } = await renderApp({ savedSettings: true, library: [fixtureProject({ name: "Night bus" })] });
+    await screen.findByRole("button", { name: /Open Night bus/ });
+
+    // Act
+    await user.keyboard("{Control>}1{/Control}");
+
+    // Assert
+    expect(window.location.hash).toBe("#/library");
+  });
+
+  it("should bring back the view tabs and project name once a groove is opened", async () => {
+    // Arrange
+    const { user } = await renderApp({ savedSettings: true, library: [fixtureProject({ name: "Night bus" })] });
+
+    // Act
+    await user.click(await screen.findByRole("button", { name: /Open Night bus/ }));
+    await screen.findByRole("main", { name: "Arrange" });
+    await user.keyboard("{Shift>}{Control>}L{/Control}{/Shift}");
+
+    // Assert
+    const views = within(await screen.findByRole("navigation", { name: "Views" }));
+    expect(views.getByRole("button", { name: "Library" })).toHaveAttribute("aria-current", "page");
+    expect(views.getByRole("button", { name: "Arrange" })).toBeInTheDocument();
+  });
+
+  it("should give every project screen one main landmark and one level-one heading", async () => {
+    // Arrange
+    const { user } = await renderApp(returning);
+    await screen.findByRole("complementary", { name: "Track inspector" });
+
+    // Act / Assert
+    for (const [keys, main] of [
+      ["{Control>}1{/Control}", "Arrange"],
+      ["{Control>}2{/Control}", "Pattern editor"],
+      ["{Control>}3{/Control}", "Mixer"],
+    ] as const) {
+      await user.keyboard(keys);
+      await screen.findByRole("main", { name: main });
+      expect(screen.getAllByRole("main")).toHaveLength(1);
+      expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+    }
+  });
+
   it("should switch screens with ⌘1 / ⌘2 / ⌘3 and ⇧⌘L", async () => {
     // Arrange
     const { user } = await renderApp(returning);

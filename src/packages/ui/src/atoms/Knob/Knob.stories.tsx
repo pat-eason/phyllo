@@ -117,6 +117,40 @@ export const Interactive: Story = {
   ),
 };
 
+function InterceptDemo() {
+  const [v, setV] = useState(0.5);
+  const [pending, setPending] = useState<number | null>(null);
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+      <Knob
+        label="Brightness"
+        valueText={`${Math.round(v * 100)}%`}
+        value={v}
+        modulated
+        onChange={setV}
+        onBlockedChange={(_direction, next) => setPending(next)}
+      />
+      <div style={value}>
+        {pending === null ? "Focus the knob and press an arrow key." : `Replace the modifier with ${Math.round(pending * 100)}%?`}
+        {pending === null ? null : (
+          <button
+            type="button"
+            onClick={() => {
+              setV(pending);
+              setPending(null);
+            }}
+          >
+            Replace
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Modulated + `onBlockedChange`: keys, wheel and double-click report the attempted value instead of changing it, so the parent can confirm. */
+export const ModulatedIntercept: Story = { render: () => <InterceptDemo /> };
+
 export const MixerSends: Story = { render: () => <Sends /> };
 
 export const Themes: Story = {

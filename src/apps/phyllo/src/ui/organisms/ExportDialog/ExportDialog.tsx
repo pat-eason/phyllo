@@ -268,12 +268,13 @@ function infoNote(tab: ExportTab, audio: AudioForm, ctx: FormContext, codeAction
     text =
       tab === "mixdown" ? (
         <>
-          Phyllo renders the song faster than real time; you can keep working. About <strong>{wait}</strong> for {length} of audio.
+          Phyllo renders the song faster than real time; you can keep working. Usually about <strong>{wait}</strong> for {length} of
+          audio; the first export can take longer while sounds load.
         </>
       ) : (
         <>
-          Phyllo renders each track on its own, faster than real time; you can keep working. About <strong>{wait}</strong> for{" "}
-          {renders} {renders === 1 ? "stem" : "stems"} of {length}.
+          Phyllo renders each track on its own, faster than real time; you can keep working. Usually about <strong>{wait}</strong>{" "}
+          for {renders} {renders === 1 ? "stem" : "stems"} of {length}; the first export can take longer while sounds load.
         </>
       );
   } else if (tab === "midi") {

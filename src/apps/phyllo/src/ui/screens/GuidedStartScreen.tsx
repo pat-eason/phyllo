@@ -19,7 +19,9 @@ export function GuidedStartScreen() {
           />
         }
       />
-      <StarterPicker showHeader={false} onOpened={toArrange} />
+      <main aria-label="Guided start">
+        <StarterPicker showHeader={false} onOpened={toArrange} />
+      </main>
     </div>
   );
 }

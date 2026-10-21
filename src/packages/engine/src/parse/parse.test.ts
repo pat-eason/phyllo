@@ -491,7 +491,7 @@ describe("parse", () => {
     ["a param set twice", '$: s("bd").gain(.5).gain(.7)', [".gain(.5)", ".gain(.7)"], {}],
     ["a param a modifier also sets", '$: s("bd").lpf(800).sometimes(x => x.cutoff(200))', [".lpf(800)", ".sometimes(x => x.cutoff(200))"], {}],
     ["pan beside jux", '$: s("bd").pan(.2).jux(rev)', [".pan(.2)", ".jux(rev)"], {}],
-    ["a value with more than 3 decimals", '$: s("bd").gain(0.0625)', [".gain(0.0625)"], {}],
+    ["a value with more than 4 decimals", '$: s("bd").gain(0.03125)', [".gain(0.03125)"], {}],
     ["a colon value", '$: s("bd").lpf("800:10")', ['.lpf("800:10")'], {}],
     ["a non-literal value", '$: s("bd").lpf(sine.range(200, 900))', [".lpf(sine.range(200, 900))"], {}],
     ["a non-integer orbit", '$: s("bd").orbit(1.5)', [".orbit(1.5)"], {}],

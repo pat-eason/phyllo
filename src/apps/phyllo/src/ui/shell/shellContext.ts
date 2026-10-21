@@ -13,6 +13,12 @@ export interface ShellToast {
 /** App-shell state the screens share: route, Arrange edit tool/snap, app-level dialogs and toasts. */
 export interface ShellState {
   route: Route | null;
+  /**
+   * A real project is open. False while only the empty placeholder exists (startup landed on the Library / Guided
+   * start without loading one): headers then hide the project name and the Arrange / Pattern / Mixer tabs, and the
+   * view shortcuts don't open an empty phantom project.
+   */
+  projectOpen: boolean;
   navigate(route: Route, options?: { replace?: boolean }): void;
   /** Arrange edit tool (Pro), lifted here so V / B / S work from the global shortcut layer. */
   tool: EditTool;

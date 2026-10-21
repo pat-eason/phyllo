@@ -221,4 +221,84 @@ describe("Meter", () => {
     expect(peakOf(bar)).toBeLessThan(0.9);
     expect(peakOf(bar)).toBeGreaterThanOrEqual(0.3);
   });
+
+  it("should track rising peaks while levels stream in through subscribe", () => {
+    // Arrange
+    const frames = stubFrames();
+    const clock = vi.spyOn(performance, "now").mockReturnValue(0);
+    let write: ((l: number, r?: number) => void) | undefined;
+    const { container } = render(<Meter hold stereo subscribe={(w) => ((write = w), () => {})} />);
+    const bar = bars(container)[0];
+    const seen: number[] = [];
+
+    // Act: a 4 s "playback" at 30 Hz with a slowly climbing envelope
+    for (let ms = 0; ms < 4000; ms += 33) {
+      clock.mockReturnValue(ms);
+      write?.(0.2 + (ms / 4000) * 0.6, 0.1);
+      frames.frame(ms);
+      seen.push(peakOf(bar));
+    }
+
+    // Assert: the marker follows the climb and is never stuck at 0
+    expect(seen[0]).toBeCloseTo(0.2, 3);
+    expect(seen.at(-1)).toBeGreaterThan(0.75);
+    expect(seen.every((v, i) => i === 0 || v >= (seen[i - 1] ?? 0))).toBe(true);
+  });
+
+  it("should keep the peak above a falling level and release it after the hold", () => {
+    // Arrange
+    const frames = stubFrames();
+    const clock = vi.spyOn(performance, "now").mockReturnValue(0);
+    let write: ((l: number, r?: number) => void) | undefined;
+    const { container } = render(<Meter hold subscribe={(w) => ((write = w), () => {})} />);
+    const bar = bars(container)[0];
+
+    // Act
+    write?.(0.8);
+    clock.mockReturnValue(100);
+    write?.(0.3);
+    frames.frame(100);
+    frames.frame(600);
+    const during = { level: levelOf(bar), peak: peakOf(bar) };
+    clock.mockReturnValue(2500);
+    frames.frame(2500);
+    frames.frame(3500);
+
+    // Assert
+    expect(during.peak).toBe(0.8);
+    expect(during.level).toBeLessThan(0.8);
+    expect(peakOf(bar)).toBeLessThan(0.8);
+  });
+
+  it("should drop both level and peak to 0 at once when stopped, instead of falling", () => {
+    // Arrange
+    const frames = stubFrames();
+    const ref = createRef<MeterHandle>();
+    const { container, rerender } = render(<Meter ref={ref} hold stereo />);
+    ref.current?.set(0.9, 0.8);
+    frames.frame(0);
+
+    // Act
+    rerender(<Meter ref={ref} hold stereo stopped />);
+    ref.current?.set(0, 0);
+    frames.frame(16);
+
+    // Assert
+    expect(bars(container).map(levelOf)).toEqual([0, 0]);
+    expect(bars(container).map(peakOf)).toEqual([0, 0]);
+    expect(frames.pending).toBe(0);
+  });
+
+  it("should start metering again when stopped is cleared", () => {
+    // Arrange
+    const ref = createRef<MeterHandle>();
+    const { container, rerender } = render(<Meter ref={ref} stopped />);
+
+    // Act
+    rerender(<Meter ref={ref} />);
+    ref.current?.set(0.6);
+
+    // Assert
+    expect(levelOf(bars(container)[0])).toBe(0.6);
+  });
 });

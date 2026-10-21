@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { createRef } from "react";
+import { createRef, useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Fader, type FaderProps } from "./Fader";
 
@@ -74,8 +74,8 @@ describe("Fader", () => {
     ["{Shift>}{ArrowDown}{/Shift}", -5.2],
     ["{PageUp}", 0.8],
     ["{PageDown}", -5.2],
-    ["{Home}", 6],
-    ["{End}", -60],
+    ["{Home}", -60],
+    ["{End}", 6],
   ])("should step with %s", async (keys, expected) => {
     // Arrange
     const user = userEvent.setup();
@@ -96,10 +96,105 @@ describe("Fader", () => {
     slider.focus();
 
     // Act
-    await user.keyboard("{ArrowUp}{Home}");
+    await user.keyboard("{ArrowUp}{End}");
 
     // Assert
     expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("should not report a change when already at −∞", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const { onChange, slider } = renderFader({ db: -60 });
+    slider.focus();
+
+    // Act
+    await user.keyboard("{ArrowDown}{PageDown}{Home}");
+
+    // Assert
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it.each(["{ArrowUp}", "{ArrowRight}", "{PageUp}", "{Shift>}{ArrowUp}{/Shift}"])(
+    "should leave −∞ for the bottom mark (−48 dB) with %s",
+    async (keys) => {
+      // Arrange
+      const user = userEvent.setup();
+      const { onChange, slider } = renderFader({ db: -60 });
+      slider.focus();
+
+      // Act
+      await user.keyboard(keys);
+
+      // Assert
+      expect(onChange).toHaveBeenCalledTimes(1);
+      expect(onChange).toHaveBeenLastCalledWith(-48);
+    },
+  );
+
+  it("should keep climbing from −∞ one step at a time instead of sticking", async () => {
+    // Arrange: a controlled fader, as in the app
+    const user = userEvent.setup();
+    const seen: number[] = [];
+    function Controlled() {
+      const [db, setDb] = useState(-60);
+      return (
+        <Fader
+          label="Kick volume"
+          db={db}
+          onChange={(next) => {
+            seen.push(next);
+            setDb(next);
+          }}
+        />
+      );
+    }
+    render(<Controlled />);
+    screen.getByRole("slider").focus();
+
+    // Act
+    await user.keyboard("{PageUp}{PageUp}{PageUp}");
+
+    // Assert
+    expect(seen).toEqual([-48, -45, -42]);
+    expect(screen.getByRole("slider")).toHaveAttribute("aria-valuenow", "-42");
+  });
+
+  it("should step down onto the bottom mark, then to −∞", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const { onChange, slider } = renderFader({ db: -47.8 });
+    slider.focus();
+
+    // Act
+    await user.keyboard("{ArrowDown}");
+
+    // Assert
+    expect(onChange).toHaveBeenLastCalledWith(-48);
+  });
+
+  it("should step from the bottom mark to −∞ going down", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const { onChange, slider } = renderFader({ db: -48 });
+    slider.focus();
+
+    // Act
+    await user.keyboard("{ArrowDown}");
+
+    // Assert
+    expect(onChange).toHaveBeenLastCalledWith(-60);
+  });
+
+  it("should step up from −∞ with the wheel to the bottom mark", () => {
+    // Arrange
+    const { onChange, slider } = renderFader({ db: -60 });
+
+    // Act
+    fireEvent.wheel(slider, { deltaY: -100 });
+
+    // Assert
+    expect(onChange).toHaveBeenLastCalledWith(-48);
   });
 
   it("should reset to 0 dB on double-click, or to defaultDb", async () => {
@@ -139,6 +234,48 @@ describe("Fader", () => {
 
     // Assert
     expect(onChange).toHaveBeenLastCalledWith(6);
+  });
+
+  it("should read −48 dB, not −∞, when dragged exactly onto the bottom mark", () => {
+    // Arrange: 200 px throw, 0 dB sits at 40 px, so −48 is 160 px lower
+    stubFrames();
+    const { onChange, slider } = renderFader({ db: 0 });
+
+    // Act
+    drag(slider, 100, 260);
+
+    // Assert
+    expect(onChange).toHaveBeenLastCalledWith(-48);
+  });
+
+  it("should read −48 dB within half a pixel past the mark and −∞ beyond it", () => {
+    // Arrange
+    stubFrames();
+    const near = renderFader({ db: 0, label: "Near" });
+    const far = renderFader({ db: 0, label: "Far" });
+
+    // Act
+    drag(near.slider, 100, 260.4);
+    drag(far.slider, 100, 261);
+
+    // Assert
+    expect(near.onChange).toHaveBeenLastCalledWith(-48);
+    expect(far.onChange).toHaveBeenLastCalledWith(-60);
+  });
+
+  it("should come back to −48 dB when the drag returns to the mark", () => {
+    // Arrange
+    stubFrames();
+    const { onChange, slider } = renderFader({ db: 0 });
+
+    // Act: far past the mark pins at −∞, then back up the 4 px of overshoot
+    fireEvent.pointerDown(slider, { pointerId: 1, button: 0, clientY: 100 });
+    fireEvent.pointerMove(slider, { pointerId: 1, clientY: 300 });
+    fireEvent.pointerMove(slider, { pointerId: 1, clientY: 296 });
+    fireEvent.pointerUp(slider, { pointerId: 1, clientY: 296 });
+
+    // Assert
+    expect(onChange).toHaveBeenLastCalledWith(-48);
   });
 
   it("should read −∞ when dragged to the bottom, even from −48 dB", () => {

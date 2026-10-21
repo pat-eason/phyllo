@@ -52,3 +52,16 @@
 - F5 merged (53b16fe): organisms adopt F4 props (ParamKnob valueText/caption, Readout caption click, GrooveCard selected/previewing, Chip code selected), StatusBar MIDI notices, sample names in Inspector/Library, stopPreview, shared useAudition (GrooveBrowser play works), StarterPicker key fix. app 719 tests, e2e 7/7. Dispatching T3.V (UI verifier) + T7.5a (desktop self-test build).
 - T7.5a merged (91b6331): release `pnpm tauri build --bundles app` + in-app self-test. **DoD flow passes in the real app: 13/13** (agent ran twice; orchestrator re-ran `pnpm --filter phyllo selftest` → 13/13, WAV 2,229,746 bytes exact, offline render 149×). WKWebView findings → D148. Removed leftover ~/Library/Application Support/com.phyllo.app created by the run.
 - T3.V done (verifier): 17 mockups compared (0 S1/S2 visual), §6.1 acceptance 5/5 pass (mute/solo → code 66–86 ms), §6.2–6.7 54/60 work, §7 shortcuts 20/20 + input isolation, keyboard walk sane, perf: zero Timeline/Inspector re-renders while playing, 60 fps. Defects: 3 S2 (Fader keys at −∞, ruler seek blocked by loop band, 2 contrast spots) + ~25 S3 → F6/F7/F8.
+
+### SPEC §6.1 acceptance criteria (verified by T3.V in Chromium; native parts by T7.5a in WKWebView)
+| Criterion | Result | How verified |
+|---|---|---|
+| Guided/Pro changes labels, knob count, library tab label, code drawer default and tips, never the project or code | PASS | Playwright: 6→8 knobs, friendly→code names, Starters→Snippets, drawer closed→open, tip hidden; serialized project + song code byte-identical across Guided→Pro→Guided, project stays clean (T3.V accept.json A1; e2e flow c) |
+| Theme toggle switches all tokens instantly; accent picks its dark/light shade | PASS (S3 transition lag → F6) | all tokens change in the same frame; accent token equals the SPEC shade for 6 accents × 2 themes (A2; e2e flow d) |
+| Selecting a track updates inspector + code highlight; Mute/Solo update the code within 100 ms | PASS | inspector + 10 highlighted lines + row tint; mute/solo → code 66–86 ms over 20 runs stopped/playing; engine eval 81–93 ms (scripts/latency.mjs; e2e flow b; unit test "within 100 ms") |
+| Turning any knob updates the code drawer text and the sound while playing | PASS | 13/14 knobs rewrite code (modulated one confirms first by design); engine re-evaluates while playing (A4); desktop: lpf edit re-evaluated ok (T7.5a step d) |
+| Playhead, bar.beat.16th and cycle readouts consistent with the scheduler | PASS | 17 samples over 4 s: 0.5005 cycles/s at 120 BPM; readout = cycle; playhead x = cycle × 20.625 px; loop wraps 16→9 (A5); desktop: 1.504 vs 1.552 expected cycles in 3 s incl. audio start (T7.5a step c) |
+
+### Definition-of-done flow in the built app
+`pnpm --filter phyllo selftest` (release .app, WKWebView, real Rust layer): open → play House starter → edit → save → reopen from library → export WAV (+ MIDI, .strudel, FLAC) — 13/13 PASS (T7.5a, re-run by orchestrator).
+- F6 merged (46640bf): Fader keyboard/scale, Meter peak/stop props, theme-switch transition suppression, Punchcard 3 rows + small-tile play, Slider valueText string, Knob onBlockedChange. pnpm check green.

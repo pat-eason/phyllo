@@ -75,21 +75,39 @@ export interface StartupOptions {
   onError(title: string, detail: string): void;
 }
 
+export interface StartupState {
+  /** A screen has been chosen. */
+  ready: boolean;
+  /**
+   * False while the store only holds the empty placeholder project: startup landed on the Library or Guided start
+   * without loading anything (first launch, nothing open last session, or the reopen failed). Becomes true as soon as
+   * a project is opened, created or imported. Screens hide the project name and Arrange/Pattern/Mixer while false.
+   */
+  projectOpen: boolean;
+}
+
+interface StartResult {
+  route: Route;
+  projectOpen: boolean;
+}
+
 /**
  * Runs the startup flow once (StrictMode-safe), listens for OS open-file events for the app's lifetime and remembers
  * the open project's path for the next launch. Resolves `ready` once a screen is chosen.
  */
-export function useStartup({ stores, initialRoute, onOpenFiles, onError }: StartupOptions): boolean {
+export function useStartup({ stores, initialRoute, onOpenFiles, onError }: StartupOptions): StartupState {
   const [ready, setReady] = useState(false);
-  const started = useRef<Promise<Route> | null>(null);
+  const [projectOpen, setProjectOpen] = useState(true);
+  const started = useRef<Promise<StartResult> | null>(null);
   const handleOpenFiles = useEffectEvent((paths: string[]) => onOpenFiles(paths));
   const reportError = useEffectEvent((title: string, detail: string) => onError(title, detail));
 
   useEffect(() => {
     let live = true;
     started.current ??= runStartup(stores, initialRoute, (paths) => handleOpenFiles(paths), (t, d) => reportError(t, d));
-    void started.current.then((route) => {
+    void started.current.then(({ route, projectOpen: loaded }) => {
       if (!live) return;
+      setProjectOpen(loaded);
       navigate(route, { replace: true });
       setReady(true);
     });
@@ -104,11 +122,13 @@ export function useStartup({ stores, initialRoute, onOpenFiles, onError }: Start
     () =>
       stores.project.subscribe((state, prev) => {
         if (state.filePath !== null && state.filePath !== prev.filePath) writeLastProject(state.filePath);
+        // Anything that replaces the project (open, new, import, starter) makes it a real, open project.
+        if (state.project.id !== prev.project.id || state.filePath !== prev.filePath) setProjectOpen(true);
       }),
     [stores],
   );
 
-  return ready;
+  return { ready, projectOpen };
 }
 
 /** Accepted OS open requests: openable extensions, and only while Settings › System allows it (D95). */
@@ -122,7 +142,7 @@ async function runStartup(
   explicit: Route | null,
   onOpenFiles: (paths: string[]) => void,
   onError: (title: string, detail: string) => void,
-): Promise<Route> {
+): Promise<StartResult> {
   const { native } = stores;
   const hadSavedSettings = await native.settingsStore
     .load()
@@ -141,7 +161,7 @@ async function runStartup(
   const first = pending[0];
   if (first !== undefined) {
     const error = await openPath(stores, first);
-    if (error === null) return { screen: "arrange" };
+    if (error === null) return { route: { screen: "arrange" }, projectOpen: true };
     onError("Couldn't open the file", error);
   }
 
@@ -155,8 +175,9 @@ async function runStartup(
     const error = await openPath(stores, plan.reopen);
     if (error !== null) {
       writeLastProject(null);
-      return plan.fallback;
+      return { route: plan.fallback, projectOpen: false };
     }
+    return { route: plan.route, projectOpen: true };
   }
-  return plan.route;
+  return { route: plan.route, projectOpen: false };
 }

@@ -59,7 +59,7 @@ export const Disabled: Story = { args: { disabled: true } };
 /** Kit size: 96 px throw, four labels. */
 export const Compact: Story = { render: () => <KitBox /> };
 
-/** Drag (Shift = fine), wheel, arrows ±0.5 dB (Shift ±3), Home/End, double-click → 0 dB. */
+/** Drag (Shift = fine), wheel, arrows ±0.5 dB (Shift ±3), PageUp/PageDown ±3, Home = −∞, End = +6, double-click → 0 dB. Up from −∞ goes to −48 first. */
 export const Interactive: Story = { render: () => <StripFader name="Bass" initial={-2.2} meter={[0.7, 0.7]} /> };
 
 export const Themes: Story = {

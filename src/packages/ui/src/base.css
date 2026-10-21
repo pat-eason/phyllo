@@ -26,3 +26,13 @@ select,
 textarea {
   font: inherit;
 }
+
+/*
+ * ThemeProvider sets data-theme-switching on <html> for two frames after a theme or accent change. Tokens flip in one
+ * frame; without this, every control's own background/color/border transition would trail them by 90-160 ms.
+ */
+:root[data-theme-switching] *,
+:root[data-theme-switching] *::before,
+:root[data-theme-switching] *::after {
+  transition: none !important;
+}

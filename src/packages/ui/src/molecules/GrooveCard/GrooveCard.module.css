@@ -103,6 +103,21 @@
   transition: filter var(--ph-dur-fast) var(--ph-ease);
 }
 
+/* The two smallest covers are only ~38 and ~46 px tall: a 30 px button would poke out of the top, so shrink it and tuck it in. */
+.tile[data-size="1"] .play {
+  right: 6px;
+  bottom: 6px;
+  width: 20px;
+  height: 20px;
+}
+
+.tile[data-size="2"] .play {
+  right: 8px;
+  bottom: 8px;
+  width: 24px;
+  height: 24px;
+}
+
 .play:disabled,
 .playRow:disabled {
   opacity: 0.5;

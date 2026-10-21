@@ -52,6 +52,19 @@ describe("GrooveCard tile", () => {
     expect(within(tile).getByText("Today, 12:41")).toBeInTheDocument();
   });
 
+  it("should draw three preview rows whether the groove has 2 or 3 tracks", () => {
+    // Arrange / Act
+    const three = setup({ groove: { ...groove, preview: NIGHT_BUS_PREVIEW } });
+    const cover = (c: HTMLElement) => c.querySelector('[aria-hidden="true"]');
+    const threeRows = cover(three.container)?.children.length;
+    three.unmount();
+    const two = setup({ groove: { ...groove, trackCount: 2, preview: NIGHT_BUS_PREVIEW.slice(0, 2) } });
+
+    // Assert
+    expect(threeRows).toBe(3);
+    expect(cover(two.container)?.children).toHaveLength(3);
+  });
+
   it("should call onOpen from the cover", async () => {
     // Arrange
     const user = userEvent.setup();

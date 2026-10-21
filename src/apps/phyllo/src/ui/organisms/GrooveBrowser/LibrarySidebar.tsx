@@ -130,14 +130,14 @@ export function LibrarySidebar({
                   type="button"
                   className={styles["tag"]}
                   aria-pressed={pressed}
-                  aria-label={`${tag.name}, ${grooveCount(tag.count)}`}
                   onClick={() => onToggleTag(tag.name)}
                 >
                   <span className={styles["dot"]} style={{ background: tag.color }} aria-hidden="true" />
                   <span className={styles["tagName"]}>{tag.name}</span>
-                  <span className={styles["count"]} aria-hidden="true">
-                    {tag.count}
-                  </span>
+                  {" "}
+                  <span className={styles["count"]}>{tag.count}</span>
+                  {" "}
+                  <span className={styles["countUnit"]}>{tag.count === 1 ? "groove" : "grooves"}</span>
                 </button>
               </li>
             );

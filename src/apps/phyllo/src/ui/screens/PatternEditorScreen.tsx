@@ -24,6 +24,7 @@ export function PatternEditorScreen({ trackId }: PatternEditorScreenProps) {
       <AppHeader className={styles["chrome"]} variant="compact" viewTabs={<ScreenTabs current="pattern" />} actions={<PlayPatternActions trackId={editedId} />} />
       <PatternEditorProvider key={editedId ?? "none"} trackId={editedId}>
         <main className={styles["body"]} aria-label="Pattern editor">
+          <h1 className={styles["visuallyHidden"]}>Pattern editor</h1>
           <StepSequencer />
           <PatternTools />
         </main>

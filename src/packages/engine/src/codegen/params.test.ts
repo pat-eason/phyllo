@@ -16,9 +16,9 @@ describe("codegen helpers", () => {
     [1600, "1600"],
     [1.25, "1.25"],
     [-0.5, "-.5"],
-    [0.1234, ".123"],
-    [0.0004, "0"],
-    [2.0005, "2.001"],
+    [0.123456, ".1235"],
+    [0.00004, "0"],
+    [0.1875, ".1875"],
     [Number.NaN, "0"],
     [Number.POSITIVE_INFINITY, "0"],
   ])("should format %d as %s", (value, text) => {
@@ -29,7 +29,7 @@ describe("codegen helpers", () => {
   it("should tell which numbers survive formatting exactly", () => {
     // Act / Assert
     expect([0.82, 0.125, 1400, -2].every(isExactNumber)).toBe(true);
-    expect([0.0625, 1 / 3].some(isExactNumber)).toBe(false);
+    expect([0.03125, 1 / 3].some(isExactNumber)).toBe(false);
   });
 
   it("should quote patterned param values", () => {

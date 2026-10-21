@@ -93,15 +93,15 @@ describe("GrooveBrowser", () => {
     await screen.findByText("12 grooves");
 
     // Act
-    await user.click(screen.getByRole("button", { name: "lo-fi, 2 grooves" }));
+    await user.click(screen.getByRole("button", { name: "lo-fi 2 grooves" }));
 
     // Assert
-    expect(screen.getByRole("button", { name: "lo-fi, 2 grooves" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "lo-fi 2 grooves" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByText("2 grooves")).toBeInTheDocument();
     expect(names()).toEqual(["Night bus", "Rain on tin"]);
 
     // Act
-    await user.click(screen.getByRole("button", { name: "sketch, 3 grooves" }));
+    await user.click(screen.getByRole("button", { name: "sketch 3 grooves" }));
 
     // Assert
     expect(names()).toEqual(["Rain on tin"]);
@@ -452,9 +452,9 @@ describe("GrooveBrowser", () => {
 
     // Assert
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-    expect(await screen.findByRole("button", { name: "rainy, 1 groove" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "late, 1 groove" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "lo-fi, 1 groove" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "rainy 1 groove" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "late 1 groove" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "lo-fi 1 groove" })).toBeInTheDocument();
   });
 
   it("should select rows with the modifier keys and add a tag to all of them", async () => {
@@ -478,7 +478,7 @@ describe("GrooveBrowser", () => {
     await user.click(screen.getByRole("button", { name: "Save tags" }));
 
     // Assert
-    expect(await screen.findByRole("button", { name: "road trip, 2 grooves" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "road trip 2 grooves" })).toBeInTheDocument();
   });
 
   it("should select a range with Shift and report bulk export paths", async () => {
@@ -591,7 +591,7 @@ describe("GrooveBrowser", () => {
     await user.type(screen.getByRole("textbox", { name: "New tag name" }), "tiny{Enter}");
 
     // Assert
-    expect(await screen.findByRole("button", { name: "tiny, 1 groove" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "tiny 1 groove" })).toBeInTheDocument();
   });
 
   it("should show the empty library state with its actions", async () => {

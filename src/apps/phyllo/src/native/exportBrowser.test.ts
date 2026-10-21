@@ -311,6 +311,54 @@ describe('browser export: MIDI file', () => {
   });
 });
 
+describe('browser export: .strudel code', () => {
+  it('downloads code written to the exports folder as <name>.strudel with the code as text', async () => {
+    // Arrange
+    const { api, downloads } = rig();
+
+    // Act
+    await api.strudelWrite('/Phyllo/Exports/Night drive.strudel', '$: s("bd*4")');
+
+    // Assert
+    expect(downloads).toHaveLength(1);
+    expect(downloads[0]!.name).toBe('Night drive.strudel');
+    expect(await downloads[0]!.blob.text()).toBe('$: s("bd*4")');
+  });
+
+  it('downloads the .strudel written next to the audio under its bare file name', async () => {
+    // Arrange
+    const { api, downloads } = rig();
+
+    // Act
+    await api.strudelWrite('Night drive.strudel', '$: s("hh*8")');
+
+    // Assert
+    expect(downloads.map((d) => d.name)).toEqual(['Night drive.strudel']);
+  });
+
+  it('keeps the exported code readable from the virtual folder', async () => {
+    // Arrange
+    const { api } = rig();
+
+    // Act
+    await api.strudelWrite('/Phyllo/Exports/a.strudel', 'x');
+
+    // Assert
+    expect(await api.strudelRead('/Phyllo/Exports/a.strudel')).toBe('x');
+  });
+
+  it('does not download .strudel files written elsewhere in the virtual file system', async () => {
+    // Arrange
+    const { api, downloads } = rig();
+
+    // Act
+    await api.strudelWrite('/Users/me/beat.strudel', 'x');
+
+    // Assert
+    expect(downloads).toEqual([]);
+  });
+});
+
 describe('browser export: default download', () => {
   const realCreate = URL.createObjectURL;
   const realRevoke = URL.revokeObjectURL;

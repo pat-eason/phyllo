@@ -13,8 +13,11 @@ export interface SliderProps extends Omit<
   step?: number;
   /** Accessible name (the slider has no visible label of its own). */
   label: string;
-  /** Spoken value, e.g. "Medium" for tile size 3. */
-  valueText?: (value: number) => string;
+  /**
+   * Spoken value → `aria-valuetext`, e.g. "Medium" for tile size 3 or "17%" for a 0 to 1 feel slider. A string is used
+   * as-is (the parent formats it); a function gets the current value. Without it screen readers read the raw number.
+   */
+  valueText?: string | ((value: number) => string);
   /** Track width in px. Default 120. */
   width?: number;
   /** Decorative detents drawn on the track (tile size 1 to 5). They do not change stepping. */
@@ -110,7 +113,7 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
           value={value}
           disabled={disabled}
           aria-label={label}
-          aria-valuetext={valueText ? valueText(value) : undefined}
+          aria-valuetext={typeof valueText === "function" ? valueText(value) : valueText}
           onChange={(event) => onChange(Number(event.target.value))}
           onKeyDown={handleKeyDown}
         />

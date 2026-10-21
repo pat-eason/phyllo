@@ -33,7 +33,8 @@ export function LibraryScreen() {
       <AppHeader
         className={styles["chrome"]}
         variant="compact"
-        viewTabs={<ScreenTabs current="library" withLibrary />}
+        hideProjectName={!shell.projectOpen}
+        viewTabs={shell.projectOpen ? <ScreenTabs current="library" withLibrary /> : <h1 className={styles["libraryTitle"]}>Library</h1>}
         actions={
           <div className={styles["headerActions"]}>
             <Button loading={importing} onClick={() => void startImport()}>
@@ -46,6 +47,7 @@ export function LibraryScreen() {
         }
       />
       <main className={styles["library"]} aria-label="Groove library">
+        {shell.projectOpen ? <h1 className={styles["visuallyHidden"]}>Library</h1> : null}
         <GrooveBrowser
           onOpenGroove={() => shell.navigate({ screen: "arrange" })}
           onNewGroove={newGroove}

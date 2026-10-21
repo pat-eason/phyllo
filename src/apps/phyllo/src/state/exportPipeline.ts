@@ -200,9 +200,15 @@ export function formatClock(seconds: number): string {
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
 }
 
-/** Wall-clock estimate of an offline audio export (at least one second per render). */
+/**
+ * Time the first render typically spends fetching and decoding sounds before audio is produced (once per export,
+ * not per stem: later renders reuse the loaded sounds). Deliberately conservative; a warm cache is faster.
+ */
+export const SAMPLE_LOAD_SEC = 6;
+
+/** Wall-clock estimate of an offline audio export: sample loading once, plus rendering (at least one second per render). */
 export function estimateExportSec(audioSec: number, renders = 1): number {
-  return Math.max(1, (audioSec / OFFLINE_SPEED) * renders);
+  return SAMPLE_LOAD_SEC + Math.max(1, (audioSec / OFFLINE_SPEED) * renders);
 }
 
 /** A track is audible unless muted, or another track is soloed and it isn't. */

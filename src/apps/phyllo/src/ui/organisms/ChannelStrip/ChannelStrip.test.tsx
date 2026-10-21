@@ -269,7 +269,7 @@ describe("ChannelStrip", () => {
 
     // Act
     fader.focus();
-    await user.keyboard("{Home}");
+    await user.keyboard("{End}");
 
     // Assert
     expect(projectOf(stores).master.postgain).toBe(1.995);

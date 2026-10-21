@@ -30,6 +30,9 @@ export function ArrangeScreen() {
     <div className={styles["screen"]}>
       <AppHeader className={styles["chrome"]} variant="full" onExport={shell.openExport} onVersionHistory={shell.openHistory} />
       <main className={styles["body"]} aria-label="Arrange">
+        <h1 className={styles["visuallyHidden"]}>Arrange</h1>
+        {/* The library panel's headings are level 3; this keeps the outline h1 → h2 → h3 without gaps. */}
+        <h2 className={styles["visuallyHidden"]}>Sound library</h2>
         <LibraryPanel ref={libraryPanelRef} />
         <div className={styles["center"]}>
           <ViewToolbar
