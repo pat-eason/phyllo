@@ -33,7 +33,7 @@ export interface SettingsChannel {
   close(): void;
 }
 
-const CHANNEL_NAME = "phyllo:settings";
+const CHANNEL_NAME = "phyllo-settings";
 
 /** Settings sync over `NativeApi.broadcast` (global Tauri events between windows; BroadcastChannel in the browser impl). */
 export function createNativeSettingsChannel(native: Pick<NativeApi, "broadcast" | "onBroadcast">): SettingsChannel {
@@ -42,12 +42,14 @@ export function createNativeSettingsChannel(native: Pick<NativeApi, "broadcast" 
   let closed = false;
   void native.onBroadcast(CHANNEL_NAME, (payload) => {
     for (const listener of [...listeners]) listener(payload);
-  }).then((off) => {
-    if (closed) off();
-    else unlisten = off;
-  });
+  })
+    .then((off) => {
+      if (closed) off();
+      else unlisten = off;
+    })
+    .catch((error: unknown) => console.warn("[phyllo] settings sync unavailable", error));
   return {
-    post: (settings) => void native.broadcast(CHANNEL_NAME, settings).catch(() => {}),
+    post: (settings) => void native.broadcast(CHANNEL_NAME, settings).catch((error: unknown) => console.warn("[phyllo] settings sync", error)),
     subscribe(callback) {
       listeners.add(callback);
       return () => listeners.delete(callback);

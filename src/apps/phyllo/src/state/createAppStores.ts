@@ -121,6 +121,7 @@ export function createAppStores(deps: AppDeps): AppStores {
     newId,
     autosaveEnabled: () => settingsNow().system.autosave,
     autosaveMs: timing.autosaveMs,
+    onError,
     ...(deps.initialProject ? { initialProject: deps.initialProject } : {}),
     ...(deps.initialFilePath !== undefined ? { initialFilePath: deps.initialFilePath } : {}),
   });

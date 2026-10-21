@@ -10,7 +10,6 @@ import { native } from "./native";
 import { SETTINGS_HASH } from "./native/browser";
 import { PhylloProvider, createAppStores } from "./state";
 import { AppThemeProvider } from "./ui/shell";
-import { createSettingsSyncChannel } from "./ui/shell/settingsChannel";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("#root not found");
@@ -21,7 +20,7 @@ const settingsOnly = desktop
   ? getCurrentWindow().label !== "main"
   : window.location.hash === SETTINGS_HASH && window.opener !== null;
 
-const stores = createAppStores({ native, settingsChannel: createSettingsSyncChannel(native) });
+const stores = createAppStores({ native });
 
 // Write a pending autosave and settings before the window goes away (best effort; autosave runs every 1.5 s anyway).
 window.addEventListener("beforeunload", () => void stores.flush());

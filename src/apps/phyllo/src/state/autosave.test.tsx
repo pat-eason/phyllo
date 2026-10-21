@@ -32,6 +32,24 @@ afterEach(() => {
 });
 
 describe("autosave", () => {
+  it("should write a pending autosave before switching to a new project", async () => {
+    // Arrange
+    ({ stores } = renderWithStores(<AutosaveStatus />));
+    const { dispatch, newProject } = stores.project.getState();
+    dispatch({ type: "tempo/set", bpm: 128 });
+
+    // Act
+    act(() => {
+      newProject("blank");
+    });
+    await act(() => vi.advanceTimersByTimeAsync(50));
+
+    // Assert
+    const scan = await stores.native.libraryScan();
+    const fixture = scan.entries.find((e) => e.summary.id === "prj_fixture");
+    expect(fixture?.summary.bpm).toBe(128);
+  });
+
   it("should save 1.5 s after the last change, not before", async () => {
     // Arrange
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime.bind(vi) });

@@ -33,7 +33,7 @@ pnpm typecheck        # pnpm -r typecheck
 pnpm lint             # pnpm -r lint (ESLint flat config at the repo root)
 pnpm test             # pnpm -r test (Vitest)
 pnpm check            # typecheck + lint + test (what CI runs)
-pnpm e2e              # Playwright smoke test against the Vite dev server (port 1420)
+pnpm e2e              # Playwright user flows against the Vite dev server (port 1420); `pnpm --filter phyllo e2e:visual` for screen captures
 pnpm stories          # Storybook for @phyllo/ui on port 6006
 pnpm --filter <name> <script>   # target a single package, e.g. run one package's tests
 ```

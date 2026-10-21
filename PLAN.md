@@ -74,7 +74,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | T3.4 | organism agent | LibraryPanel | T3.1, M2 | same | done |
 | T3.5 | organism agent | CodeDrawer, TipCoach | T3.1, M2 | same + inline pattern edit, Edit code mode | done |
 | T3.6 | organism agent | Inspector | T3.1, M2 | same | done |
-| T3.7 | shell agent | App/main, router, all screens (Arrange, Pattern, Mixer, Library, GuidedStart, Settings), shortcuts, menu/media/open-file glue, unsaved/history dialogs, e2e flows | all organisms | SPEC §6.1 acceptance + §7; e2e flows | active |
+| T3.7 | shell agent | App/main, router, all screens (Arrange, Pattern, Mixer, Library, GuidedStart, Settings), shortcuts, menu/media/open-file glue, unsaved/history dialogs, e2e flows | all organisms | SPEC §6.1 acceptance + §7; e2e flows | done |
 | T3.V | verifier | read-only | T3.7 | §6.1 checklist + screenshot parity 01/02/accent-* | todo |
 
 ### M4 Pattern editor and Mixer

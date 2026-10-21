@@ -97,6 +97,8 @@ export interface ProjectStoreDeps {
   autosaveMs: number;
   initialProject?: Project;
   initialFilePath?: string | null;
+  /** Background write failures that have no store state to land in. */
+  onError?: (message: string, error: unknown) => void;
 }
 
 export interface ProjectStoreHandle {
@@ -259,7 +261,20 @@ export function createProjectStore(deps: ProjectStoreDeps): ProjectStoreHandle {
     else clearAutosave();
   };
 
+  /** Writes a project that is about to be replaced while its autosave was still pending (never drop edits). */
+  const writeOutgoing = (snapshot: Project, filePath: string | null) => {
+    saveChain = saveChain
+      .then(async () => {
+        const path = filePath ?? (await native.projectNewPath(snapshot.name));
+        const json = serializeProject(snapshot);
+        await native.projectWrite(path, json);
+        await native.historySnapshot(snapshot.id, json).catch(() => undefined);
+      })
+      .catch((error: unknown) => deps.onError?.("Autosave before switching projects failed", error));
+  };
+
   const loadProject: ProjectStoreState["loadProject"] = (project, options = {}) => {
+    if (autosaveTimer !== undefined && get().dirty && deps.autosaveEnabled()) writeOutgoing(get().project, get().filePath);
     generation += 1;
     clearAutosave();
     history = emptyHistory();
