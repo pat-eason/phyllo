@@ -1,0 +1,382 @@
+.root {
+  display: flex;
+  flex: 999 1 640px;
+  flex-direction: column;
+  gap: var(--ph-s-7);
+  box-sizing: border-box;
+  min-width: 0;
+  padding: var(--ph-s-7) var(--ph-s-8);
+  color: var(--ph-text);
+  font: var(--ph-text-body);
+}
+
+.muted {
+  margin: 0;
+  color: var(--ph-muted);
+}
+
+.mono {
+  font-family: var(--ph-font-mono);
+}
+
+/* ---- header ---- */
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ph-s-5);
+}
+
+.chip {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+}
+
+.titles {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  margin: 0;
+  font: var(--ph-text-heading);
+}
+
+.subtitle {
+  font: var(--ph-text-small);
+  color: var(--ph-muted);
+}
+
+.tabs {
+  margin-left: var(--ph-s-5);
+}
+
+.grow {
+  flex: 1;
+}
+
+.length {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ph-s-2);
+  box-sizing: border-box;
+  height: 34px;
+  padding: 0 var(--ph-s-5);
+  border: 1px solid var(--ph-line);
+  border-radius: 9px;
+  white-space: nowrap;
+}
+
+.fieldLabel {
+  color: var(--ph-muted);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ph-s-7);
+  min-width: 0;
+}
+
+/* ---- step grid ---- */
+.scroll {
+  margin: 0 calc(-1 * var(--ph-s-2));
+  overflow-x: auto;
+}
+
+/* Rows keep StepRow's 6 px padding; labels and lanes get the same inset so the columns line up. */
+.gridBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ph-s-3);
+  min-width: 732px;
+}
+
+.beatLabels {
+  display: flex;
+  padding: 0 var(--ph-s-2);
+  align-items: center;
+  gap: var(--ph-s-5);
+  font-family: var(--ph-font-mono);
+  font-size: 11px;
+  color: var(--ph-muted);
+}
+
+.labelSpacer {
+  flex: 0 0 140px;
+}
+
+.beats {
+  display: grid;
+  flex: 1;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--ph-s-4);
+}
+
+.writes {
+  flex: 0 0 170px;
+  font-family: var(--ph-font-ui);
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ph-s-3);
+}
+
+.addRow {
+  display: flex;
+  padding: 0 var(--ph-s-2);
+}
+
+/* ---- velocity lane ---- */
+.velocity {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--ph-s-5);
+  margin-top: var(--ph-s-2);
+  padding: 0 var(--ph-s-2);
+}
+
+.velocityLabel {
+  display: flex;
+  flex: 0 0 140px;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: var(--ph-s-1);
+}
+
+.velocityTitle {
+  font-weight: 600;
+}
+
+.velocityHint {
+  font-size: 11px;
+  color: var(--ph-muted);
+}
+
+.velocityBars {
+  display: grid;
+  flex: 1;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--ph-s-4);
+  box-sizing: border-box;
+  height: 72px;
+  padding: var(--ph-s-2) 0 0;
+  border-top: 1px solid var(--ph-line);
+  border-bottom: 1px solid var(--ph-line);
+  cursor: ns-resize;
+  touch-action: none;
+  user-select: none;
+}
+
+.velocityBeat {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--ph-s-1);
+  height: 100%;
+}
+
+.velocitySlot {
+  display: flex;
+  align-items: flex-end;
+  height: 100%;
+  min-width: 0;
+}
+
+.velocityBar {
+  width: 100%;
+  min-height: 2px;
+  border-radius: 3px 3px 0 0;
+  background: var(--row-color);
+}
+
+.velocityBar:focus-visible {
+  outline: 2px solid var(--ph-accent);
+  outline-offset: 2px;
+}
+
+.velocityNote {
+  flex: 1;
+  margin: 0;
+  padding: var(--ph-s-5) 0;
+  border-top: 1px solid var(--ph-line);
+  border-bottom: 1px solid var(--ph-line);
+  color: var(--ph-muted);
+}
+
+.velocitySpacer {
+  flex: 0 0 170px;
+}
+
+/* ---- unfit ---- */
+.unfit {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ph-s-3);
+  padding: var(--ph-s-6);
+  border: 1px dashed var(--ph-line);
+  border-radius: var(--ph-r-xl);
+}
+
+.unfitTitle {
+  margin: 0;
+  font: var(--ph-text-subheading);
+}
+
+.unfitDetail {
+  margin: 0;
+  color: var(--ph-muted);
+}
+
+.unfitCode {
+  align-self: stretch;
+  margin: 0;
+  padding: var(--ph-s-4) var(--ph-s-5);
+  overflow-x: auto;
+  border-radius: var(--ph-r-lg);
+  background: var(--ph-sunken);
+  font: var(--ph-text-code);
+  color: var(--ph-text);
+}
+
+/* ---- live code ---- */
+.live {
+  padding: 14px var(--ph-s-6);
+}
+
+/* ---- piano roll ---- */
+.piano {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ph-s-3);
+}
+
+.pianoBar {
+  display: flex;
+  align-items: center;
+  gap: var(--ph-s-3);
+}
+
+.pianoKey {
+  margin-right: auto;
+  color: var(--ph-muted);
+}
+
+.pianoKey strong {
+  color: var(--ph-text);
+  font-weight: 600;
+}
+
+.pianoSnapLabel {
+  font: var(--ph-text-small);
+  color: var(--ph-muted);
+}
+
+.pianoGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 720px;
+  padding: 0 var(--ph-s-2);
+}
+
+.pianoRow {
+  display: flex;
+  align-items: center;
+  gap: var(--ph-s-5);
+}
+
+.pianoLabel {
+  flex: 0 0 56px;
+  font-family: var(--ph-font-mono);
+  font-size: 11px;
+  color: var(--ph-muted);
+}
+
+.pianoRow[data-root] .pianoLabel {
+  color: var(--ph-text);
+  font-weight: 600;
+}
+
+.pianoRow[data-off-key] .pianoLabel {
+  opacity: 0.7;
+}
+
+.pianoSteps {
+  display: grid;
+  flex: 1;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--ph-s-4);
+}
+
+.pianoBeat {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--ph-s-1);
+}
+
+.pianoCellWrap {
+  min-width: 0;
+}
+
+.pianoCell {
+  height: 26px;
+  border-radius: 5px;
+}
+
+.pianoRow[data-root] .pianoCell:not([data-on]) {
+  background: color-mix(in srgb, var(--ph-accent) 8%, var(--ph-step-beat));
+}
+
+.pianoNote {
+  margin: 0;
+  font: var(--ph-text-small);
+  color: var(--ph-muted);
+}
+
+/* ---- code tab ---- */
+.codeView {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ph-s-6);
+}
+
+.codeBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ph-s-3);
+  padding: 14px var(--ph-s-6);
+  border: 1px solid var(--ph-line);
+  border-radius: var(--ph-r-xl);
+  background: var(--ph-sunken);
+  box-shadow: var(--ph-shadow-inset);
+}
+
+.codeHead {
+  display: flex;
+  align-items: baseline;
+  gap: var(--ph-s-3);
+}
+
+.codeTitle {
+  font-weight: 600;
+}
+
+.codeMeta {
+  font: var(--ph-text-small);
+  color: var(--ph-muted);
+}
+
+.codeLines {
+  margin: 0;
+  overflow-x: auto;
+  font: var(--ph-text-code);
+  font-size: 13px;
+  color: var(--ph-text);
+  white-space: pre;
+}
