@@ -24,3 +24,4 @@
 - T2.5 merged (4364dcf): Readout, TransportControls, TrackHeader, SoundRow, SectionChip, Toast, EmptyState; ui 449 tests.
 - T2.6 merged (1bde935): Clip, ParamKnob, SuggestionButton, ModifierRow, PatternField, StepRow; ui 513 tests, Storybook builds. All 17 molecules done.
 - T1.5 merged (26aefff): createEngine (own scheduler, hot-swap with last-good fallback + track attribution, heard-cycle clock, loop/seek/pause, look-ahead, previews, limiter, track/orbit/master meters, capture tap, offline render incl. stems, MIDI/OSC outputs via bridge, sample preload). Engine 1993 unit tests + 12 Playwright browser tests (agent-run; orchestrator re-ran unit suite). Orchestrator: runtime barrel, kind 'runtime', e2e script, Vite define. pnpm check green; app builds. M1 complete.
+- Dispatched T3.1 (app state/hooks) and T1.V (M1 verifier).

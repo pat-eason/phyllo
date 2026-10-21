@@ -33,6 +33,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | T1.2 | codegen agent | `src/packages/engine/src/codegen/**`, `src/packages/engine/src/parse/**`, `src/packages/engine/src/share/**` | T0.3 | SPEC §4.1 rules, both scopes, loop window, line map; §4.2 parser with Code-track fallback + prelude; strudel.cc encode/decode; round-trip tests model→code→model | done |
 | T1.3 | mini agent | `src/packages/engine/src/mini/**` | T0.3 | SPEC §4.3 toMini/fromMini, bjorklund, `(k,n)` form, unfit-pattern detection; tests with spec examples | done |
 | T1.4 | content agent | `src/shared/model/src/content/**` | T0.3 | 7 original starters, tips curriculum, Try-one suggestions, modifier catalog, sound catalog (friendly names), Feel tools | done |
+| T1.V | verifier | read-only | T1.1–T1.5 | adversarial round-trip/parse/reducer fuzzing + browser runtime checks of starters | active |
 | T1.5 | runtime agent | `src/packages/engine/src/runtime/**` | T0.3, T1.2 | init on gesture, evaluate + hot-swap, keep last good on error + attribution, cycle clock, loop, preview, master limiter/postgain, meters, capture tap, sample registration; unit tests with mocks + browser smoke | done |
 
 ### M2 Atoms, then molecules
@@ -59,7 +60,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 ### M3 Arrange screen
 | id | owner | owns | deps | acceptance | status |
 |---|---|---|---|---|---|
-| T3.1 | state agent | `src/apps/phyllo/src/state/**`, `src/apps/phyllo/src/hooks/**` | M1 | all §5 hooks, Zustand stores, mock providers for stories; playhead/meters via subscriptions, not React state | todo |
+| T3.1 | state agent | `src/apps/phyllo/src/state/**`, `src/apps/phyllo/src/hooks/**` | M1 | all §5 hooks, Zustand stores, mock providers for stories; playhead/meters via subscriptions, not React state | active |
 | T3.2–T3.6 | organism agents | AppHeader+StatusBar · ViewToolbar+Timeline · LibraryPanel · CodeDrawer+TipCoach · Inspector | T3.1, M2 | organism docs + SPEC §6.1; stories with mocked hooks | todo |
 | T3.7 | screen agent | `screens/ArrangeScreen`, routing/app shell | T3.2–T3.6 | SPEC §6.1 acceptance criteria | todo |
 | T3.V | verifier | read-only | T3.7 | §6.1 checklist + screenshot parity 01/02/accent-* | todo |
