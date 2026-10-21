@@ -68,7 +68,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | id | owner | owns | deps | acceptance | status |
 |---|---|---|---|---|---|
 | T3.1 | state agent | `src/apps/phyllo/src/state/**`, `src/apps/phyllo/src/hooks/**` | M1 | all §5 hooks, Zustand stores, mock providers for stories; playhead/meters via subscriptions, not React state | done |
-| T3.2 | organism agent | AppHeader, StatusBar, ViewTabs | T3.1, M2 | organism docs + SPEC §6.1; stories with mocked hooks | active |
+| T3.2 | organism agent | AppHeader, StatusBar, ViewTabs | T3.1, M2 | organism docs + SPEC §6.1; stories with mocked hooks | done |
 | T3.3 | organism agent | ViewToolbar, Timeline | T3.1, M2 | same + clip editing, DnD, no re-render while playing | active |
 | T3.4 | organism agent | LibraryPanel | T3.1, M2 | same | done |
 | T3.5 | organism agent | CodeDrawer, TipCoach | T3.1, M2 | same + inline pattern edit, Edit code mode | active |
