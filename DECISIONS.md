@@ -70,3 +70,12 @@ One line each: decision — reason — where. Strudel verification results are i
 - D39 Fader value is dB; marks evenly spaced along the throw with piecewise-linear dB between them; bottom = −∞ (−60) — SPEC §6.4 — atoms/Fader/faderScale.ts.
 - D40 Meter can be driven by `level` prop, a ref handle (`set(l,r)`/`reset()`), or a `subscribe` prop, all writing to the DOM directly with 20 dB/s release + peak hold — playhead/meters must not re-render React (design-system §5) — atoms/Meter.
 - D41 `gainToDb`/`dbToGain` exist in both `@phyllo/ui` (Fader) and `@phyllo/model` (params) — ui must stay model-free; two one-line functions, tested in both — accepted duplication.
+
+## Model (M1)
+- D42 Param defaults are Strudel's (gain .8, pan .5, delayfeedback .5, shape/room/delay 0; lpf/lpq/hpf/roomsize/delaytime unset); `track/setParam` with null, "" or the default removes the key so codegen omits it; values clamped/rounded per spec; gain range 0–2 for the mixer's +6 dB — SPEC §4.1 "omit params left at defaults" — model/params.ts, reducer.ts.
+- D43 Clip/section overlap: the edited range wins; neighbours are trimmed, removed, or split (right half id `<id>~2`); `clip/split` valid for `start < atBar ≤ end` — deterministic reducer — model/reducer.ts.
+- D44 Reducer never stamps `modified`; the persistence layer does — reducer stays pure/deterministic — model/reducer.ts.
+- D45 `code/replace` matches by id then position+kind; matched tracks keep id, color, clips, solo (code can't express solo), and keep name only when the incoming name is generic and orbit only when incoming is 1; mute comes from code — code is the source of truth except for arrangement/identity — model/reducer.ts.
+- D46 New project: 120 BPM 4/4, C minor, 32 bars, one "Song" section, loop on over bars 1–8, master postgain 1 + limiter on — SPEC "Loop on (default)" — model/factories.ts.
+- D47 Clips/modifiers missing ids on load get stable derived ids (`<trackId>:c1`, `:m1`); hard parse errors only for bad JSON/format/tracks, everything else coerced with warnings — no id churn on autosave — model/serialize.ts.
+- D48 Guided pan text `Center`/`Left 16`/`Right 30`; Pro `C`/`L16`/`R30`; unset lpf reads "off" with the knob fully open — model/params.ts.

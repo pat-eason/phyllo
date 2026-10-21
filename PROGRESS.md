@@ -15,3 +15,4 @@
 - Dispatched M1 in parallel worktrees: T1.1 (model reducer/params/serialize), T1.2 (codegen/parse/share), T1.3 (mini↔grid, bjorklund, viz data), T1.4 (content), T1.5 (Strudel runtime + browser harness).
 - T6.2 merged (63802f1): midir MIDI in/out with scheduled output thread + hot-plug poller, rosc OSC sender, NativeApi + Web MIDI browser fallback. Orchestrator re-ran: cargo test 64 passed (1 ignored hw smoke), clippy clean, app 66 tests. Real-device MIDI untested (no ports on this machine) — flagged for T6.V.
 - T2.4 merged (0d819d1): Knob, Fader, Meter, StepCell; ui 334 tests. All 21 atoms done. Dispatched molecules T2.5–T2.7.
+- T1.1 merged (b79063c): ids, params, factories, reducer (all actions), serialize/migrate, time helpers; model 221 tests.
