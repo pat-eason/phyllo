@@ -15,6 +15,7 @@ mod osc;
 mod paths;
 mod project;
 mod samples;
+mod selftest;
 mod sound_cache;
 mod trash;
 mod tray;
@@ -40,7 +41,8 @@ pub fn run() {
         .manage(tray::TrayState::default())
         .manage(media::MediaState::default())
         .manage(windows::KeepRunning::default())
-        .manage(open_files::OpenFileQueue::default());
+        .manage(open_files::OpenFileQueue::default())
+        .manage(selftest::SelftestConfig::from_env());
 
     // Global shortcuts exist on desktop only.
     #[cfg(desktop)]
@@ -105,6 +107,11 @@ pub fn run() {
             commands::sound_cache_status,
             commands::sound_cache_clear,
             commands::sound_cache_prefetch,
+            selftest::selftest_config,
+            selftest::selftest_write_report,
+            selftest::selftest_inspect_wav,
+            selftest::selftest_file_info,
+            selftest::selftest_exit,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application");
