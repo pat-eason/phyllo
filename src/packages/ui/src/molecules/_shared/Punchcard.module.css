@@ -1,0 +1,58 @@
+.punchcard {
+  --ph-punch-off: color-mix(in srgb, var(--ph-text) 7%, transparent);
+  --ph-punch-h: 9px;
+  --ph-punch-gap: 2px;
+  --ph-punch-r: var(--ph-r-xs);
+
+  display: grid;
+  gap: var(--ph-punch-gap);
+  min-width: 0;
+}
+
+/* One grid per row so each row carries its own colour; rows share the cell gap. */
+.row {
+  display: grid;
+  grid-template-columns: repeat(var(--ph-punch-cols, 16), minmax(0, 1fr));
+  gap: var(--ph-punch-gap);
+}
+
+.cell {
+  height: var(--ph-punch-h);
+  border-radius: var(--ph-punch-r);
+  background: var(--ph-punch-off);
+}
+
+.cell[data-on] {
+  background: var(--ph-punch-color);
+}
+
+.punchcard[data-size="micro"] {
+  --ph-punch-h: 3px;
+  --ph-punch-gap: 1px;
+  --ph-punch-r: 0;
+}
+
+.punchcard[data-size="xs"] {
+  --ph-punch-h: 6px;
+}
+
+.punchcard[data-size="sm"] {
+  --ph-punch-h: 7px;
+}
+
+.punchcard[data-size="md"] {
+  --ph-punch-h: 9px;
+}
+
+.punchcard[data-size="lg"] {
+  --ph-punch-h: 11px;
+}
+
+.punchcard[data-size="xl"] {
+  --ph-punch-h: 14px;
+}
+
+.punchcard[data-size="card"] {
+  --ph-punch-h: 9px;
+  --ph-punch-gap: 3px;
+}
