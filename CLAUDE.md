@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-pnpm monorepo (`pnpm@10.34.5`, Node >=22) for strudel-daw. The repo is freshly scaffolded: the workspace roots exist but contain no packages yet, so no build, lint or test tooling is configured beyond the root scripts.
+pnpm monorepo (`pnpm@10.34.5`, Node >=22) for strudel-daw, a DAW-style UI around Strudel. The desktop app is **Phylo**, a Tauri v2 + React + Vite app. Rust 1.95+ is required for the Tauri side. There is no test tooling yet; `lint` is `tsc --noEmit`.
 
 ## Workspace layout
 
@@ -14,7 +14,12 @@ All source lives under `src/`. `pnpm-workspace.yaml` globs `src/apps/*`, `src/pa
 - `src/packages/` — isolated, contextual modules
 - `src/shared/` — functionality or logic shared between apps and packages
 
-Place new code by role: anything deployable goes in `apps`, self-contained modules in `packages`, and logic that both apps and packages consume in `shared`. Each of the three directories currently holds only a `.gitkeep`; delete it when adding the first package.
+Place new code by role: anything deployable goes in `apps`, self-contained modules in `packages`, and logic that both apps and packages consume in `shared`. Current packages:
+
+- `src/apps/phylo` — Tauri v2 desktop app (React frontend, Rust in `src-tauri/`)
+- `src/packages/engine` (`@phylo/engine`) — thin wrapper over `@strudel/web` (`init`, `play`, `stop`). `@strudel/web` ships no types, so `src/strudel-web.d.ts` declares the subset used; keep that declaration referenced from `index.ts` so consuming apps' `tsc` picks it up.
+
+`src/shared/` is still empty (holds a `.gitkeep`); delete it when adding the first package.
 
 ## Commands
 
@@ -28,3 +33,5 @@ pnpm lint             # pnpm -r lint
 pnpm test             # pnpm -r test
 pnpm --filter <name> <script>   # target a single package, e.g. run one package's tests
 ```
+
+Run the desktop app with `pnpm --filter phylo tauri dev` (not root `pnpm dev`, which only starts the Vite frontend in a browser). Audio needs a user gesture, so `play` must be called from a click handler.

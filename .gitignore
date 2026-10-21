@@ -8,3 +8,6 @@ coverage
 .env.*
 !.env.example
 .DS_Store
+
+src/apps/phylo/src-tauri/target
+src/apps/phylo/src-tauri/gen
