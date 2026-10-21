@@ -1,0 +1,34 @@
+.tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tab {
+  height: 34px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--ph-r-md);
+  background: transparent;
+  color: var(--ph-muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color var(--ph-dur-fast) var(--ph-ease),
+    color var(--ph-dur-fast) var(--ph-ease);
+}
+
+.tab:hover {
+  color: var(--ph-text);
+}
+
+.tab[aria-current="page"] {
+  background: var(--ph-raised);
+  color: var(--ph-text);
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--ph-accent);
+  outline-offset: 2px;
+}

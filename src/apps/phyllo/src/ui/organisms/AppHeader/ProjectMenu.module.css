@@ -1,0 +1,112 @@
+.root {
+  position: relative;
+}
+
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  max-width: 260px;
+  padding: 0 10px;
+  border: 1px solid var(--ph-line);
+  border-radius: var(--ph-r-md);
+  background: transparent;
+  color: var(--ph-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.trigger:hover,
+.trigger[aria-expanded="true"] {
+  background: var(--ph-raised);
+}
+
+.trigger:focus-visible,
+.renameInput:focus-visible,
+.item:focus-visible {
+  outline: 2px solid var(--ph-accent);
+  outline-offset: 2px;
+}
+
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The rename input covers the trigger, which stays mounted so focus can return to it. */
+.trigger[data-renaming] {
+  min-width: 220px;
+  opacity: 0;
+}
+
+.renameInput {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  width: 100%;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--ph-accent);
+  border-radius: var(--ph-r-md);
+  background: var(--ph-bg);
+  color: var(--ph-text);
+  font: inherit;
+  font-weight: 600;
+}
+
+.panel {
+  position: absolute;
+  inset-block-start: calc(100% + 6px);
+  inset-inline-start: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+  padding: 6px;
+  border: 1px solid var(--ph-line);
+  border-radius: var(--ph-r-lg);
+  background: var(--ph-panel);
+  box-shadow: var(--ph-shadow-card);
+}
+
+.item {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--ph-r-sm);
+  background: transparent;
+  color: var(--ph-text);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.item:hover:not(:disabled),
+.item:focus-visible {
+  background: var(--ph-raised);
+}
+
+.item:disabled {
+  color: var(--ph-muted);
+  cursor: default;
+}
+
+.rule {
+  width: 100%;
+  height: 0;
+  margin: 6px 0;
+  border: 0;
+  border-top: 1px solid var(--ph-line);
+}
+
+.groupLabel {
+  padding: 4px 10px;
+  color: var(--ph-muted);
+  font: var(--ph-text-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
