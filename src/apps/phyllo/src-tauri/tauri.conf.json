@@ -16,8 +16,8 @@
         "title": "Phyllo",
         "width": 1440,
         "height": 900,
-        "minWidth": 1100,
-        "minHeight": 720,
+        "minWidth": 1320,
+        "minHeight": 760,
         "titleBarStyle": "Overlay",
         "hiddenTitle": true,
         "backgroundThrottling": "disabled"
