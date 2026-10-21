@@ -70,7 +70,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 |---|---|---|---|---|---|
 | T3.1 | state agent | `src/apps/phyllo/src/state/**`, `src/apps/phyllo/src/hooks/**` | M1 | all §5 hooks, Zustand stores, mock providers for stories; playhead/meters via subscriptions, not React state | done |
 | T3.2 | organism agent | AppHeader, StatusBar, ViewTabs | T3.1, M2 | organism docs + SPEC §6.1; stories with mocked hooks | done |
-| T3.3 | organism agent | ViewToolbar, Timeline | T3.1, M2 | same + clip editing, DnD, no re-render while playing | active |
+| T3.3 | organism agent | ViewToolbar, Timeline | T3.1, M2 | same + clip editing, DnD, no re-render while playing | done |
 | T3.4 | organism agent | LibraryPanel | T3.1, M2 | same | done |
 | T3.5 | organism agent | CodeDrawer, TipCoach | T3.1, M2 | same + inline pattern edit, Edit code mode | done |
 | T3.6 | organism agent | Inspector | T3.1, M2 | same | done |
@@ -81,7 +81,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | id | owner | owns | deps | acceptance | status |
 |---|---|---|---|---|---|
 | T4.1 | organism agent | StepSequencer, PatternTools | T3.1, M2 | SPEC §4.3, §6.3; steps/velocity/live code/Euclid/feel/piano roll | active |
-| T4.2 | organism agent | ChannelStrip, MixerStrips | T3.1, M2 | SPEC §6.4; track/bus/master strips, Rec output | active |
+| T4.2 | organism agent | ChannelStrip, MixerStrips | T3.1, M2 | SPEC §6.4; track/bus/master strips, Rec output | done |
 | T4.3 | screen agent | PatternEditorScreen, MixerScreen | T4.1, T4.2, T3.2 | screens.md layouts | todo |
 | T4.V | verifier | read-only | T4.3 | png 04/05 parity, §6.3/§6.4 | todo |
 
@@ -113,3 +113,7 @@ T7.1 shortcuts (SPEC §7) · T7.2 a11y pass (SPEC §8) · T7.3 screenshot parity
 - B9 CodeDrawer should consume `useCodeEditorPrefs()` (font size, line numbers) — from T5.3.
 - B10 ParamKnob: `aria-valuetext`/`aria-label` + caption slot props (Inspector writes the attribute after render as a workaround); Knob double-click "unset" callback — from T3.6.
 - B11 Pro value text `.78` vs mockup `0.78` — decide in T7.3 parity pass (model `PARAM_SPECS.format`) — from T2.6/T3.6.
+- B12 Rec output / export naming: avoid overwriting earlier takes after relaunch (native "unique export path" like `project_new_path` for Exports/) — from T4.2.
+- B13 TrackHeader attribute passthrough for Mute/Solo (tip anchors), SectionChip imperative `current`, SegmentedControl per-option attrs — from T3.3.
+- B14 App-level toast queue (Mixer/CodeDrawer/Library each render their own) — from T4.2/T3.5.
+- B15 Timeline lane virtualization past ~40 tracks; ↑/↓ track navigation — from T3.3.
