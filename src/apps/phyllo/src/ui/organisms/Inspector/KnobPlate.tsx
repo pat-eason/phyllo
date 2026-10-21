@@ -103,6 +103,7 @@ function KnobCell({ param, track, mode, modulated, cc, editing, onRequest, onRes
   const value = track.params[param];
   const range = modulated ? modulationRange(track, param) : null;
   const knob = useRef<HTMLDivElement | null>(null);
+  const guided = mode === "guided";
   const tipTarget = param === "lpf" ? "inspector-knob-lpf" : undefined;
   const highlighted = useTipHighlight(tipTarget);
 
@@ -110,12 +111,23 @@ function KnobCell({ param, track, mode, modulated, cc, editing, onRequest, onRes
   if (typeof value === "string") valueText = `patterned ${value}`;
   else if (modulated) valueText = range ? `modulated ${range}` : "modulated";
   else valueText = spec.format(value, mode);
+  // SPEC §8: the spoken value carries the label too ("Brightness 1.6k Hz"); the visible caption stays the bare value.
   const spoken = `${spec.guidedLabel} ${valueText}`;
-
-  // ParamKnob reads only the value text; SPEC §8 wants the label in it too ("Brightness 1.6k Hz").
-  useLayoutEffect(() => {
-    knob.current?.setAttribute("aria-valuetext", spoken);
-  });
+  const visibleValue = typeof value === "string" ? value : modulated && range ? range : spec.format(typeof value === "number" ? value : null, mode);
+  // The CC badge rides in the caption line; the default caption (Guided `.lpf()`, Pro value) is kept next to it.
+  const defaultCaption = guided ? `.${param}()` : visibleValue;
+  // Pro's `valueText` is the spoken form, so its visible caption is always passed (hidden from readers: the value is spoken).
+  const caption =
+    guided && cc === null ? undefined : (
+      <>
+        <span aria-hidden={guided ? undefined : true}>{defaultCaption}</span>
+        {cc !== null ? (
+          <span className={styles["ccBadge"]} title={`MIDI CC ${cc} controls ${spec.guidedLabel}`}>
+            CC {cc}
+          </span>
+        ) : null}
+      </>
+    );
 
   return (
     <div className={styles["knobCell"]}>
@@ -127,6 +139,8 @@ function KnobCell({ param, track, mode, modulated, cc, editing, onRequest, onRes
         mode={mode}
         modulated={modulated}
         modulationText={range ?? undefined}
+        valueText={spoken}
+        caption={caption}
         onChange={onRequest}
         onChangeStart={onGestureStart}
         onChangeEnd={onGestureEnd}
@@ -140,11 +154,6 @@ function KnobCell({ param, track, mode, modulated, cc, editing, onRequest, onRes
         data-tip-highlight={highlighted ? "" : undefined}
         className={styles["paramKnob"]}
       />
-      {cc !== null ? (
-        <span className={styles["ccBadge"]} title={`MIDI CC ${cc} controls ${spec.guidedLabel}`}>
-          CC {cc}
-        </span>
-      ) : null}
       {editing ? (
         <ValueEntry
           label={`${spec.guidedLabel} (${param}) value${spec.unit ? ` in ${spec.unit}` : ""}, ${formatNumber(spec.min)} to ${formatNumber(spec.max)}`}

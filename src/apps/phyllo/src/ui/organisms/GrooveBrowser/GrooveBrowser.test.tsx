@@ -224,21 +224,84 @@ describe("GrooveBrowser", () => {
     expect(onOpenGroove).toHaveBeenCalledWith(stores.project.getState().filePath);
   });
 
-  it("should mark Play as unavailable and say why when it is pressed", async () => {
+  it("should audition a groove as a clean preview and put the open project back on stop", async () => {
     // Arrange
-    const { user } = await setup();
+    const { user, stores } = await setup();
     await screen.findByText("12 grooves");
-    const play = screen.getByRole("button", { name: "Play Night bus" });
-
-    // Assert
-    expect(play).toHaveAttribute("title", "Open to play");
-    expect(play).toHaveAttribute("aria-disabled", "true");
+    const before = stores.project.getState().project;
 
     // Act
-    await user.click(play);
+    await user.click(screen.getByRole("button", { name: "Play Night bus" }));
 
     // Assert
-    expect(screen.getByText("Preview isn't available yet. Open Night bus to play it.")).toBeInTheDocument();
+    await waitFor(() => expect(stores.fakeEngine.playing).toBe(true));
+    expect(stores.project.getState().project.name).toBe("Night bus");
+    expect(stores.project.getState().dirty).toBe(false);
+    expect(stores.project.getState().filePath).toBeNull();
+    expect(screen.getByRole("button", { name: "Play Night bus" })).toHaveAttribute("aria-pressed", "true");
+
+    // Act
+    await user.click(screen.getByRole("button", { name: "Play Night bus" }));
+
+    // Assert
+    expect(stores.fakeEngine.playing).toBe(false);
+    expect(stores.project.getState().project).toBe(before);
+    expect(screen.getByRole("button", { name: "Play Night bus" })).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("should audition one groove at a time in list view", async () => {
+    // Arrange
+    const { user, stores } = await setup({ library: { view: "list" } });
+    await screen.findByText("12 grooves");
+    const before = stores.project.getState().project;
+    await user.click(screen.getByRole("button", { name: "Play Night bus" }));
+    await waitFor(() => expect(stores.project.getState().project.name).toBe("Night bus"));
+
+    // Act
+    await user.click(screen.getByRole("button", { name: "Play Slow harbor" }));
+
+    // Assert
+    await waitFor(() => expect(stores.project.getState().project.name).toBe("Slow harbor"));
+    expect(screen.getByRole("button", { name: "Play Night bus" })).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("button", { name: "Play Slow harbor" })).toHaveAttribute("aria-pressed", "true");
+
+    // Act
+    await user.click(screen.getByRole("button", { name: "Play Slow harbor" }));
+
+    // Assert: the project from before the first audition is back
+    expect(stores.project.getState().project).toBe(before);
+  });
+
+  it("should say why a groove can't be played and leave the open project alone", async () => {
+    // Arrange
+    const { user, stores, native } = await setup();
+    await screen.findByText("12 grooves");
+    const before = stores.project.getState().project;
+    vi.spyOn(native, "projectRead").mockRejectedValue(new Error("file is gone"));
+
+    // Act
+    await user.click(screen.getByRole("button", { name: "Play Night bus" }));
+
+    // Assert
+    expect(await screen.findByText("Couldn't play Night bus: file is gone")).toBeInTheDocument();
+    expect(stores.project.getState().project).toBe(before);
+    expect(screen.getByRole("button", { name: "Play Night bus" })).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("should end the audition before opening a groove", async () => {
+    // Arrange
+    const { user, stores } = await setup();
+    await screen.findByText("12 grooves");
+    await user.click(screen.getByRole("button", { name: "Play Night bus" }));
+    await waitFor(() => expect(stores.fakeEngine.playing).toBe(true));
+
+    // Act
+    await user.click(screen.getByRole("button", { name: "Open Tidal study 2" }));
+
+    // Assert
+    await waitFor(() => expect(stores.project.getState().project.name).toBe("Tidal study 2"));
+    expect(stores.project.getState().filePath).not.toBeNull();
+    expect(stores.fakeEngine.playing).toBe(false);
   });
 
   it("should open the context menu with a right click and close it with Escape", async () => {

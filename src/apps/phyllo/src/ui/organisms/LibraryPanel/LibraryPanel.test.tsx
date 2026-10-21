@@ -104,6 +104,20 @@ describe("LibraryPanel", () => {
     await waitFor(() => expect(stores.fakeEngine.previews).toEqual([{ s: "sawtooth", note: "c3" }]));
   });
 
+  it("should show a previewing synth chip as pressed", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    renderWithStores(<LibraryPanel />, guided);
+    const chip = screen.getByRole("button", { name: "sawtooth" });
+    expect(chip).toHaveAttribute("aria-pressed", "false");
+
+    // Act
+    await user.click(chip);
+
+    // Assert
+    expect(chip).toHaveAttribute("aria-pressed", "true");
+  });
+
   it("should carry a sound reference when a row is dragged", () => {
     // Arrange
     renderWithStores(<LibraryPanel />, guided);
@@ -250,6 +264,42 @@ describe("LibraryPanel", () => {
 
     // Assert
     await waitFor(() => expect(stores.fakeEngine.previews).toEqual([{ s: "kick_dusty" }]));
+  });
+
+  it("should preview a sample under the name the engine registered when folders collide", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const { stores } = renderWithStores(<LibraryPanel initialTab="samples" />, {
+      native: nativeWithSamples(),
+      initialSettings: { uiMode: "guided", sampleFolders: [FOLDER] },
+    });
+    act(() =>
+      stores.samples.setState({
+        samples: [{ name: "vox2", path: `${FOLDER}/vox.wav`, folder: FOLDER }],
+      }),
+    );
+    await user.click(await screen.findByRole("button", { name: /^…\/Music\/Samples/ }));
+
+    // Act
+    await user.click(screen.getByRole("button", { name: "Preview vox.wav" }));
+
+    // Assert
+    await waitFor(() => expect(stores.fakeEngine.previews).toEqual([{ s: "vox2" }]));
+  });
+
+  it("should stop the preview when its toggle is pressed again", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const { stores } = renderWithStores(<LibraryPanel />, guided);
+    await user.click(screen.getByRole("button", { name: "Preview Snare" }));
+    await waitFor(() => expect(stores.fakeEngine.previews).toHaveLength(1));
+
+    // Act
+    await user.click(screen.getByRole("button", { name: "Stop preview of Snare" }));
+
+    // Assert
+    expect(stores.fakeEngine.previewStops).toBe(1);
+    expect(stores.fakeEngine.previews).toHaveLength(1);
   });
 
   it("should link a folder chosen in the native dialog", async () => {

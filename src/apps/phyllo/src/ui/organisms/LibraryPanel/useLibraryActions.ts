@@ -12,7 +12,7 @@ const NOTICE_MS = 3200;
 export interface LibraryActions {
   /** Key of the sound being auditioned (`bank:RolandTR909:bd`), or null. */
   previewingKey: string | null;
-  /** Audition `sound`; calling again for the same key while it plays just clears the indicator. */
+  /** Audition `sound`; calling again for the same key while it plays stops the preview. */
   preview(key: string, sound: PreviewSound): void;
   /** Enter on a row or chip: swap the selected track's sound, or add a new track. */
   insertSound(ref: SoundRef): void;
@@ -25,7 +25,7 @@ export interface LibraryActions {
 /** Preview and insert behaviour shared by every tab. Reads the project at call time, so it never re-renders on edits. */
 export function useLibraryActions(): LibraryActions {
   const { project } = useAppStores();
-  const { preview: enginePreview } = useEngine();
+  const { preview: enginePreview, stopPreview } = useEngine();
   const [previewingKey, setPreviewingKey] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const previewToken = useRef(0);
@@ -51,6 +51,7 @@ export function useLibraryActions(): LibraryActions {
       clearTimeout(timers.current.preview);
       if (previewingKey === key) {
         setPreviewingKey(null);
+        stopPreview();
         return;
       }
       setPreviewingKey(key);
@@ -66,7 +67,7 @@ export function useLibraryActions(): LibraryActions {
         say("Couldn't play that sound");
       });
     },
-    [enginePreview, previewingKey, say],
+    [enginePreview, stopPreview, previewingKey, say],
   );
 
   const run = useCallback(

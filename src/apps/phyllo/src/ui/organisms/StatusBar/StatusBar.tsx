@@ -14,6 +14,7 @@ import { formatAutosaved, formatClock } from "../../../state/format";
 import { useOpenSettings } from "../AppHeader/useOpenSettings";
 import { EvaluatedAgo } from "./EvaluatedAgo";
 import styles from "./StatusBar.module.css";
+import { StatusNotices } from "./StatusNotices";
 import { describeAudioOutput, describeEngineError, describeMidiInput, tildify } from "./statusText";
 
 export interface StatusBarProps {
@@ -23,7 +24,8 @@ export interface StatusBarProps {
 }
 
 /**
- * Quiet, always-visible system state: engine, audio output, MIDI input, autosave and file path.
+ * Quiet, always-visible system state: engine, audio output, MIDI input (plus its dismissable record-take and
+ * "needs audio" notices), autosave and file path.
  * No CPU readout yet: the native layer has no process-usage call, and a made-up number would be worse than none.
  */
 export function StatusBar({ onErrorClick, className }: StatusBarProps) {
@@ -32,6 +34,7 @@ export function StatusBar({ onErrorClick, className }: StatusBarProps) {
       <EngineState onErrorClick={onErrorClick} />
       <AudioOutput />
       <MidiInput />
+      <StatusNotices />
       <span className={styles["spacer"]} />
       <SaveState />
     </footer>

@@ -292,9 +292,9 @@
 }
 
 .ccBadge {
-  position: absolute;
-  top: 0;
-  right: 0;
+  display: block;
+  width: max-content;
+  margin: 2px auto 0;
   padding: 0 var(--ph-s-1);
   border: 1px solid var(--ph-line);
   border-radius: var(--ph-r-sm);
@@ -303,7 +303,6 @@
   font-size: 9.5px;
   line-height: 14px;
   color: var(--ph-muted);
-  pointer-events: none;
 }
 
 .valueEntry {

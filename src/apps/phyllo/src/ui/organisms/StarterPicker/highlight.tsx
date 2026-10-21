@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import type { ReactNode } from "react";
 import styles from "./StarterPicker.module.css";
 
@@ -30,5 +31,11 @@ export function highlightLine(line: string): ReactNode[] {
 /** The program as one `<pre>`-ready node list: lines joined with real newlines so copy/paste keeps the code intact. */
 export function highlightCode(code: string): ReactNode[] {
   const lines = code.split("\n");
-  return lines.flatMap((line, i) => (i < lines.length - 1 ? [...highlightLine(line), "\n"] : highlightLine(line)));
+  // One keyed fragment per line: token keys (their offset in the line) only need to be unique within it.
+  return lines.map((line, i) => (
+    <Fragment key={i}>
+      {highlightLine(line)}
+      {i < lines.length - 1 ? "\n" : null}
+    </Fragment>
+  ));
 }

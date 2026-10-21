@@ -155,6 +155,65 @@ describe("StatusBar", () => {
     expect(screen.getByRole("button", { name: "No MIDI input" })).toBeInTheDocument();
   });
 
+  it("should report what the last MIDI take recorded and let it be dismissed", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const target = renderBar();
+
+    // Act
+    act(() =>
+      target.recorder.setState({
+        lastTake: { status: "written", trackId: "bass", pattern: "c2 ~ eb2", noteCount: 7, bars: 1, at: 1 },
+      }),
+    );
+
+    // Assert
+    expect(screen.getByRole("status")).toHaveTextContent("Recorded 7 notes onto Bass");
+
+    // Act
+    await user.click(screen.getByRole("button", { name: "Dismiss recording notice" }));
+
+    // Assert
+    expect(screen.queryByText("Recorded 7 notes onto Bass")).not.toBeInTheDocument();
+  });
+
+  it("should show the next take after an earlier one was dismissed", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const target = renderBar();
+    act(() =>
+      target.recorder.setState({
+        lastTake: { status: "written", trackId: "bass", pattern: "c2", noteCount: 1, bars: 1, at: 1 },
+      }),
+    );
+    await user.click(screen.getByRole("button", { name: "Dismiss recording notice" }));
+
+    // Act
+    act(() => target.recorder.setState({ lastTake: { status: "empty", trackId: null, pattern: null, noteCount: 0, bars: 1, at: 2 } }));
+
+    // Assert
+    expect(screen.getByRole("status")).toHaveTextContent("Nothing recorded");
+  });
+
+  it("should say MIDI notes need audio until the hint is dismissed", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const target = renderBar();
+
+    // Act
+    act(() => target.midiInput.setState({ hint: "Press Play once to turn on audio, then your MIDI keys will play the selected track." }));
+
+    // Assert
+    expect(screen.getByRole("status")).toHaveTextContent("MIDI notes need audio — press Play once");
+
+    // Act
+    await user.click(screen.getByRole("button", { name: "Dismiss MIDI hint" }));
+
+    // Assert
+    expect(target.midiInput.getState().hint).toBeNull();
+    expect(screen.queryByText("MIDI notes need audio — press Play once")).not.toBeInTheDocument();
+  });
+
   it("should say Not saved yet for a project that was never filed", () => {
     // Arrange / Act
     renderBar();

@@ -25,8 +25,13 @@ export function soundSlot(track: Track): SoundSlot {
   return { label: ".s()", code: sound ? `s("${sound}")` : `s("${track.pattern}")`, current: sound, field: "sound" };
 }
 
-/** Sounds a track of this kind can switch to, in picker order. */
-export function soundChoices(track: Track): readonly SoundEntry[] {
+/** What the Sound picker needs from a sound (catalog entries and the user's linked samples alike). */
+export type SoundChoice = Pick<SoundEntry, "code" | "name" | "description" | "keywords">;
+
+const SAMPLE_DESCRIPTION = "Your sample";
+
+/** Sounds a track of this kind can switch to, in picker order; sample tracks also list `sampleNames` (linked folders). */
+export function soundChoices(track: Track, sampleNames: readonly string[] = []): readonly SoundChoice[] {
   switch (track.kind) {
     case "drum":
       return DRUM_BANKS;
@@ -35,14 +40,17 @@ export function soundChoices(track: Track): readonly SoundEntry[] {
     case "chord":
       return [...INSTRUMENTS, ...SYNTHS];
     case "sample":
-      return DRUM_SOUNDS;
+      return [
+        ...DRUM_SOUNDS,
+        ...sampleNames.map((name): SoundChoice => ({ code: name, name, description: SAMPLE_DESCRIPTION, keywords: ["sample", "mine"] })),
+      ];
     default:
       return [];
   }
 }
 
 /** Case-insensitive filter over code, name, description and keywords (every word must match). */
-export function filterSounds(entries: readonly SoundEntry[], query: string): SoundEntry[] {
+export function filterSounds(entries: readonly SoundChoice[], query: string): SoundChoice[] {
   const words = query.toLowerCase().split(/\s+/).filter(Boolean);
   if (words.length === 0) return [...entries];
   return entries.filter((e) => {
