@@ -81,7 +81,63 @@ describe('tauri native: command names and arguments', () => {
       'osc_send',
       { messages: [{ address: '/dirt/play', args: ['s', 'bd', 'n', 3], atMs: 20 }] },
     ],
+    [
+      'exportBegin',
+      () =>
+        api.exportBegin({ path: 'mix.wav', format: 'wav', bitDepth: 24, sampleRate: 48000, channels: 2, normalizeDbfs: -1 }),
+      'export_begin',
+      {
+        options: { path: 'mix.wav', format: 'wav', bitDepth: 24, sampleRate: 48000, channels: 2, normalizeDbfs: -1 },
+      },
+    ],
+    ['exportFinish', () => api.exportFinish('s1'), 'export_finish', { sessionId: 's1' }],
+    ['exportCancel', () => api.exportCancel('s1'), 'export_cancel', { sessionId: 's1' }],
+    [
+      'midiFileWrite',
+      () =>
+        api.midiFileWrite('beat.mid', {
+          bpm: 120,
+          tracks: [{ name: 'Drums', channel: 10, notes: [{ startSec: 0, durationSec: 0.25, note: 36, velocity: 100 }] }],
+        }),
+      'midi_file_write',
+      {
+        path: 'beat.mid',
+        spec: {
+          bpm: 120,
+          tracks: [{ name: 'Drums', channel: 10, notes: [{ startSec: 0, durationSec: 0.25, note: 36, velocity: 100 }] }],
+        },
+      },
+    ],
   ];
+
+  it('exportChunk sends the raw bytes as the body with the session in a header (binary IPC, not JSON)', async () => {
+    mocks.invoke.mockResolvedValue(undefined);
+    const frames = new Float32Array([0.5, -0.5, 0.25, -0.25]);
+    await api.exportChunk('s1', frames);
+    expect(mocks.invoke).toHaveBeenCalledTimes(1);
+    const [command, body, options] = mocks.invoke.mock.calls[0] as [string, Uint8Array, { headers: Record<string, string> }];
+    expect(command).toBe('export_chunk');
+    expect(body).toBeInstanceOf(Uint8Array);
+    expect(body.byteLength).toBe(16);
+    expect(options).toEqual({ headers: { 'x-session': 's1' } });
+    // Same memory, little-endian f32: no copy through JSON.
+    expect(Array.from(new Float32Array(body.buffer, body.byteOffset, 4))).toEqual(Array.from(frames));
+  });
+
+  it('exportChunk respects a subarray view (byteOffset)', async () => {
+    mocks.invoke.mockResolvedValue(undefined);
+    const whole = new Float32Array([9, 9, 1, 2, 9]);
+    await api.exportChunk('s1', whole.subarray(2, 4));
+    const body = mocks.invoke.mock.calls[0]![1] as Uint8Array;
+    expect(body.byteLength).toBe(8);
+    expect(Array.from(new Float32Array(body.buffer, body.byteOffset, 2))).toEqual([1, 2]);
+  });
+
+  it('exportChunk errors surface as NativeError', async () => {
+    mocks.invoke.mockRejectedValue({ code: 'not_found', message: 'unknown export session: s9' });
+    const err = await api.exportChunk('s9', new Float32Array(2)).catch((e: unknown) => e);
+    expect(isNativeError(err, 'not_found')).toBe(true);
+  });
 
   it.each(cases)('%s -> %s', async (_name, run, command, args) => {
     mocks.invoke.mockResolvedValue('result');
@@ -91,7 +147,7 @@ describe('tauri native: command names and arguments', () => {
   });
 
   it('COMMANDS lists exactly the commands registered in lib.rs', () => {
-    expect(Object.values(COMMANDS).sort()).toEqual(cases.map((c) => c[2]).sort());
+    expect(Object.values(COMMANDS).sort()).toEqual([...cases.map((c) => c[2]), 'export_chunk'].sort());
   });
 });
 

@@ -9,7 +9,10 @@ import type { NativeApi } from './api';
 import { toNativeError } from './errors';
 import { COMMANDS, EVENTS } from './types';
 import type {
+  ExportResult,
+  ExportSession,
   LibraryScan,
+  MidiFileResult,
   MidiMessageEvent,
   MidiPortInfo,
   PhylloPaths,
@@ -25,6 +28,18 @@ const SETTINGS_KEY = 'settings';
 async function call<T>(command: string, args?: Record<string, unknown>): Promise<T> {
   try {
     return await invoke<T>(command, args);
+  } catch (err) {
+    throw toNativeError(err);
+  }
+}
+
+/** Header that carries the session id on the raw-binary `export_chunk` command. */
+export const EXPORT_SESSION_HEADER = 'x-session';
+
+/** `invoke` with a raw binary body (Tauri binary IPC: no JSON, no base64) and the session id in a header. */
+async function callRaw(command: string, body: Uint8Array, sessionId: string): Promise<void> {
+  try {
+    await invoke<void>(command, body, { headers: { [EXPORT_SESSION_HEADER]: sessionId } });
   } catch (err) {
     throw toNativeError(err);
   }
@@ -88,6 +103,13 @@ export function createTauriApi(): NativeApi {
 
     oscConfigure: (config) => call<void>(COMMANDS.oscConfigure, { config }),
     oscSend: (messages) => call<void>(COMMANDS.oscSend, { messages }),
+
+    exportBegin: (options) => call<ExportSession>(COMMANDS.exportBegin, { options }),
+    exportChunk: (sessionId, frames) =>
+      callRaw(COMMANDS.exportChunk, new Uint8Array(frames.buffer, frames.byteOffset, frames.byteLength), sessionId),
+    exportFinish: (sessionId) => call<ExportResult>(COMMANDS.exportFinish, { sessionId }),
+    exportCancel: (sessionId) => call<void>(COMMANDS.exportCancel, { sessionId }),
+    midiFileWrite: (path, spec) => call<MidiFileResult>(COMMANDS.midiFileWrite, { path, spec }),
 
     openDialog: (options) => guard(async () => (await open(options)) ?? null),
     saveDialog: (options) => guard(async () => (await save(options)) ?? null),
