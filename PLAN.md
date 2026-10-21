@@ -33,8 +33,15 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | T1.2 | codegen agent | `src/packages/engine/src/codegen/**`, `src/packages/engine/src/parse/**`, `src/packages/engine/src/share/**` | T0.3 | SPEC §4.1 rules, both scopes, loop window, line map; §4.2 parser with Code-track fallback + prelude; strudel.cc encode/decode; round-trip tests model→code→model | done |
 | T1.3 | mini agent | `src/packages/engine/src/mini/**` | T0.3 | SPEC §4.3 toMini/fromMini, bjorklund, `(k,n)` form, unfit-pattern detection; tests with spec examples | done |
 | T1.4 | content agent | `src/shared/model/src/content/**` | T0.3 | 7 original starters, tips curriculum, Try-one suggestions, modifier catalog, sound catalog (friendly names), Feel tools | done |
-| T1.V | verifier | read-only | T1.1–T1.5 | adversarial round-trip/parse/reducer fuzzing + browser runtime checks of starters | active |
+| T1.V | verifier | read-only | T1.1–T1.5 | adversarial round-trip/parse/reducer fuzzing + browser runtime checks of starters | done |
 | T1.5 | runtime agent | `src/packages/engine/src/runtime/**` | T0.3, T1.2 | init on gesture, evaluate + hot-swap, keep last good on error + attribution, cycle clock, loop, preview, master limiter/postgain, meters, capture tap, sample registration; unit tests with mocks + browser smoke | done |
+
+### Fixes from verifiers
+| id | owner | owns | deps | acceptance | status |
+|---|---|---|---|---|---|
+| F1 | orchestrator | content/starters | T1.V | lofi chords voice in all keys (T1.V #1) | done |
+| F2 | fix agent | model reducer/serialize, engine parse/codegen | T1.V | T1.V #2–#9, #13–#18; verifier fuzz passes | active |
+| F3 | fix agent | engine runtime | T1.V, T6.6 | T1.V #10 unknown chord → error, #11 stop releases voices, #12 limiter default on + ceiling, #19 offline error flood, #20 pattern error column | todo |
 
 ### M2 Atoms, then molecules
 | id | owner | owns | deps | acceptance | status |
