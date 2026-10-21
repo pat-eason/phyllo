@@ -37,3 +37,4 @@
 - T3.2 merged (67f4ec5): AppHeader (full/compact, project menu, transport, live readout, mode/theme/settings/export), StatusBar, ViewTabs.
 - T5.1 merged (8fe28e8): GrooveBrowser (sidebar collections/tags/manage, toolbar search/sort/size/view, grid + table, multi-select, context menu, dialogs). Backlog B6–B7.
 - T5.3 merged (342191b): SettingsLayout (all 8 sections incl. offline sound download, MIDI table, OSC, folders, shortcuts, code editor, system) + AccentPicker. App tests green.
+- T3.6 merged (2023c71): Inspector (header/rename, sound picker, pattern + explanation + errors, Guided/Pro knob plate with modulation/pattern confirm/typed values/CC badge, Try one, modifier list with search/drag/drop). Orchestrator aligned ccMap semantics (D121). App 439 tests.

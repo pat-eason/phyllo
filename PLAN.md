@@ -72,7 +72,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | T3.3 | organism agent | ViewToolbar, Timeline | T3.1, M2 | same + clip editing, DnD, no re-render while playing | active |
 | T3.4 | organism agent | LibraryPanel | T3.1, M2 | same | done |
 | T3.5 | organism agent | CodeDrawer, TipCoach | T3.1, M2 | same + inline pattern edit, Edit code mode | active |
-| T3.6 | organism agent | Inspector | T3.1, M2 | same | active |
+| T3.6 | organism agent | Inspector | T3.1, M2 | same | done |
 | T3.7 | screen agent | `screens/ArrangeScreen`, routing/app shell | T3.2–T3.6 | SPEC §6.1 acceptance criteria | todo |
 | T3.V | verifier | read-only | T3.7 | §6.1 checklist + screenshot parity 01/02/accent-* | todo |
 
@@ -110,3 +110,5 @@ T7.1 shortcuts (SPEC §7) · T7.2 a11y pass (SPEC §8) · T7.3 screenshot parity
 - B7 Molecule gaps: GrooveCard `selected` row + play `disabled`; Readout caption action + cell popover (key menu); StatusDot `tone="plain"`; SegmentedControl compact padding; Chip code `selected`; IconButton/TextField/Select 40 px size — from T3.2/T3.4/T5.1/T5.2.
 - B8 Engine should honour `settings.audio.sampleRate` (AudioContext sampleRate on init) — from T5.3.
 - B9 CodeDrawer should consume `useCodeEditorPrefs()` (font size, line numbers) — from T5.3.
+- B10 ParamKnob: `aria-valuetext`/`aria-label` + caption slot props (Inspector writes the attribute after render as a workaround); Knob double-click "unset" callback — from T3.6.
+- B11 Pro value text `.78` vs mockup `0.78` — decide in T7.3 parity pass (model `PARAM_SPECS.format`) — from T2.6/T3.6.

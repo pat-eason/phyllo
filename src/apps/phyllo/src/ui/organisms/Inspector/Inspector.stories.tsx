@@ -79,7 +79,7 @@ export const CodeTrack: Story = {
 export const MidiCcMapped: Story = {
   parameters: stores({
     initialProject: inspectorProject("bass", { bass: MOCKUP_BASS }),
-    initialSettings: { uiMode: "pro", midi: { ccMap: { "bass:lpq": { trackParam: "lpq", cc: 13 }, "bass:gain": { trackParam: "gain", cc: 14 } } } },
+    initialSettings: { uiMode: "pro", midi: { ccMap: { "13": { trackParam: "lpq", cc: 13 }, "14": { trackParam: "gain", cc: 14 } } } },
   }),
 };
 

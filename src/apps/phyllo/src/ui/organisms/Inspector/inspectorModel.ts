@@ -96,13 +96,12 @@ export function modifiersSetting(track: Track, param: ParamName): Modifier[] {
 }
 
 /**
- * MIDI CC mapped to this track's param (SPEC §5). `settings.midi.ccMap` keys are `"<trackId>:<param>"` or
- * `"<trackId>"`; the entry's `trackParam` must match.
+ * MIDI CC mapped to this knob (SPEC §5/§6.6: CCs drive the inspector's knobs on whichever track is selected).
+ * `settings.midi.ccMap` is keyed by `String(cc)` (DECISIONS D120/D121); the entry's `trackParam` names the knob.
  */
-export function ccFor(ccMap: Settings["midi"]["ccMap"], trackId: string, param: ParamName): number | null {
-  for (const [key, entry] of Object.entries(ccMap)) {
-    if (entry.trackParam !== param) continue;
-    if (key === trackId || key === `${trackId}:${param}` || key.startsWith(`${trackId}:`)) return entry.cc;
+export function ccFor(ccMap: Settings["midi"]["ccMap"], param: ParamName): number | null {
+  for (const entry of Object.values(ccMap)) {
+    if (entry.trackParam === param) return entry.cc;
   }
   return null;
 }

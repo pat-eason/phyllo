@@ -379,7 +379,7 @@ describe("Inspector", () => {
 
   it("should show a MIDI CC badge on a mapped knob", () => {
     // Arrange
-    setup({ mode: "pro", initialSettings: { uiMode: "pro", midi: { ccMap: { "bass:lpf": { trackParam: "lpf", cc: 13 } } } } });
+    setup({ mode: "pro", initialSettings: { uiMode: "pro", midi: { ccMap: { "13": { trackParam: "lpf", cc: 13 } } } } });
     // Assert
     expect(screen.getByText("CC 13")).toHaveAttribute("title", "MIDI CC 13 controls Brightness");
   });

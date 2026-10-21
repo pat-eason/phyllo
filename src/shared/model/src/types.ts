@@ -319,7 +319,11 @@ export interface Settings {
   appearance: { mode: ThemeMode; accent: Accent };
   uiMode: UiMode;
   audio: { outputDevice: string | null; sampleRate: number | null; lookaheadMs: number };
-  midi: { enabledPorts: string[]; ccMap: Record<string, { trackParam: ParamName; cc: number }> };
+  midi: {
+    enabledPorts: string[];
+    /** Keyed by `String(cc)`; each CC drives that knob on whichever track is selected (SPEC §6.6). */
+    ccMap: Record<string, { trackParam: ParamName; cc: number }>;
+  };
   osc: { enabled: boolean; host: string; port: number };
   sampleFolders: string[];
   system: { mediaKeys: boolean; menuBar: boolean; fileAssociations: boolean; autosave: boolean };

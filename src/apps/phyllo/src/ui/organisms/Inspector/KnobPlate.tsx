@@ -59,7 +59,7 @@ export function KnobPlate({ track, mode, ccMap, actions }: KnobPlateProps) {
             track={track}
             mode={mode}
             modulated={modulated.has(p)}
-            cc={ccFor(ccMap, track.id, p)}
+            cc={ccFor(ccMap, p)}
             editing={editing === p}
             onRequest={(v) => request(p, v)}
             onReset={() => actions.setParam(p, null)}
