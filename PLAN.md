@@ -24,7 +24,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 |---|---|---|---|---|---|
 | T0.1 | scaffold agent | root configs, `src/packages/ui` skeleton, `src/shared/model` skeleton, app shell, `src-tauri` config + plugins | — | `pnpm check`, app build with woff2, e2e smoke, stories build, `cargo check` | done |
 | T0.2 | verify agent | scratchpad only → `DECISIONS.md` (orchestrator writes) | — | every SPEC "(verify)" item resolved with source citations | active |
-| T0.3 | orchestrator | `types.ts`, engine Strudel deps pinned, CLAUDE.md update | T0.1, T0.2 | types compile; deps pinned exact | todo |
+| T0.3 | orchestrator | `types.ts`, engine Strudel deps pinned, CLAUDE.md update | T0.1, T0.2 | types compile; deps pinned exact | done |
 
 ### M1 Engine core (parallel with M2)
 | id | owner | owns | deps | acceptance | status |
@@ -38,7 +38,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 ### M2 Atoms, then molecules
 | id | owner | owns | deps | acceptance | status |
 |---|---|---|---|---|---|
-| T2.1 | atoms-A | Icon, Logo, Surface, Kbd, StatusDot, Swatch | T0.1 | design-system §8 DoD, stories all states both themes | todo |
+| T2.1 | atoms-A | Icon, Logo, Surface, Kbd, StatusDot, Swatch | T0.1 | design-system §8 DoD, stories all states both themes | active |
 | T2.2 | atoms-B | Button, IconButton, TransportKey, ToggleButton, SegmentedControl, Switch, Checkbox | T2.1 | same | todo |
 | T2.3 | atoms-C | TextField, Select, Slider, Chip | T2.1 | same | todo |
 | T2.4 | atoms-D | Knob, Fader, Meter, StepCell | T2.1 | same + slider a11y, value-passing onChange | todo |
@@ -50,7 +50,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 ### M6a Native core (Rust, starts early, parallel with M1/M2)
 | id | owner | owns | deps | acceptance | status |
 |---|---|---|---|---|---|
-| T6.1 | rust-A | `src-tauri/src/**`, `src-tauri/Cargo.toml`, `src/apps/phyllo/src/native/**` | T0.1 | project IO (atomic write), library index of `~/Music/Phyllo`, history snapshots, folder watching (`notify`) + sample folder serving; typed TS bindings; `cargo test` + `cargo clippy` clean | todo |
+| T6.1 | rust-A | `src-tauri/src/**`, `src-tauri/Cargo.toml`, `src/apps/phyllo/src/native/**` | T0.1 | project IO (atomic write), library index of `~/Music/Phyllo`, history snapshots, folder watching (`notify`) + sample folder serving; typed TS bindings; `cargo test` + `cargo clippy` clean | active |
 | T6.2 | rust-B | same | T6.1 | MIDI in/out bridge (`midir`), OSC UDP to SuperDirt; TS bindings | todo |
 | T6.3 | rust-C | same | T6.2 | PCM stream sink + WAV/FLAC/MP3 encoder, normalize post-pass, MIDI file writer | todo |
 | T6.4 | rust-D | same + `tauri.conf.json` | T6.3 | tray/menu-bar transport, media keys, file associations, notifications w/ Reveal, app menu | todo |

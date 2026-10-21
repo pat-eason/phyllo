@@ -21,3 +21,11 @@ One line each: decision — reason — where. Strudel verification results are i
 - D14 `@phyllo/ui` ships `base.css` (reset, full-height root, body bg/text from tokens) imported by app and Storybook — every surface needs the same ground — src/packages/ui/src/base.css.
 - D15 Tauri capabilities start at each plugin's `:default`; fs scope is widened for `~/Music/Phyllo` in T6.1 — least privilege until needed — capabilities/default.json.
 - D16 Global-shortcut plugin registered under `#[cfg(desktop)]` — plugin is desktop-only — src-tauri/src/lib.rs.
+
+## UI (M2)
+- D17 tokens.css: `--ph-accent-text` / `--ph-code-kw` declared on `:root, [data-theme]` instead of `:root` only — a nested `data-theme` subtree (ThemePair stories, Settings preview) otherwise inherits the outer theme's accent — src/packages/ui/src/tokens.css (only deviation from the verbatim copy).
+- D18 Icon `chevron-down` uses Kit's `chevron` path; `clock`/`arrow-right` paths come from Export/Onboarding sources — Kit `icons` array lacks them — atoms/Icon/icons.ts.
+- D19 Surface adds `floating` (card shadow) and `edge: top|bottom` (chrome line); plate/inset radius is a literal 12px (no token) — the doc's states had no prop to express them — atoms/Surface.
+- D20 Kbd builds a spoken default `aria-label` ("Command K"); word keys join with "+" — screen readers can't read ⌘ — atoms/Kbd.
+- D21 Swatch is `role="radio"` + `aria-checked`; roving focus belongs to the parent radiogroup (AccentPicker) — atoms/Swatch.
+- D22 Keep `forwardRef` on focusable atoms despite React 19 — design-system §3 convention; harmless in 19 — atoms/*.
