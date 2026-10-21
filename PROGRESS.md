@@ -64,3 +64,4 @@
 
 ### Definition-of-done flow in the built app
 `pnpm --filter phyllo selftest` (release .app, WKWebView, real Rust layer): open → play House starter → edit → save → reopen from library → export WAV (+ MIDI, .strudel, FLAC) — 13/13 PASS (T7.5a, re-run by orchestrator).
+- F6 merged (46640bf): Fader keyboard/scale, Meter peak/stop props, theme-switch transition suppression, Punchcard 3 rows + small-tile play, Slider valueText string, Knob onBlockedChange. pnpm check green.
