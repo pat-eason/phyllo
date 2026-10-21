@@ -18,3 +18,4 @@
 - T1.1 merged (b79063c): ids, params, factories, reducer (all actions), serialize/migrate, time helpers; model 221 tests.
 - T1.3 merged (ab24e8d): bjorklund (matches Strudel euclid), rowToMini/miniToRows with semantic fit check, velocity↔gain, previewRows, clipViz; engine 1653 tests (incl. 300 seeded round-trips).
 - T6.3 merged (2f059ac): binary-IPC export sessions, WAV/FLAC/MP3 encoders, normalize, SMF writer, streamAudioBuffer + browser fallback. Orchestrator re-ran: cargo test 92 passed, clippy clean, app 101 tests. Live Tauri binary-IPC path untested — flagged for T5.V.
+- T1.4 merged (d143821): 7 original starters + transpose, tips, suggestions, 50 verified modifiers, sound catalogs, feel tools, cheat sheet, explainPattern, tags; model 533 tests. Fixed barrel clash (feel's formatNumber kept internal).

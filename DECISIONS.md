@@ -90,3 +90,10 @@ One line each: decision — reason — where. Strudel verification results are i
 - D55 Encoders: WAV via hound (16-bit TPDF dither fixed seed, 24 rounded, 32 float), FLAC via flacenc (16/24 only), MP3 320 CBR via mp3lame-encoder (LAME built from source; no Xing tag) — pure-Rust where possible — src-tauri/src/encode.rs.
 - D56 LAME (mp3lame-sys) is LGPL; statically linked alongside the AGPL Strudel stack — recorded for the M7 license review (D7) — Cargo.toml.
 - D57 Browser fallback encodes WAV + SMF in JS and downloads; FLAC/MP3 → `unsupported_format` — exports testable without Tauri — src/native/exportBrowser.ts.
+
+## Content (M1)
+- D58 Changing the starter key transposes melodic/chord tracks by root distance only (`semitonesBetween` in −5..+6); the mode label is stored as given — remapping modes would change the music — SPEC §6.2 (proposed) — model/content/transpose.ts.
+- D59 Starters are original model data (not parsed code): 16-bit stage splits hats into their own track to match "4 tracks"; Breakbeat hats use the AkaiMPC60 bank; per-starter section names and tags; ambient bus roomsize 5 — SPEC §6.2; mockup code showed 3 tracks — model/content/starters.ts.
+- D60 Feel tools: Fill is a 3-position slider (off, `fast(2)`, `fast(4)`); a slider at its off value removes the modifier — SPEC §6.3 — model/content/feel.ts.
+- D61 Tip copy is original (step-3 title from the mockup); step 1 targets the Library Starters tab (`starter-picker`); seven `data-tip-target` anchors: starter-picker, track-mute, track-solo, inspector-knob-lpf, inspector-try-one, inspector-pattern, header-export — model/content/tips.ts.
+- D62 Modifier catalog = 50 functions, each verified in installed Strudel source (non-existent `rolled`, `rot`, `arpMode`, `acidenv` dropped); drum sounds per bank taken from the real `tidal-drum-machines.json` — model/content/modifiers.ts, sounds.ts.
