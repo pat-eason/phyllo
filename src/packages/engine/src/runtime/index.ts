@@ -31,3 +31,5 @@ export type { PhylloEngineError } from "./errors";
 export { DEFAULT_SAMPLE_SOURCES, STRUDEL_CDN, SOUNDFONT_BASE, listBuiltInSoundUrls, sampleMapFileUrls } from "./samples";
 export type { BuiltInSoundOptions, UrlResolver } from "./samples";
 export { LIMITER } from "./master";
+export { DEFAULT_VELOCITY, GM_DRUM_NOTES, midiNoteOf, midiVelocityOf, queryNoteEvents } from "./notes";
+export type { NoteEvent, NoteQueryOptions } from "./notes";
