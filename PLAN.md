@@ -42,7 +42,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 | T2.2 | atoms-B | Button, IconButton, TransportKey, ToggleButton, SegmentedControl, Switch, Checkbox | T2.1 | same | done |
 | T2.3 | atoms-C | TextField, Select, Slider, Chip | T2.1 | same | done |
 | T2.4 | atoms-D | Knob, Fader, Meter, StepCell | T2.1 | same + slider a11y, value-passing onChange | done |
-| T2.5 | molecules-A | Readout, TransportControls, TrackHeader, SoundRow, SectionChip, Toast, EmptyState | T2.2–T2.4 | same | active |
+| T2.5 | molecules-A | Readout, TransportControls, TrackHeader, SoundRow, SectionChip, Toast, EmptyState | T2.2–T2.4 | same | done |
 | T2.6 | molecules-B | Clip, ParamKnob, SuggestionButton, ModifierRow, PatternField, StepRow | T2.2–T2.4 | same | active |
 | T2.7 | molecules-C | TipCard, StarterCard, GrooveCard, SettingRow | T2.2–T2.4 | same | done |
 | T2.V | verifier | read-only + `e2e/stories/**` | T2.5–T2.7 | screenshots vs `png/kit.png` both themes, 2 accents; defects filed | todo |

@@ -108,3 +108,7 @@ One line each: decision — reason — where. Strudel verification results are i
 - D71 Known round-trip losses (accepted, documented): solo flattens to mute, clip-less track → muted with full clip, static value under a modulated knob, disabled modifiers — code can't express them; the reducer's `code/replace` preserves solo/clips for matched tracks (D45) — engine/parse.
 - D72 `ParseResult` gains `ok`, `error {message,line,column}`, `buses`; `code/replace` gains `buses`, `master` (merged), `lengthBars` (applied first) so imports keep them — types.ts, reducer.ts.
 - D73 Track ids must not contain whitespace (they go into `.analyze("<id>")`, parsed as mini-notation); model `newId` produces safe ids — engine/codegen.
+- D74 Readout cells take per-cell `subscribe` (DOM writes, no React re-render); BPM click-to-edit (`onEdit`) + wheel/↑↓ nudge (`onNudge`) — design-system §5 perf contract — molecules/Readout.
+- D75 TrackHeader `onMuteChange/onSoloChange(value, event)` (modifier keys); meter via `level` or `meterSubscribe`; rename via double-click/F2; lane 56 px per doc (Kit shows 52) — molecules/TrackHeader.
+- D76 SoundRow is an `<li>` (organism owns the `<ul>`), drag payload MIME `SOUND_DRAG_MIME` with a local `SoundRef` copy (ui can't import model); Space previews / Enter inserts only when the row has focus — molecules/SoundRow.
+- D77 Toast pauses on hover/focus, Escape dismisses, errors use `role="alert"`, sticky toasts (duration 0) get a Dismiss button — molecules/Toast.
