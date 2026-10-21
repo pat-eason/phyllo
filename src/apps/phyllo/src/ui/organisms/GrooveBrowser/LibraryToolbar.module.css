@@ -1,0 +1,41 @@
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+}
+
+.search {
+  flex: 1 1 280px;
+  --ph-field-bg: var(--ph-panel);
+}
+
+.sort {
+  flex: none;
+}
+
+.tileSize {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--ph-line);
+  border-radius: var(--ph-r-lg);
+  color: var(--ph-muted);
+  font: var(--ph-text-body);
+}
+
+.tileSizeLabel {
+  white-space: nowrap;
+}
+
+.largeGlyph {
+  display: block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: currentColor;
+}
