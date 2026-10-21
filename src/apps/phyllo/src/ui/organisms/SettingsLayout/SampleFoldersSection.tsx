@@ -60,7 +60,7 @@ export function SampleFoldersSection() {
               {missing ? (
                 <StatusDot status="warn" label="Not found" />
               ) : (
-                <StatusDot status="ok" label="Watching" className={styles["folderStatus"]} />
+                <StatusDot status="ok" label="Watching" labelTone="accent" className={styles["folderStatus"]} />
               )}
               <Button
                 variant="secondary"

@@ -62,7 +62,7 @@ function FolderSection({ folder, mode, query, actions, onUnlink }: FolderSection
         <Icon name="chevron-down" size={14} className={styles["chevron"]} data-open={expanded ? "" : undefined} />
       </button>
       <div className={styles["folderMeta"]}>
-        <StatusDot status={status.dot} label={status.label} />
+        <StatusDot status={status.dot} label={status.label} labelTone={status.dot === "ok" ? "accent" : "default"} />
         <IconButton icon="close" label={`Unlink ${folder.path}`} size={26} variant="plain" onClick={onUnlink} />
       </div>
       <div id={listId} hidden={!expanded}>

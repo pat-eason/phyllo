@@ -41,7 +41,7 @@ Sources of truth: `__inspiration/mockups/` (SPEC.md wins on behavior, design-sys
 |---|---|---|---|---|---|
 | F1 | orchestrator | content/starters | T1.V | lofi chords voice in all keys (T1.V #1) | done |
 | F2 | fix agent | model reducer/serialize, engine parse/codegen | T1.V | T1.V #2–#9, #13–#18; verifier fuzz passes | done |
-| F4 | fix agent | @phyllo/ui atoms/molecules/tokens/stories | T2.V | T2.V defects 1–20; axe clean except documented by-design rules | active |
+| F4 | fix agent | @phyllo/ui atoms/molecules/tokens/stories | T2.V | T2.V defects 1–20; axe clean except documented by-design rules | done |
 | F3 | fix agent | engine runtime | T1.V, T6.6 | T1.V #10 unknown chord → error, #11 stop releases voices, #12 limiter default on + ceiling, #19 offline error flood, #20 pattern error column | done |
 
 ### M2 Atoms, then molecules

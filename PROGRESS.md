@@ -45,3 +45,4 @@
 - T4.1 merged (700dd56): StepSequencer (steps/velocity/live code/piano roll/code tabs, PatternEditorProvider) + PatternTools (Euclid, feel, cheat sheet). App tests green. All organisms except ExportDialog done.
 - Dispatched T3.7 (app shell + all screens + shortcuts + native glue + e2e; folds T4.3/T5.5) and T6.5 (sample folders → engine, MIDI in/record, CC → knobs, stopPreview).
 - T6.5 merged (524a577): sample folders → engine registration + watch, MIDI input (preview + CC → selected track knobs), MIDI recorder + useRecorder, engine stopPreview on reserved orbit. Orchestrator added engineStore.stopPreview passthrough. App 605 tests.
+- F4 merged (e655b1d): T2.V defects fixed; axe down to documented by-design findings only (Clip muted opacity, doc-mandated label-content-name-mismatch, TipCard Themes landmark); light accent-text token darkened (D137). Orchestrator set labelTone=accent on Watching dots. pnpm check green (ui 541).
