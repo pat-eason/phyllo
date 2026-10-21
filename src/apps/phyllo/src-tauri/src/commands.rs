@@ -12,11 +12,17 @@ use crate::error::{Error, Result};
 use crate::export::{self, BeginOptions, BeginResult, ExportResult, ExportSessions};
 use crate::history::{self, SnapshotInfo};
 use crate::library::{self, LibraryScan};
+use crate::media::{self, MediaState, NowPlaying};
+use crate::menu::{MenuItemState, MenuState, RecentItem};
 use crate::midi::{self, MidiHub, OutMessage, PortInfo};
 use crate::midifile::{self, MidiFileResult, MidiFileSpec};
+use crate::notifications::{self, ExportFinished};
+use crate::open_files::{self, OpenFileQueue};
 use crate::osc::{OscConfig, OscMessageIn, OscState};
 use crate::paths::{self, PhylloPaths};
 use crate::samples::{self, SampleScan};
+use crate::tray::{self, TrayState};
+use crate::windows::{self, KeepRunning};
 use crate::{project, trash, watch};
 
 pub const EVENT_LIBRARY_CHANGED: &str = "library://changed";
@@ -307,4 +313,91 @@ pub async fn midi_file_write(path: String, spec: MidiFileSpec) -> Result<MidiFil
         })
     })
     .await
+}
+
+// ── System integration (menu, windows, tray, media keys, open files, notifications) ────────────
+
+#[tauri::command]
+pub fn menu_set_state(state: State<'_, MenuState>, item: MenuItemState) -> Result<()> {
+    state.set_state(&item)
+}
+
+/// Replace File › Open Recent; at most 10 entries are shown.
+#[tauri::command]
+pub fn menu_set_recent(
+    app: AppHandle,
+    state: State<'_, MenuState>,
+    items: Vec<RecentItem>,
+) -> Result<()> {
+    state.set_recent(&app, items)
+}
+
+/// Focus the Settings window, creating it if needed. Async: creating a window from a sync command deadlocks on
+/// Windows (WebView2), see `WebviewWindowBuilder::new`.
+#[tauri::command]
+pub async fn open_settings_window(app: AppHandle) -> Result<()> {
+    windows::open_settings(&app)
+}
+
+/// Create or remove the menu-bar tray icon; resolves whether one exists now.
+#[tauri::command]
+pub async fn tray_set_enabled(app: AppHandle, enabled: bool) -> Result<bool> {
+    tray::set_enabled(&app, &app.state::<TrayState>(), enabled)
+}
+
+#[tauri::command]
+pub fn tray_set_playing(app: AppHandle, state: State<'_, TrayState>, playing: bool) -> Result<()> {
+    tray::set_playing(&app, &state, playing)
+}
+
+/// While on, closing the main window hides it and audio keeps running.
+#[tauri::command]
+pub fn app_set_keep_running(state: State<'_, KeepRunning>, keep: bool) {
+    state.set(keep);
+}
+
+/// Resolves `true` when native media keys are active (macOS); `false` elsewhere.
+#[tauri::command]
+pub fn media_set_enabled(
+    app: AppHandle,
+    state: State<'_, MediaState>,
+    enabled: bool,
+) -> Result<bool> {
+    media::set_enabled(&app, &state, enabled)
+}
+
+/// Resolves `true` when the native Now Playing info was updated.
+#[tauri::command]
+pub fn media_set_now_playing(
+    app: AppHandle,
+    state: State<'_, MediaState>,
+    info: NowPlaying,
+) -> Result<bool> {
+    media::set_now_playing(&app, &state, info)
+}
+
+/// Files the OS asked Phyllo to open before JS was listening. After the first call, opens arrive as
+/// `app://open-files` events instead.
+#[tauri::command]
+pub fn take_pending_open_files(queue: State<'_, OpenFileQueue>) -> Vec<String> {
+    queue.take()
+}
+
+#[tauri::command]
+pub fn notify_export_finished(app: AppHandle, notification: ExportFinished) -> Result<bool> {
+    notifications::export_finished(&app, notification)
+}
+
+/// Queue or deliver files the OS handed us (Finder open, command line). Shows the main window when delivering.
+pub fn deliver_open_files(app: &AppHandle, paths: Vec<PathBuf>) {
+    let cwd = std::env::current_dir().unwrap_or_default();
+    let paths = open_files::filter_paths(paths, &cwd);
+    if let Some(paths) = app.state::<OpenFileQueue>().push(paths) {
+        windows::show_main(app);
+        let _ = app.emit_to(
+            tauri::EventTarget::webview_window(windows::MAIN),
+            open_files::EVENT_OPEN_FILES,
+            serde_json::json!({ "paths": paths }),
+        );
+    }
 }

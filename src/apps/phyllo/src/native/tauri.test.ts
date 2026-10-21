@@ -3,6 +3,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   invoke: vi.fn(),
   listen: vi.fn(),
+  emit: vi.fn(),
+  windowListen: vi.fn(),
+  label: 'main',
   open: vi.fn(),
   save: vi.fn(),
   reveal: vi.fn(),
@@ -18,7 +21,10 @@ vi.mock('@tauri-apps/api/core', () => ({
   convertFileSrc: (p: string) => `asset://localhost/${encodeURIComponent(p)}`,
   isTauri: () => true,
 }));
-vi.mock('@tauri-apps/api/event', () => ({ listen: mocks.listen }));
+vi.mock('@tauri-apps/api/event', () => ({ listen: mocks.listen, emit: mocks.emit }));
+vi.mock('@tauri-apps/api/webviewWindow', () => ({
+  getCurrentWebviewWindow: () => ({ label: mocks.label, listen: mocks.windowListen }),
+}));
 vi.mock('@tauri-apps/plugin-dialog', () => ({ open: mocks.open, save: mocks.save }));
 vi.mock('@tauri-apps/plugin-opener', () => ({ revealItemInDir: mocks.reveal }));
 vi.mock('@tauri-apps/plugin-notification', () => ({
@@ -91,6 +97,29 @@ describe('tauri native: command names and arguments', () => {
       },
     ],
     ['exportFinish', () => api.exportFinish('s1'), 'export_finish', { sessionId: 's1' }],
+    [
+      'menuSetState',
+      () => api.menuSetState({ id: 'transport.playPause', text: 'Pause', enabled: true }),
+      'menu_set_state',
+      { item: { id: 'transport.playPause', text: 'Pause', enabled: true } },
+    ],
+    [
+      'menuSetRecent',
+      () => api.menuSetRecent([{ path: '/p/a.phyllo', name: 'A' }]),
+      'menu_set_recent',
+      { items: [{ path: '/p/a.phyllo', name: 'A' }] },
+    ],
+    ['openSettingsWindow', () => api.openSettingsWindow(), 'open_settings_window', undefined],
+    ['traySetEnabled', () => api.traySetEnabled(true), 'tray_set_enabled', { enabled: true }],
+    ['traySetPlaying', () => api.traySetPlaying(false), 'tray_set_playing', { playing: false }],
+    ['appSetKeepRunning', () => api.appSetKeepRunning(true), 'app_set_keep_running', { keep: true }],
+    ['takePendingOpenFiles', () => api.takePendingOpenFiles(), 'take_pending_open_files', undefined],
+    [
+      'notifyExportFinished',
+      () => api.notifyExportFinished({ title: 'Export finished', body: 'mix.wav', path: '/m/mix.wav' }),
+      'notify_export_finished',
+      { notification: { title: 'Export finished', body: 'mix.wav', path: '/m/mix.wav' } },
+    ],
     ['exportCancel', () => api.exportCancel('s1'), 'export_cancel', { sessionId: 's1' }],
     [
       'midiFileWrite',
@@ -147,7 +176,9 @@ describe('tauri native: command names and arguments', () => {
   });
 
   it('COMMANDS lists exactly the commands registered in lib.rs', () => {
-    expect(Object.values(COMMANDS).sort()).toEqual([...cases.map((c) => c[2]), 'export_chunk'].sort());
+    expect(Object.values(COMMANDS).sort()).toEqual(
+      [...cases.map((c) => c[2]), 'export_chunk', 'media_set_enabled', 'media_set_now_playing'].sort(),
+    );
   });
 });
 

@@ -1,5 +1,12 @@
 import type { NativeApi } from './api';
+import { broadcastEventName } from './broadcast';
 import { NativeError } from './errors';
+import {
+  type MediaSessionBridge,
+  createMediaSessionBridge,
+  defaultMediaMetadata,
+  defaultMediaSession,
+} from './mediaSession';
 import {
   BrowserExportSession,
   type Download,
@@ -22,7 +29,9 @@ import type {
 /**
  * In-memory implementation of `NativeApi` for plain-browser runs (Vite dev, Playwright, Storybook).
  * Projects, text files and "opened" times persist in `localStorage` when it is usable; history is memory only.
- * It starts with zero projects, dialogs resolve `null`, and `notify` logs.
+ * It starts with zero projects, dialogs resolve `null`, and `notify` logs. System integration: no menu, tray or
+ * file associations (those no-op); Settings opens as a `#/settings` popup; `broadcast` uses `BroadcastChannel`;
+ * media keys use `navigator.mediaSession`.
  */
 
 export const BROWSER_ROOT = '/Phyllo';
@@ -53,6 +62,46 @@ export interface BrowserApiOptions {
   requestMidiAccess?: RequestMidiAccess | null;
   /** How exports reach the user; defaults to a Blob + `a[download]` click. Tests inject a recorder. */
   download?: Download;
+  /** Media keys via `navigator.mediaSession`; defaults to the real one when the browser has it. */
+  mediaSession?: MediaSessionBridge;
+  /** Opens the Settings popup; defaults to `window.open`. Returning `null` (blocked) falls back to `navigateTo`. */
+  openWindow?: (url: string, target: string, features: string) => unknown;
+  /** Defaults to setting `location.hash`. */
+  navigateTo?: (hash: string) => void;
+  /**
+   * Cross-tab transport for `broadcast`; defaults to a `BroadcastChannel` when available, `null` for none.
+   * Messages a channel posts never come back to the same channel object.
+   */
+  broadcastChannel?: BroadcastChannelLike | null;
+}
+
+export type BroadcastChannelLike = Pick<BroadcastChannel, 'postMessage' | 'addEventListener' | 'removeEventListener'>;
+
+export const BROADCAST_CHANNEL_NAME = 'phyllo.native.broadcast';
+export const SETTINGS_HASH = '#/settings';
+
+function defaultBroadcastChannel(): BroadcastChannelLike | null {
+  try {
+    return typeof BroadcastChannel === 'function' ? new BroadcastChannel(BROADCAST_CHANNEL_NAME) : null;
+  } catch {
+    return null;
+  }
+}
+
+function defaultOpenWindow(url: string, target: string, features: string): unknown {
+  try {
+    return globalThis.window?.open(url, target, features) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function defaultNavigateTo(hash: string): void {
+  try {
+    globalThis.location.hash = hash;
+  } catch {
+    /* no location (tests, workers) */
+  }
 }
 
 function defaultStorage(): Pick<Storage, 'getItem' | 'setItem'> | null {
@@ -187,6 +236,16 @@ export function createBrowserApi(options: BrowserApiOptions = {}): NativeApi {
   const download = options.download ?? defaultDownload;
   const exportSessions = new Map<string, BrowserExportSession>();
   let exportCounter = 0;
+
+  const media = options.mediaSession ?? createMediaSessionBridge(defaultMediaSession(), defaultMediaMetadata());
+  const openWindow = options.openWindow ?? defaultOpenWindow;
+  const navigateTo = options.navigateTo ?? defaultNavigateTo;
+  let channel: BroadcastChannelLike | null | undefined = options.broadcastChannel;
+  // Created on first use so merely loading the module opens no channel.
+  const broadcastChannel = () => {
+    if (channel === undefined) channel = defaultBroadcastChannel();
+    return channel;
+  };
 
   return {
     kind: 'browser',
@@ -341,6 +400,48 @@ export function createBrowserApi(options: BrowserApiOptions = {}): NativeApi {
       return false;
     },
     convertFileSrc: (path) => path,
+
+    // No native menu in a browser; a keyboard layer may map MENU_ACTIONS accelerators itself.
+    onMenuAction: async (): Promise<Unsubscribe> => () => undefined,
+    menuSetState: async () => {},
+    menuSetRecent: async () => {},
+
+    openSettingsWindow: async () => {
+      const popup = openWindow(SETTINGS_HASH, 'phyllo-settings', 'popup,width=1100,height=800');
+      if (popup === null || popup === undefined) navigateTo(SETTINGS_HASH);
+    },
+    broadcast: async (name, payload) => {
+      const event = broadcastEventName(name);
+      broadcastChannel()?.postMessage({ event, payload });
+    },
+    onBroadcast: async (name, callback): Promise<Unsubscribe> => {
+      const event = broadcastEventName(name);
+      const ch = broadcastChannel();
+      if (!ch) return () => undefined;
+      const handler = (message: MessageEvent) => {
+        const data = message.data as { event?: unknown; payload?: unknown } | null;
+        if (data?.event === event) callback(data.payload);
+      };
+      ch.addEventListener('message', handler);
+      return () => ch.removeEventListener('message', handler);
+    },
+
+    // There is no tray and closing the tab ends playback.
+    traySetEnabled: async () => false,
+    traySetPlaying: async () => {},
+    appSetKeepRunning: async () => {},
+
+    mediaSetEnabled: async (enabled) => media.setEnabled(enabled),
+    mediaSetNowPlaying: async (info) => media.setNowPlaying(info),
+    onMediaCommand: async (callback) => media.onCommand(callback),
+
+    takePendingOpenFiles: async () => [],
+    onOpenFiles: async (): Promise<Unsubscribe> => () => undefined,
+
+    notifyExportFinished: async (notification) => {
+      log('notify', notification);
+      return false;
+    },
 
     settingsStore: {
       load: async () => {

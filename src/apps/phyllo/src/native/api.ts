@@ -1,8 +1,15 @@
 import type {
   ExportBeginOptions,
+  ExportFinishedNotification,
   ExportResult,
   ExportSession,
   LibraryScan,
+  MediaCommandEvent,
+  MenuActionEvent,
+  MenuItemState,
+  NowPlaying,
+  OpenFilesEvent,
+  RecentItem,
   MidiFileResult,
   MidiFileSpec,
   MidiMessageEvent,
@@ -120,6 +127,62 @@ export interface NativeApi {
   notify(options: NotifyOptions): Promise<boolean>;
   /** URL the web view can load for a file on disk (asset protocol). */
   convertFileSrc(path: string): string;
+
+  // Menu bar (SPEC §7). Desktop: native menu; browser: no menu, these no-op and no actions arrive.
+  /**
+   * `menu://action` from the menu bar and the tray menu, delivered to the main window only. Accelerators belong to
+   * the menu (see `MENU_ACTIONS`), so don't bind them in JS as well. App-level undo is the exception: the Edit menu
+   * uses the predefined text Undo/Redo, and a JS ⌘Z / ⇧⌘Z `keydown` handler that finds focus outside editable
+   * content calls `preventDefault()` and runs the app's undo (the web view sees key equivalents before the menu).
+   */
+  onMenuAction(callback: (event: MenuActionEvent) => void): Promise<Unsubscribe>;
+  /** Enable/disable, check or relabel one custom item. Rejects `not_found` for an unknown id. */
+  menuSetState(state: MenuItemState): Promise<void>;
+  /** Replace File › Open Recent (first 10 shown, in the given order). */
+  menuSetRecent(items: RecentItem[]): Promise<void>;
+
+  // Windows
+  /**
+   * Focus or open Settings: a second desktop window (1100×800, `#/settings`); in the browser a popup on
+   * `#/settings`, or the current tab's hash when popups are blocked.
+   */
+  openSettingsWindow(): Promise<void>;
+  /**
+   * Send `payload` to every *other* Phyllo window on `channel` (letters, digits, `-`, `_`), e.g. settings changes
+   * between main and Settings. Desktop: a global Tauri event; browser: `BroadcastChannel` between tabs.
+   */
+  broadcast(channel: string, payload: unknown): Promise<void>;
+  onBroadcast(channel: string, callback: (payload: unknown) => void): Promise<Unsubscribe>;
+
+  // Menu-bar mini transport (Settings › System "Keep playing from the menu bar", off by default)
+  /** Create or remove the tray icon (Play/Pause, Stop, Show Phyllo, Quit). Resolves whether one exists; browser `false`. */
+  traySetEnabled(enabled: boolean): Promise<boolean>;
+  /** Tray Play/Pause label. */
+  traySetPlaying(playing: boolean): Promise<void>;
+  /** While on, closing the main window hides it and audio keeps playing. Turn on together with the tray. */
+  appSetKeepRunning(keep: boolean): Promise<void>;
+
+  // Media keys (Settings › System, on by default)
+  /**
+   * Native on macOS (MPRemoteCommandCenter); otherwise `navigator.mediaSession`. Resolves whether a handler set is
+   * registered (`false` when turning off, or when neither exists).
+   */
+  mediaSetEnabled(enabled: boolean): Promise<boolean>;
+  /** Project name and play state for Now Playing / the OS media overlay. Resolves `false` while media keys are off. */
+  mediaSetNowPlaying(info: NowPlaying): Promise<boolean>;
+  onMediaCommand(callback: (event: MediaCommandEvent) => void): Promise<Unsubscribe>;
+
+  // Files opened from the OS (Finder double-click / Open With, `phyllo <file>`)
+  /** Files the OS handed over before JS listened (cold start). Call once at startup, after `onOpenFiles`. */
+  takePendingOpenFiles(): Promise<string[]>;
+  onOpenFiles(callback: (event: OpenFilesEvent) => void): Promise<Unsubscribe>;
+
+  /**
+   * Native "export finished" notification with a Reveal action that shows `path` in Finder / Explorer (clicking the
+   * body brings Phyllo forward). Keep the in-app Toast's Reveal button regardless: under `tauri dev` and on some
+   * notification servers the action button does not show. Resolves `false` in the browser.
+   */
+  notifyExportFinished(notification: ExportFinishedNotification): Promise<boolean>;
 
   settingsStore: SettingsStore;
 }

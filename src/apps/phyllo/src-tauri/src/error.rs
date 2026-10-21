@@ -36,6 +36,14 @@ pub enum Error {
     UnsupportedFormat(String),
     #[error("encode error: {0}")]
     Encode(String),
+    #[error("menu error: {0}")]
+    Menu(String),
+    #[error("window error: {0}")]
+    Window(String),
+    #[error("tray error: {0}")]
+    Tray(String),
+    #[error("notification error: {0}")]
+    Notification(String),
     #[error("{0}")]
     Internal(String),
 }
@@ -56,6 +64,10 @@ impl Error {
             Error::Osc(_) => "osc",
             Error::UnsupportedFormat(_) => "unsupported_format",
             Error::Encode(_) => "encode",
+            Error::Menu(_) => "menu",
+            Error::Window(_) => "window",
+            Error::Tray(_) => "tray",
+            Error::Notification(_) => "notification",
             Error::Internal(_) => "internal",
         }
     }
