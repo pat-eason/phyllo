@@ -5,6 +5,7 @@ import type { SelectOption } from "@phyllo/ui";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAppStores, useEngine, useMeters, useNative, useProject, useProjectFile, useProjectSelector, useSettings } from "../../../hooks";
+import { useTransportStopped } from "./useTransportStopped";
 import { nextTakeFileName, startOutputRecording } from "./recordOutput";
 import type { OutputRecording } from "./recordOutput";
 import { formatElapsed } from "./stripModel";
@@ -109,6 +110,7 @@ export function MasterStrip() {
   const { settings, set } = useSettings();
   const { ensureAudio, audioReady } = useEngine();
   const { masterMeter } = useMeters();
+  const stopped = useTransportStopped();
   const { engineHost } = useAppStores();
   const native = useNative();
   const devices = useOutputDevices();
@@ -239,7 +241,7 @@ export function MasterStrip() {
           label="Master volume"
           height={faderHeight}
         />
-        <Meter className={styles["meter"]} subscribe={masterMeter} stereo length={faderHeight} thickness={6} hold />
+        <Meter className={styles["meter"]} subscribe={masterMeter} stopped={stopped} stereo length={faderHeight} thickness={6} hold />
       </div>
       <div className={styles["db"]}>{formatDb(db)}</div>
 

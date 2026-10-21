@@ -83,6 +83,30 @@ export function KnobPlate({ track, mode, ccMap, actions }: KnobPlateProps) {
   );
 }
 
+/** Knob keyboard steps (same as the Knob atom): the 0–1 position a key asks for, clamped, or null for other keys. */
+function keyedPosition(key: string, shift: boolean, from: number): number | null {
+  const step = shift ? 0.1 : 0.01;
+  const clamp = (p: number) => Math.min(1, Math.max(0, p));
+  switch (key) {
+    case "ArrowUp":
+    case "ArrowRight":
+      return clamp(from + step);
+    case "ArrowDown":
+    case "ArrowLeft":
+      return clamp(from - step);
+    case "PageUp":
+      return clamp(from + 0.1);
+    case "PageDown":
+      return clamp(from - 0.1);
+    case "Home":
+      return 0;
+    case "End":
+      return 1;
+    default:
+      return null;
+  }
+}
+
 interface KnobCellProps {
   param: ParamName;
   track: Track;
@@ -104,6 +128,7 @@ function KnobCell({ param, track, mode, modulated, cc, editing, onRequest, onRes
   const range = modulated ? modulationRange(track, param) : null;
   const knob = useRef<HTMLDivElement | null>(null);
   const guided = mode === "guided";
+  const confirmsChanges = modulated || typeof value === "string";
   const tipTarget = param === "lpf" ? "inspector-knob-lpf" : undefined;
   const highlighted = useTipHighlight(tipTarget);
 
@@ -145,6 +170,16 @@ function KnobCell({ param, track, mode, modulated, cc, editing, onRequest, onRes
         onChangeStart={onGestureStart}
         onChangeEnd={onGestureEnd}
         onRequestEdit={onStartEdit}
+        // A modulated/patterned knob often rests at an end of its travel (an unset lpf sits fully open), where the
+        // Knob drops a key that can't move it, so the "Replace …?" confirm never showed for arrows. Keys are taken
+        // here instead and always ask, like a drag does.
+        onKeyDownCapture={(event) => {
+          if (!confirmsChanges || event.altKey || event.metaKey || event.ctrlKey) return;
+          const position = keyedPosition(event.key, event.shiftKey, spec.toKnob(typeof value === "number" ? value : null));
+          if (position === null) return;
+          event.preventDefault();
+          onRequest(spec.fromKnob(position));
+        }}
         // Double-click resets to "unset" (codegen omits the call), not to the knob's resting position.
         onDoubleClickCapture={(event) => {
           event.preventDefault();

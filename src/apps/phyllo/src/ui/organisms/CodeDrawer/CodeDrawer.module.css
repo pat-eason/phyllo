@@ -65,23 +65,28 @@
   font-weight: 600;
 }
 
+/*
+ * One header row at the drawer widths of mockup 02: the summary takes the free space and truncates (basis 0,
+ * so it never pushes the scope switch and tools onto a second line); the header still wraps when not even a
+ * 120 px summary fits.
+ */
 .summary {
-  min-width: 0;
+  flex: 1 1 0;
+  min-width: 120px;
+  overflow: hidden;
   color: var(--ph-muted);
   font: var(--ph-text-small);
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .summaryError {
   color: var(--ph-rec);
 }
 
-.spacer {
-  flex: 1;
-}
-
 .tools {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: var(--ph-s-3);
 }

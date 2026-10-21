@@ -157,6 +157,37 @@ describe("LibraryPanel", () => {
     expect(findTrack(stores.project.getState().project, "kick")?.pattern).toBe("sd*4");
   });
 
+  it("should insert the top search result on the selected track when Enter is pressed in the search", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const { stores } = renderWithStores(<LibraryPanel />, pro);
+    act(() => stores.project.getState().dispatch({ type: "ui/select", trackId: "kick" }));
+
+    // Act
+    await user.type(screen.getByRole("searchbox", { name: "Search sounds" }), "snare{Enter}");
+
+    // Assert
+    expect(findTrack(stores.project.getState().project, "kick")?.pattern).toBe("sd*4");
+  });
+
+  it("should make the drum sound list one tab stop and move between rows with the arrow keys", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    renderWithStores(<LibraryPanel />, pro);
+    const [first, second] = drumRows() as [HTMLElement, HTMLElement];
+    first.focus();
+
+    // Act
+    await user.keyboard("{ArrowDown}");
+
+    // Assert
+    expect(second).toHaveFocus();
+    await user.tab();
+    expect(screen.getByRole("list", { name: "Drum sounds" })).not.toContainElement(document.activeElement as HTMLElement);
+    await user.tab({ shift: true });
+    expect(second).toHaveFocus();
+  });
+
   it("should change the sound of the selected melodic track when an instrument chip gets Enter", async () => {
     // Arrange
     const user = userEvent.setup();

@@ -374,7 +374,7 @@ describe("Timeline", () => {
 
     // Act
     await user.pointer([
-      { keys: "[MouseLeft>]", target: screen.getByRole("button", { name: "Loop region, bars 9 to 16" }), coords: { clientX: 300 } },
+      { keys: "[MouseLeft>]", target: screen.getByTestId("loop-grip"), coords: { clientX: 300 } },
       { coords: { clientX: 300 + 4 * BASE_BAR_PX } },
       { keys: "[/MouseLeft]" },
     ]);
@@ -382,6 +382,32 @@ describe("Timeline", () => {
     // Assert
     expect(screen.getByRole("button", { name: "Loop region, bars 13 to 20" })).toBeInTheDocument();
     expect(stores?.transport.getState().position.bar).toBe(1);
+  });
+
+  it("should seek when a bar inside the loop band is clicked", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    renderTimeline();
+
+    // Act
+    await user.pointer({ keys: "[MouseLeft]", target: screen.getByRole("button", { name: "Loop region, bars 9 to 16" }), coords: { clientX: xOf(13) + 2 } });
+
+    // Assert
+    expect(stores?.transport.getState().position.bar).toBe(13);
+    expect(stores?.project.getState().project.loop).toEqual({ enabled: true, startBar: 9, endBar: 16 });
+  });
+
+  it("should seek instead of moving the loop when its top strip is clicked without dragging", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    renderTimeline();
+
+    // Act
+    await user.pointer({ keys: "[MouseLeft]", target: screen.getByTestId("loop-grip"), coords: { clientX: xOf(11) + 2 } });
+
+    // Assert
+    expect(stores?.transport.getState().position.bar).toBe(11);
+    expect(stores?.project.getState().project.loop).toEqual({ enabled: true, startBar: 9, endBar: 16 });
   });
 
   it("should mark the section under the playhead as current", () => {

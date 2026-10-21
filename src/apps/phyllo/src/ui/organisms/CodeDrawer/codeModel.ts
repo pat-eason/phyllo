@@ -98,10 +98,10 @@ export function audibleTrackCount(tracks: readonly Track[]): number {
   return tracks.filter((t) => t.clips.length > 0 && isAudible(t, tracks)).length;
 }
 
-/** Guided summary: "Phyllo writes Strudel as you work — 5 patterns playing". */
-export function guidedSummary(tracks: readonly Track[]): string {
+/** Guided summary: "Phyllo writes Strudel as you work — 5 patterns playing" ("… ready" while stopped). */
+export function guidedSummary(tracks: readonly Track[], playing: boolean): string {
   const n = audibleTrackCount(tracks);
-  return `Phyllo writes Strudel as you work — ${n} ${n === 1 ? "pattern" : "patterns"} playing`;
+  return `Phyllo writes Strudel as you work — ${n} ${n === 1 ? "pattern" : "patterns"} ${playing ? "playing" : "ready"}`;
 }
 
 /** Name of the section the "This section" scope renders, or null when no section contains the bar. */

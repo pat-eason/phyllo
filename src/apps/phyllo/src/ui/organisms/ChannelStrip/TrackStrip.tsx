@@ -5,6 +5,7 @@ import { Fader, formatDb, gainToDb, dbToGain, Knob, Meter, Select, ToggleButton 
 import type { SelectOption } from "@phyllo/ui";
 import { useMemo, type CSSProperties } from "react";
 import { useMeters, useProject, useProjectSelector, useSelection } from "../../../hooks";
+import { useTransportStopped } from "./useTransportStopped";
 import { EffectMenu } from "./EffectMenu";
 import { InsertList } from "./InsertList";
 import { nextFreeOrbit, soundLine, trackInserts } from "./stripModel";
@@ -61,6 +62,7 @@ export function TrackStrip({ trackId }: { trackId: string }) {
   const { dispatch, beginGesture, endGesture } = useProject();
   const { trackId: selectedId, select } = useSelection();
   const { meterFor } = useMeters();
+  const stopped = useTransportStopped();
   const [area, faderHeight] = useFillHeight<HTMLDivElement>();
   const inserts = useMemo(() => (track ? trackInserts(track) : []), [track]);
   const modulated = useMemo(() => (track ? modulatedParams(track) : new Set<ParamName>()), [track]);
@@ -131,7 +133,7 @@ export function TrackStrip({ trackId }: { trackId: string }) {
           disabled={gainLocked}
           aria-describedby={gainLocked ? `${track.id}-gain-note` : undefined}
         />
-        <Meter className={styles["meter"]} subscribe={meterFor(track.id)} stereo length={faderHeight} thickness={6} />
+        <Meter className={styles["meter"]} subscribe={meterFor(track.id)} stopped={stopped} stereo length={faderHeight} thickness={6} />
       </div>
       <div className={styles["db"]}>{gainLocked ? "pattern" : formatDb(db)}</div>
       {gainLocked && (

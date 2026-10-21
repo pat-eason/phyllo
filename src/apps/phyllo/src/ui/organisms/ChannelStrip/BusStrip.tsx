@@ -2,6 +2,7 @@ import { PARAM_SPECS } from "@phyllo/model";
 import type { Bus } from "@phyllo/model";
 import { Knob, Meter, ToggleButton } from "@phyllo/ui";
 import { useProject, useProjectSelector, useMeters } from "../../../hooks";
+import { useTransportStopped } from "./useTransportStopped";
 import { insertLabel } from "./stripModel";
 import { useFillHeight } from "./useFillHeight";
 import styles from "./ChannelStrip.module.css";
@@ -43,6 +44,7 @@ export function BusStrip({ orbit }: { orbit: number }) {
   });
   const { dispatch, beginGesture, endGesture } = useProject();
   const { orbitMeterFor } = useMeters();
+  const stopped = useTransportStopped();
   const [area, meterHeight] = useFillHeight<HTMLDivElement>();
   const count = members.length;
   const legendId = `bus-${orbit}-shared`;
@@ -82,7 +84,7 @@ export function BusStrip({ orbit }: { orbit: number }) {
       </div>
 
       <div className={styles["faderArea"]} ref={area}>
-        <Meter className={styles["meter"]} subscribe={orbitMeterFor(orbit)} stereo length={meterHeight} thickness={6} />
+        <Meter className={styles["meter"]} subscribe={orbitMeterFor(orbit)} stopped={stopped} stereo length={meterHeight} thickness={6} />
       </div>
 
       <div className={styles["buttons"]}>

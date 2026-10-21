@@ -243,6 +243,7 @@ export const Lane = memo(function Lane({
         muted={track.mute}
         soloed={track.solo}
         meterSubscribe={meterSubscribe}
+        // F6: pass meterStopped={!playing} (SPEC §6.1 "Meters read 0 when stopped") once TrackHeader forwards it.
         {...(error ? { error } : {})}
         codeTrack={kind === "code"}
         onSelect={() => actions.select(trackId)}

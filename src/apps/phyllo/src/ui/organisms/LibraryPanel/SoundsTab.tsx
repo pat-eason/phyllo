@@ -1,42 +1,27 @@
 import { DRUM_BANKS, INSTRUMENTS, SYNTHS, drumSoundsFor, searchSounds } from "@phyllo/model";
-import type { DrumBank, DrumSound, InstrumentSound, SoundEntry, SynthSound, UiMode } from "@phyllo/model";
+import type { DrumBank, UiMode } from "@phyllo/model";
 import { Button, Chip, EmptyState, Icon } from "@phyllo/ui";
 import { useId, useMemo, useState } from "react";
 import { ChipList, DrumList, GroupHeading, SampleList } from "./parts";
 import { shortPath } from "./soundRefs";
+import { bankFor, groupResults, matchingSamples } from "./soundSearch";
 import type { SampleFolders } from "./useSampleFolders";
 import type { LibraryActions } from "./useLibraryActions";
 import styles from "./LibraryPanel.module.css";
 
-const DEFAULT_BANK = "RolandTR909";
 /** Matching sample files shown in a search before "Show all". */
 const SAMPLE_MATCH_LIMIT = 12;
 
 export interface SoundsTabProps {
   mode: UiMode;
   query: string;
+  /** Selected drum machine (owned by the panel so search Enter can insert from it). */
+  bank: string;
+  onBankChange(bank: string): void;
   actions: LibraryActions;
   samples: SampleFolders;
   onOpenSamples(): void;
   onClearSearch(): void;
-}
-
-interface SearchGroups {
-  banks: DrumBank[];
-  drums: DrumSound[];
-  synths: SynthSound[];
-  instruments: InstrumentSound[];
-}
-
-function groupResults(results: readonly SoundEntry[]): SearchGroups {
-  const groups: SearchGroups = { banks: [], drums: [], synths: [], instruments: [] };
-  for (const entry of results) {
-    if (entry.group === "bank") groups.banks.push(entry as DrumBank);
-    else if (entry.group === "drum") groups.drums.push(entry as DrumSound);
-    else if (entry.group === "synth") groups.synths.push(entry as SynthSound);
-    else groups.instruments.push(entry as InstrumentSound);
-  }
-  return groups;
 }
 
 interface BankChipsProps {
@@ -64,18 +49,14 @@ function BankChips({ banks, selected, onSelect }: BankChipsProps) {
 }
 
 /** Sounds tab: drum machines (bank chips + rows), synths, instruments and the linked folders; search results replace the groups. */
-export function SoundsTab({ mode, query, actions, samples, onOpenSamples, onClearSearch }: SoundsTabProps) {
-  const [bank, setBank] = useState(DEFAULT_BANK);
+export function SoundsTab({ mode, query, bank, onBankChange, actions, samples, onOpenSamples, onClearSearch }: SoundsTabProps) {
   const [drumsOpen, setDrumsOpen] = useState(true);
   const drumsId = useId();
   const searching = query.trim() !== "";
   const results = useMemo(() => (searching ? groupResults(searchSounds(query, mode)) : null), [searching, query, mode]);
 
-  const bankFor = (sound: DrumSound) => (sound.banks.includes(bank) ? bank : (sound.banks[0] ?? bank));
-
   if (results) {
-    const needle = query.trim().toLowerCase();
-    const sampleMatches = samples.folders.flatMap((folder) => folder.scan.files.filter((file) => file.name.toLowerCase().includes(needle)));
+    const sampleMatches = matchingSamples(samples, query);
     const total = results.banks.length + results.drums.length + results.synths.length + results.instruments.length + sampleMatches.length;
     if (total === 0) {
       return (
@@ -95,9 +76,9 @@ export function SoundsTab({ mode, query, actions, samples, onOpenSamples, onClea
         {results.banks.length > 0 || results.drums.length > 0 ? (
           <section className={styles["group"]} aria-label="Drum machines">
             <GroupHeading>Drum machines</GroupHeading>
-            {results.banks.length > 0 ? <BankChips banks={results.banks} selected={bank} onSelect={setBank} /> : null}
+            {results.banks.length > 0 ? <BankChips banks={results.banks} selected={bank} onSelect={onBankChange} /> : null}
             {results.drums.length > 0 ? (
-              <DrumList label="Drum sounds" sounds={results.drums} bankFor={bankFor} mode={mode} actions={actions} />
+              <DrumList label="Drum sounds" sounds={results.drums} bankFor={(sound) => bankFor(sound, bank)} mode={mode} actions={actions} />
             ) : null}
           </section>
         ) : null}
@@ -145,7 +126,7 @@ export function SoundsTab({ mode, query, actions, samples, onOpenSamples, onClea
           </button>
         </div>
         <div id={drumsId} className={styles["group"]} hidden={!drumsOpen}>
-          <BankChips banks={DRUM_BANKS} selected={bank} onSelect={setBank} />
+          <BankChips banks={DRUM_BANKS} selected={bank} onSelect={onBankChange} />
           <DrumList label="Drum sounds" sounds={drumSoundsFor(bank)} bankFor={() => bank} mode={mode} actions={actions} />
         </div>
       </section>
