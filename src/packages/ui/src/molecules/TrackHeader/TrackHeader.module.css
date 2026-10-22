@@ -82,8 +82,9 @@
   white-space: nowrap;
 }
 
-/* Keep a long name clear of the marks (badge 18 + gap 6 + dot 8 + breathing room). */
-.text[data-marked] .name {
+/* Keep a long name clear of the marks (badge 18 + gap 6 + dot 8 + breathing room). On the button, not the name: the
+   button shrinks to fit its text, so a percentage on the name would eat into the name itself and hide short ones. */
+.text[data-marked] .select {
   max-width: calc(100% - 40px);
 }
 
