@@ -1,0 +1,138 @@
+/* Phyllo's palette and type (src/packages/ui/src/tokens.css) over VitePress's default theme. */
+
+:root {
+  --vp-font-family-base: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+  --vp-font-family-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --manual-font-display: "Source Serif 4 Variable", Georgia, serif;
+
+  --vp-c-brand-1: #1f7a2e;
+  --vp-c-brand-2: #26903a;
+  --vp-c-brand-3: #1f7a2e;
+  --vp-c-brand-soft: rgba(31, 122, 46, 0.12);
+
+  --vp-c-bg: #f6f7f2;
+  --vp-c-bg-alt: #eceee6;
+  --vp-c-bg-soft: #eceee6;
+
+  /* The magenta used for screenshot callouts (capture/harness.ts), so legends match the numbers. */
+  --manual-callout: #e8336d;
+
+  --vp-home-hero-name-color: var(--vp-c-text-1);
+}
+
+.dark {
+  --vp-c-brand-1: #8fe388;
+  --vp-c-brand-2: #a6ec9f;
+  --vp-c-brand-3: #2f8a3b;
+  --vp-c-brand-soft: rgba(143, 227, 136, 0.14);
+
+  --vp-c-bg: #131512;
+  --vp-c-bg-alt: #0e100d;
+  --vp-c-bg-soft: #1b1e19;
+}
+
+.VPHero .name,
+.vp-doc h1 {
+  font-family: var(--manual-font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.VPHero .name .clip {
+  font-style: italic;
+}
+
+/* Screenshots are captured at 2x; frame them like a window. */
+.vp-doc img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 20px 0 8px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 10px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* An image wrapped in <div class="crop"> (narrow crops) keeps its natural half size. */
+.vp-doc .crop img {
+  width: auto;
+  max-width: min(100%, 720px);
+}
+
+/* Italic paragraph right after an image reads as its caption. */
+.vp-doc p:has(> img) + p > em:only-child,
+.vp-doc .crop + p > em:only-child {
+  display: block;
+  margin-top: -4px;
+  font-size: 14px;
+  color: var(--vp-c-text-2);
+}
+
+/* Numbered legends under a callout screenshot: ordered lists get the callout's magenta badges. */
+.vp-doc ol.callouts,
+.vp-doc .callouts ol {
+  list-style: none;
+  padding-left: 0;
+  counter-reset: callout var(--callout-start, 0);
+}
+
+.vp-doc ol.callouts > li,
+.vp-doc .callouts ol > li {
+  position: relative;
+  padding-left: 36px;
+  counter-increment: callout;
+}
+
+.vp-doc ol.callouts > li::before,
+.vp-doc .callouts ol > li::before {
+  content: counter(callout);
+  position: absolute;
+  left: 0;
+  top: 1px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--manual-callout);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 24px;
+  text-align: center;
+}
+
+/* Keycaps. */
+.vp-doc kbd {
+  display: inline-block;
+  min-width: 1.6em;
+  padding: 1px 6px;
+  border: 1px solid var(--vp-c-divider);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--vp-c-bg-soft);
+  font-family: var(--vp-font-family-base);
+  font-size: 0.85em;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* Click-to-zoom (medium-zoom, theme/index.ts). */
+.vp-doc img {
+  cursor: zoom-in;
+}
+
+.medium-zoom-overlay,
+.medium-zoom-image--opened {
+  z-index: 100;
+}
+
+/* Two screenshots compared next to each other (<div class="side-by-side">); stacked on narrow screens. */
+.vp-doc .side-by-side {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.vp-doc .side-by-side > p {
+  margin: 0;
+}

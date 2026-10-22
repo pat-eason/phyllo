@@ -16,6 +16,7 @@ src/apps/phyllo/src-tauri/gen
 playwright-report
 test-results
 storybook-static
+src/apps/manual/docs/.vitepress/cache
 *.tsbuildinfo
 
 # agent worktrees / tool scratch
