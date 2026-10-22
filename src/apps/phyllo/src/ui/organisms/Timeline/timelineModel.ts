@@ -3,6 +3,8 @@
  * model (except zoom, which the model stores in `ui.zoom`); the Arrange screen owns `tool` and `snap`.
  */
 
+import type { TrackKind } from "@phyllo/model";
+
 /** Pro pointer modes (SPEC §6.1, shortcuts V / B / S per §7). Guided always uses `select`. */
 export type EditTool = "select" | "draw" | "split";
 
@@ -78,3 +80,12 @@ export const MAX_ZOOM = ZOOM_STEPS[ZOOM_STEPS.length - 1] ?? 8;
 export function formatZoom(zoom: number): string {
   return `${Math.round(zoom * 100)}%`;
 }
+
+/** Track kinds the "Add track" menus offer (AddTrackRow and the context menus). */
+export const TRACK_KINDS: readonly { kind: TrackKind; label: string; hint: string }[] = [
+  { kind: "drum", label: "Drums", hint: "Drum machine pattern" },
+  { kind: "melodic", label: "Melodic", hint: "Synth notes" },
+  { kind: "chord", label: "Chords", hint: "Chord progression" },
+  { kind: "sample", label: "Sample", hint: "Your own sound file" },
+  { kind: "code", label: "Code", hint: "Free Strudel code" },
+];

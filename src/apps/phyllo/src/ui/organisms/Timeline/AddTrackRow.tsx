@@ -1,19 +1,11 @@
-import type { TrackKind } from "@phyllo/model";
 import { Icon } from "@phyllo/ui";
 import { useEffect, useId, useRef, useState } from "react";
 import type { CSSProperties, DragEvent, KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 import { isSoundDrag, readSoundRef } from "./soundDrop";
 import styles from "./Timeline.module.css";
+import { TRACK_KINDS } from "./timelineModel";
 import type { TimelineActions } from "./useTimelineActions";
-
-const KINDS: readonly { kind: TrackKind; label: string; hint: string }[] = [
-  { kind: "drum", label: "Drums", hint: "Drum machine pattern" },
-  { kind: "melodic", label: "Melodic", hint: "Synth notes" },
-  { kind: "chord", label: "Chords", hint: "Chord progression" },
-  { kind: "sample", label: "Sample", hint: "Your own sound file" },
-  { kind: "code", label: "Code", hint: "Free Strudel code" },
-];
 
 const MENU_GAP = 4;
 const MENU_MARGIN = 8;
@@ -103,7 +95,7 @@ export function AddTrackRow({
       (item) => item === document.activeElement,
     );
     const focusAt = (i: number) =>
-      items.current[(i + KINDS.length) % KINDS.length]?.focus();
+      items.current[(i + TRACK_KINDS.length) % TRACK_KINDS.length]?.focus();
     switch (event.key) {
       case "ArrowDown":
         event.preventDefault();
@@ -119,7 +111,7 @@ export function AddTrackRow({
         break;
       case "End":
         event.preventDefault();
-        focusAt(KINDS.length - 1);
+        focusAt(TRACK_KINDS.length - 1);
         break;
       case "Escape":
         event.preventDefault();
@@ -186,7 +178,7 @@ export function AddTrackRow({
               onKeyDown={onMenuKeyDown}
               tabIndex={-1}
             >
-              {KINDS.map((item, index) => (
+              {TRACK_KINDS.map((item, index) => (
                 <button
                   key={item.kind}
                   ref={(node) => {

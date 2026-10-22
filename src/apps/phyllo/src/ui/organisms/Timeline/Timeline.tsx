@@ -3,7 +3,7 @@ import { EmptyState } from "@phyllo/ui";
 import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, CSSProperties, DragEvent, FocusEvent, KeyboardEvent } from "react";
 import { useStore } from "zustand";
-import { useAppStores, useMeters, useProjectSelector, useUiMode } from "../../../hooks";
+import { useAppStores, useContextMenuTrigger, useMeters, useProjectSelector, useUiMode } from "../../../hooks";
 import { AddTrackRow } from "./AddTrackRow";
 import { Lane } from "./Lane";
 import { Ruler } from "./Ruler";
@@ -14,6 +14,7 @@ import type { EditTool, Snap } from "./timelineModel";
 import { usePlayhead } from "./usePlayhead";
 import { LANE_ROW_PX, renderedLaneIndexes, useLaneRange, VIRTUALIZE_AFTER } from "./useLaneRange";
 import { useTimelineActions } from "./useTimelineActions";
+import { useTimelineMenus } from "./useTimelineMenus";
 
 /** Stands in for `lanes` unrendered lanes so the scroll height stays the same. */
 function LaneGap({ lanes }: { lanes: number }) {
@@ -47,6 +48,10 @@ export interface TimelineProps extends Omit<ComponentPropsWithoutRef<"div">, "ch
 export function Timeline({ tool = "select", snap = DEFAULT_SNAP, onEditPattern, className, style, ...rest }: TimelineProps) {
   const stores = useAppStores();
   const actions = useTimelineActions();
+  const menus = useTimelineMenus(actions);
+  // Lanes, headers, clips, chips and the loop band open their own menus and stop the event; what reaches here is the
+  // background (and Shift+F10 from the Add-track button).
+  const backgroundMenu = useContextMenuTrigger(() => menus.background());
   const { meterFor } = useMeters();
   const { mode } = useUiMode();
   const view = useProjectSelector((p) => ({
@@ -195,6 +200,8 @@ export function Timeline({ tool = "select", snap = DEFAULT_SNAP, onEditPattern, 
   } as CSSProperties;
 
   return (
+    // Shift+F10 from the Add-track button reaches the background menu here; the scroller itself is not focusable.
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     <div
       ref={scroller}
       className={className ? `${styles["root"]} ${className}` : styles["root"]}
@@ -203,6 +210,8 @@ export function Timeline({ tool = "select", snap = DEFAULT_SNAP, onEditPattern, 
       onDragEnter={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
+      onContextMenu={backgroundMenu.onContextMenu}
+      onKeyDown={backgroundMenu.onKeyDown}
       {...rest}
     >
       <div className={styles["content"]} style={{ minWidth: Math.max(MIN_CONTENT_PX, HEADER_PX + songWidth) }}>

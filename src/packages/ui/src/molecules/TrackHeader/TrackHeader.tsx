@@ -2,16 +2,24 @@ import {
   forwardRef,
   useEffect,
   useId,
+  useImperativeHandle,
   useRef,
   useState,
   type ComponentPropsWithoutRef,
   type KeyboardEvent,
   type MouseEvent,
+  type Ref,
 } from "react";
 import { Icon } from "../../atoms/Icon";
 import { Meter, type MeterSubscribe } from "../../atoms/Meter";
 import { ToggleButton, type ToggleButtonProps } from "../../atoms/ToggleButton";
 import styles from "./TrackHeader.module.css";
+
+/** Lets a context menu start the same inline rename as F2 / double-click. */
+export interface TrackHeaderRenameHandle {
+  /** Starts renaming; does nothing when the header has no `onRename`. */
+  start: () => void;
+}
 
 export interface TrackHeaderProps extends Omit<ComponentPropsWithoutRef<"div">, "onSelect" | "color"> {
   name: string;
@@ -47,6 +55,8 @@ export interface TrackHeaderProps extends Omit<ComponentPropsWithoutRef<"div">, 
   onSoloChange: (soloed: boolean, event: MouseEvent<HTMLButtonElement>) => void;
   /** Double-click the name (or F2) to rename in place; Enter commits, Escape cancels. */
   onRename?: (name: string) => void;
+  /** Imperative handle to start the inline rename from outside (a context menu's Rename item). */
+  renameHandle?: Ref<TrackHeaderRenameHandle>;
   /** Shows a remove button (on hover, focus or selection) and removes on Delete/Backspace from the name button. */
   onRemove?: () => void;
   /** Extra native props for the Mute button, e.g. `data-tip-target`. `pressed`, `kind`, `label` and `onChange` stay owned by the header. */
@@ -82,6 +92,7 @@ export const TrackHeader = forwardRef<HTMLDivElement, TrackHeaderProps>(function
     onMuteChange,
     onSoloChange,
     onRename,
+    renameHandle,
     onRemove,
     muteProps,
     soloProps,
@@ -117,6 +128,8 @@ export const TrackHeader = forwardRef<HTMLDivElement, TrackHeaderProps>(function
     setDraft(name);
     setEditing(true);
   }
+
+  useImperativeHandle(renameHandle, () => ({ start: startEditing }));
 
   /** Ends the edit; `keepFocus` hands focus back to the name button (Enter/Escape, not Tab-away). */
   function finish(save: boolean, keepFocus: boolean) {

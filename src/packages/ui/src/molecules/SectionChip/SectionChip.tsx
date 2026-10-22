@@ -1,5 +1,20 @@
-import { forwardRef, useEffect, useRef, useState, type ButtonHTMLAttributes, type KeyboardEvent } from "react";
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+  type ButtonHTMLAttributes,
+  type KeyboardEvent,
+  type Ref,
+} from "react";
 import styles from "./SectionChip.module.css";
+
+/** Lets a context menu start the same inline rename as F2 / double-click. */
+export interface SectionChipRenameHandle {
+  /** Starts renaming; does nothing when the chip has no `onRename`. */
+  start: () => void;
+}
 
 export interface SectionChipProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children" | "onSelect"> {
   /** "Groove" */
@@ -14,6 +29,8 @@ export interface SectionChipProps extends Omit<ButtonHTMLAttributes<HTMLButtonEl
   onSelect?: () => void;
   /** Double-click the name (or F2) to rename in place; Enter commits, Escape cancels. */
   onRename?: (name: string) => void;
+  /** Imperative handle to start the inline rename from outside (a context menu's Rename item). */
+  renameHandle?: Ref<SectionChipRenameHandle>;
   /**
    * In a narrow slot, drop the bar range before the name is truncated (the range wraps to a clipped second line).
    * Default false: the name truncates and the range stays.
@@ -27,7 +44,7 @@ export interface SectionChipProps extends Omit<ButtonHTMLAttributes<HTMLButtonEl
  * so neighbours never touch (the chip fills whatever box it is given).
  */
 export const SectionChip = forwardRef<HTMLButtonElement, SectionChipProps>(function SectionChip(
-  { name, startBar, endBar, current, onSelect, onRename, dropRangeFirst = false, className, onClick, onDoubleClick, onKeyDown, ...rest },
+  { name, startBar, endBar, current, onSelect, onRename, renameHandle, dropRangeFirst = false, className, onClick, onDoubleClick, onKeyDown, ...rest },
   ref,
 ) {
   const [editing, setEditing] = useState(false);
@@ -53,6 +70,8 @@ export const SectionChip = forwardRef<HTMLButtonElement, SectionChipProps>(funct
     setDraft(name);
     setEditing(true);
   }
+
+  useImperativeHandle(renameHandle, () => ({ start: startEditing }));
 
   /** Ends the edit; `keepFocus` hands focus back to the chip (Enter/Escape, not Tab-away). */
   function finish(save: boolean, keepFocus: boolean) {
