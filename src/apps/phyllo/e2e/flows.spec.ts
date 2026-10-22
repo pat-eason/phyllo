@@ -205,3 +205,22 @@ test("shortcuts stay quiet while typing in the inspector pattern field", async (
   await page.keyboard.press("m");
   await expect(page.getByRole("button", { name: "Mute Drums" })).toHaveAttribute("aria-pressed", "true");
 });
+
+test("right-click a track header → Duplicate adds a copy below; ⌘Z removes it", async ({ page }) => {
+  await startLofi(page);
+  await expect(tracks(page)).toHaveCount(3);
+
+  const list = page.getByRole("list", { name: "Tracks" });
+  await list.getByRole("button", { name: "Hats", exact: true }).click({ button: "right" });
+  const menu = page.getByRole("menu", { name: "Track Hats" });
+  await expect(menu).toBeVisible();
+  await menu.getByRole("menuitem", { name: "Duplicate" }).click();
+
+  await expect(menu).toHaveCount(0);
+  await expect(tracks(page)).toHaveCount(4);
+  await expect(page.getByRole("button", { name: "Mute Hats copy" })).toBeVisible();
+
+  await focusNothing(page);
+  await page.keyboard.press(`${MOD}+z`);
+  await expect(tracks(page)).toHaveCount(3);
+});
