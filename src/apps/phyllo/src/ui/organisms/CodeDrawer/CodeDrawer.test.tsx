@@ -201,6 +201,125 @@ describe("CodeDrawer", () => {
     expect(screen.getByText("strudel.cc link copied to the clipboard")).toBeInTheDocument();
   });
 
+  /** Pro on "This section" at bar 13, where Kick and Bass each have a one-line block. */
+  async function renderSectionCode() {
+    const user = userEvent.setup();
+    const result = renderDrawer(PRO);
+    act(() => result.stores.transport.getState().seek(13));
+    await user.click(screen.getByRole("radio", { name: /^This section/ }));
+    return { user, ...result };
+  }
+
+  it("should offer the track's items and the copy items when a code line is right-clicked", async () => {
+    // Arrange
+    const { user } = await renderSectionCode();
+
+    // Act
+    await user.pointer({ keys: "[MouseRight]", target: getLine('$: note("<a1 a1 c2 g1>*2").s("sawtooth").lpf(900)') });
+
+    // Assert
+    const menu = await screen.findByRole("menu", { name: "Generated code" });
+    expect(within(menu).getAllByRole("menuitem").map((item) => item.textContent)).toEqual([
+      'Select "Bass"',
+      "Edit pattern",
+      "Copy all code",
+      "Copy strudel.cc link",
+    ]);
+  });
+
+  it("should select the track of the right-clicked line", async () => {
+    // Arrange
+    const { user, stores } = await renderSectionCode();
+    await user.pointer({ keys: "[MouseRight]", target: getLine('$: note("<a1 a1 c2 g1>*2").s("sawtooth").lpf(900)') });
+
+    // Act
+    await user.click(await screen.findByRole("menuitem", { name: 'Select "Bass"' }));
+
+    // Assert
+    expect(stores.project.getState().project.ui.selectedTrack).toBe("bass");
+  });
+
+  it("should open the pattern editor on the right-clicked line's track", async () => {
+    // Arrange
+    window.location.hash = "";
+    const { user, stores } = await renderSectionCode();
+    await user.pointer({ keys: "[MouseRight]", target: getLine('$: note("<a1 a1 c2 g1>*2").s("sawtooth").lpf(900)') });
+
+    // Act
+    await user.click(await screen.findByRole("menuitem", { name: "Edit pattern" }));
+
+    // Assert
+    expect(window.location.hash).toBe("#/pattern/bass");
+    expect(stores.project.getState().project.ui.selectedTrack).toBe("bass");
+  });
+
+  it("should copy all the code from the menu", async () => {
+    // Arrange
+    const { user } = await renderSectionCode();
+    await user.pointer({ keys: "[MouseRight]", target: getLine('$: s("bd*4").bank("RolandTR909")') });
+
+    // Act
+    await user.click(await screen.findByRole("menuitem", { name: "Copy all code" }));
+
+    // Assert
+    const copied = await navigator.clipboard.readText();
+    expect(copied).toContain('$: s("bd*4").bank("RolandTR909")');
+    expect(copied).toContain('$: note("<a1 a1 c2 g1>*2").s("sawtooth").lpf(900)');
+    expect(screen.getByText("Code copied to the clipboard")).toBeInTheDocument();
+  });
+
+  it("should copy the strudel.cc link from the menu", async () => {
+    // Arrange
+    const { user } = await renderSectionCode();
+    await user.pointer({ keys: "[MouseRight]", target: getLine('$: s("bd*4").bank("RolandTR909")') });
+
+    // Act
+    await user.click(await screen.findByRole("menuitem", { name: "Copy strudel.cc link" }));
+
+    // Assert
+    expect(await navigator.clipboard.readText()).toMatch(/^https:\/\/strudel\.cc\/#.+/);
+    expect(screen.getByRole("button", { name: "Link copied" })).toBeInTheDocument();
+  });
+
+  it("should leave the track items out when the code region itself is right-clicked", async () => {
+    // Arrange
+    const { user } = await renderSectionCode();
+
+    // Act
+    await user.pointer({ keys: "[MouseRight]", target: codeRegion() });
+
+    // Assert
+    const menu = await screen.findByRole("menu", { name: "Generated code" });
+    expect(within(menu).getAllByRole("menuitem").map((item) => item.textContent)).toEqual(["Copy all code", "Copy strudel.cc link"]);
+  });
+
+  it("should open the code menu from the focused code with Shift+F10", async () => {
+    // Arrange
+    const { user } = await renderSectionCode();
+    codeRegion().focus();
+
+    // Act
+    await user.keyboard("{Shift>}{F10}{/Shift}");
+
+    // Assert
+    expect(await screen.findByRole("menu", { name: "Generated code" })).toBeInTheDocument();
+  });
+
+  it("should keep the web view's own menu while code text is selected", async () => {
+    // Arrange
+    const { user } = await renderSectionCode();
+    window.getSelection()?.selectAllChildren(codeRegion());
+    // A real right-click on selected text keeps the selection; user-event would collapse it on mousedown.
+    codeRegion().addEventListener("pointerdown", (event) => event.preventDefault());
+
+    // Act
+    await user.pointer({ keys: "[MouseRight]", target: getLine('$: s("bd*4").bank("RolandTR909")') });
+
+    // Assert
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    window.getSelection()?.removeAllRanges();
+  });
+
   it("should complete the share tip when the link is copied", async () => {
     // Arrange
     const user = userEvent.setup();

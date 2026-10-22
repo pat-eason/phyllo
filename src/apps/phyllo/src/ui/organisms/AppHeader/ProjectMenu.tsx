@@ -1,8 +1,11 @@
-import { Icon } from "@phyllo/ui";
+import { Icon, compactMenu } from "@phyllo/ui";
+import type { MenuEntryInput } from "@phyllo/ui";
 import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
-import { useLibrary, useNative, useProject, useProjectFile } from "../../../hooks";
+import { useContextMenuTrigger, useLibrary, useNative, useProject, useProjectFile } from "../../../hooks";
 import styles from "./ProjectMenu.module.css";
+import { projectMenuEntries, projectMenuGroups } from "./projectMenuEntries";
+import type { ProjectMenuCommands } from "./projectMenuEntries";
 
 const RECENT_LIMIT = 5;
 
@@ -11,13 +14,16 @@ type MenuView = "closed" | "menu" | "rename";
 export interface ProjectMenuProps {
   /** Opens the version history dialog (owned by the screen). The menu item is disabled without it. */
   onVersionHistory?: () => void;
+  /** Opens the export dialog (owned by the screen). The menu has no Export item without it. */
+  onExport?: () => void;
 }
 
 /**
- * Project name button with its menu: Rename (inline), Save, Save As…, Show in Finder, Recent, Version History…
+ * Project name button with its menu: Rename (inline), Save, Save As…, Show in Finder, Recent, Version History…, Export…
+ * Right-clicking the button opens the same items (one builder, `projectMenuGroups`).
  * A menu-button pattern: arrows move between items, Escape closes and returns focus to the button.
  */
-export function ProjectMenu({ onVersionHistory }: ProjectMenuProps) {
+export function ProjectMenu({ onVersionHistory, onExport }: ProjectMenuProps) {
   const { projectName, filePath, saving, save, saveAs } = useProjectFile();
   const { dispatch } = useProject();
   const native = useNative();
@@ -60,6 +66,19 @@ export function ProjectMenu({ onVersionHistory }: ProjectMenuProps) {
     close(true);
   }
 
+  const commands: ProjectMenuCommands = {
+    rename: startRename,
+    save: () => void save(),
+    saveAs: () => void saveAs(),
+    reveal: filePath ? () => void native.revealInFinder(filePath) : undefined,
+    versionHistory: onVersionHistory,
+    exportProject: onExport,
+  };
+  const trigger = useContextMenuTrigger(() => {
+    if (view === "rename") return null;
+    setView("closed");
+    return { label: "Project", entries: projectMenuEntries({ saving }, commands), returnFocus: buttonRef.current };
+  });
   return (
     <div ref={rootRef} className={styles["root"]}>
       <button
@@ -71,7 +90,9 @@ export function ProjectMenu({ onVersionHistory }: ProjectMenuProps) {
         data-renaming={view === "rename" ? "" : undefined}
         tabIndex={view === "rename" ? -1 : undefined}
         onClick={() => setView(view === "menu" ? "closed" : "menu")}
+        onContextMenu={trigger.onContextMenu}
         onKeyDown={(event) => {
+          trigger.onKeyDown(event);
           if (event.key === "ArrowDown" && view === "closed") {
             event.preventDefault();
             setView("menu");
@@ -99,15 +120,13 @@ export function ProjectMenu({ onVersionHistory }: ProjectMenuProps) {
       ) : null}
       {view === "menu" ? (
         <MenuPanel onClose={close}>
-          <MenuItem label="Rename" onSelect={startRename} />
-          <MenuItem label="Save" disabled={saving} onSelect={() => run(() => void save())} />
-          <MenuItem label="Save As…" onSelect={() => run(() => void saveAs())} />
-          {filePath ? (
-            <MenuItem label="Show in Finder" onSelect={() => run(() => void native.revealInFinder(filePath))} />
-          ) : null}
-          <RecentProjects currentPath={filePath} onPicked={() => close(false)} />
-          <hr className={styles["rule"]} />
-          <MenuItem label="Version History…" disabled={!onVersionHistory} onSelect={() => run(() => onVersionHistory?.())} />
+          <DropdownItems
+            saving={saving}
+            commands={commands}
+            currentPath={filePath}
+            run={run}
+            onRecentPicked={() => close(false)}
+          />
         </MenuPanel>
       ) : null}
     </div>
@@ -175,10 +194,57 @@ function MenuPanel({ onClose, children }: MenuPanelProps) {
   );
 }
 
+interface DropdownItemsProps {
+  saving: boolean;
+  commands: ProjectMenuCommands;
+  currentPath: string | null;
+  /** Closes the dropdown (focus back on the trigger), then runs the action. */
+  run: (action: () => void) => void;
+  onRecentPicked: () => void;
+}
+
+/** The dropdown's items from the shared builder, with Recent between the file actions and the rest. */
+function DropdownItems({ saving, commands, currentPath, run, onRecentPicked }: DropdownItemsProps) {
+  const groups = projectMenuGroups(
+    { saving },
+    {
+      ...commands,
+      save: () => run(commands.save),
+      saveAs: () => run(commands.saveAs),
+      reveal: commands.reveal && (() => run(() => commands.reveal?.())),
+      versionHistory: commands.versionHistory && (() => run(() => commands.versionHistory?.())),
+      exportProject: commands.exportProject && (() => run(() => commands.exportProject?.())),
+    },
+  );
+  return (
+    <>
+      <MenuItems entries={groups.file} />
+      <RecentProjects currentPath={currentPath} onPicked={onRecentPicked} />
+      <hr className={styles["rule"]} />
+      <MenuItems entries={groups.more} />
+    </>
+  );
+}
+
+/** Renders builder entries as menu buttons; the project menu only has plain items. */
+function MenuItems({ entries }: { entries: MenuEntryInput[] }) {
+  return (
+    <>
+      {compactMenu(entries).map((entry) =>
+        entry.type === "separator" ? (
+          <hr key="rule" className={styles["rule"]} />
+        ) : entry.type === "submenu" ? null : (
+          <MenuItem key={entry.id} label={entry.label} disabled={entry.disabled} onSelect={entry.onSelect} />
+        ),
+      )}
+    </>
+  );
+}
+
 interface MenuItemProps {
   label: string;
   onSelect: () => void;
-  disabled?: boolean;
+  disabled?: boolean | undefined;
 }
 
 function MenuItem({ label, onSelect, disabled = false }: MenuItemProps) {

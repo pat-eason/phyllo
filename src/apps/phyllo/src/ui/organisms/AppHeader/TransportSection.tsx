@@ -3,10 +3,12 @@ import type { TransportPosition } from "@phyllo/model";
 import { IconButton, Readout, TransportControls } from "@phyllo/ui";
 import type { ReadoutCell, ReadoutSubscribe } from "@phyllo/ui";
 import { useMemo, useRef } from "react";
-import type { KeyboardEvent } from "react";
-import { useProjectSelector, useSettings, useTransport, useUiMode } from "../../../hooks";
+import type { KeyboardEvent, MouseEvent } from "react";
+import { isContextMenuKey, useContextMenu, useProject, useProjectSelector, useSettings, useTransport, useUiMode } from "../../../hooks";
+import type { ContextMenuRequest } from "../../../hooks";
 import styles from "./AppHeader.module.css";
 import { addTap, bpmFromTaps, clampBpm } from "./tapTempo";
+import { bpmMenuEntries, keyMenuEntries, positionMenuEntries } from "./transportMenus";
 
 type PositionSubscribe = ReturnType<typeof useTransport>["subscribePosition"];
 
@@ -25,6 +27,8 @@ export function TransportSection() {
   const { settings } = useSettings();
   const key = useProjectSelector((project) => project.key);
   const taps = useRef<number[]>([]);
+  const { dispatch } = useProject();
+  const contextMenu = useContextMenu();
 
   const { bpm, beatsPerBar, position, subscribePosition, setBpm } = transport;
   const pro = mode === "pro";
@@ -44,8 +48,44 @@ export function TransportSection() {
     if (Number.isFinite(parsed)) setBpm(clampBpm(parsed));
   }
 
+  /** Right-click menu of a readout cell; the cycle cell has none. */
+  function cellMenu(cellId: string): ContextMenuRequest | null {
+    switch (cellId) {
+      case "position":
+        return { label: "Position", entries: positionMenuEntries(transport.loop.enabled, { toStart: transport.toStart, toggleLoop: transport.toggleLoop }) };
+      case "bpm":
+        return { label: "Tempo", entries: bpmMenuEntries(bpm, { tapTempo: tap, setBpm: (next) => setBpm(clampBpm(next)) }) };
+      case "key":
+        return {
+          label: "Key and time signature",
+          entries: keyMenuEntries(key, beatsPerBar, {
+            setKey: (next) => dispatch({ type: "project/setKey", key: next }),
+            setBeatsPerBar: (next) => dispatch({ type: "tempo/set", beatsPerBar: next }),
+          }),
+        };
+      default:
+        return null;
+    }
+  }
+
+  function openCellMenu(event: MouseEvent<HTMLElement>, cellId: string) {
+    const request = cellMenu(cellId);
+    if (request) contextMenu.openFromEvent(event, request);
+  }
+
+  // Shift+F10 on a focused cell button opens that cell's menu.
+  function openCellMenuFromKey(event: KeyboardEvent<HTMLDivElement>): boolean {
+    const cell = event.target instanceof Element ? event.target.closest<HTMLElement>("[data-cell]") : null;
+    const request = cell?.dataset["cell"] ? cellMenu(cell.dataset["cell"]) : null;
+    if (!cell || !request) return false;
+    event.preventDefault();
+    contextMenu.openAtElement(cell, request);
+    return true;
+  }
+
   // Tap tempo lives on the BPM cell: its "BPM · TAP" caption button (Guided) or T while the cell has focus.
   function onReadoutKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (isContextMenuKey(event) && openCellMenuFromKey(event)) return;
     const target = event.target;
     if (event.key.toLowerCase() !== "t" || event.metaKey || event.ctrlKey || event.altKey) return;
     if (!(target instanceof HTMLButtonElement) || !target.closest('[data-cell="bpm"]')) return;
@@ -61,6 +101,7 @@ export function TransportSection() {
       mono: true,
       minWidth: 112,
       subscribe: positionFeed,
+      onContextMenu: (event) => openCellMenu(event, "position"),
     },
     {
       id: "bpm",
@@ -72,8 +113,9 @@ export function TransportSection() {
       onCaptionClick: pro ? undefined : tap,
       captionLabel: `${bpmCaption}, tap tempo`,
       onNudge: (delta) => setBpm(clampBpm(bpm + delta)),
+      onContextMenu: (event) => openCellMenu(event, "bpm"),
     },
-    { id: "key", value: key, caption: `KEY · ${beatsPerBar}/4` },
+    { id: "key", value: key, caption: `KEY · ${beatsPerBar}/4`, onContextMenu: (event) => openCellMenu(event, "key") },
     {
       id: "cycle",
       value: position.cycle.toFixed(2),

@@ -58,7 +58,7 @@ export function AppHeader({
     <header className={classes} data-variant="full" data-tauri-drag-region="">
       <div className={styles["identity"]} data-tauri-drag-region="">
         <Logo size={26} />
-        <ProjectMenu onVersionHistory={onVersionHistory} />
+        <ProjectMenu onVersionHistory={onVersionHistory} onExport={onExport} />
       </div>
       <TransportSection />
       <SwitchesSection onExport={onExport} />

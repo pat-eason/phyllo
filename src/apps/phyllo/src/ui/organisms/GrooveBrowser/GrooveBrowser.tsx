@@ -1,20 +1,21 @@
 import { Button, Chip, EmptyState } from "@phyllo/ui";
 import type { GrooveSummary } from "@phyllo/model";
 import { useRef, useState } from "react";
-import { useAudition, useLibrary, useNative } from "../../../hooks";
+import type { KeyboardEvent, MouseEvent } from "react";
+import { isContextMenuKey, useAudition, useContextMenu, useLibrary, useNative } from "../../../hooks";
+import type { ContextMenuRequest } from "../../../hooks";
 import { useToasts } from "../../toasts";
-import { ContextMenu } from "./ContextMenu";
-import type { MenuItem } from "./ContextMenu";
 import { grooveCount } from "./format";
 import { GrooveGrid } from "./GrooveGrid";
 import { GrooveTable } from "./GrooveTable";
 import styles from "./GrooveBrowser.module.css";
 import { createGrooveActions } from "./grooveActions";
 import type { Notice } from "./grooveActions";
-import type { ContextAnchor } from "./interaction";
+import { grooveMenuEntries } from "./grooveMenu";
 import { LibrarySidebar } from "./LibrarySidebar";
 import { LibraryToolbar } from "./LibraryToolbar";
 import { ManageTagsDialog } from "./ManageTagsDialog";
+import type { Panel } from "./ManageTagsDialog";
 import { firstSectionBar, readGroove } from "./readGroove";
 import { RenameDialog } from "./RenameDialog";
 import { hasTag } from "./tags";
@@ -41,12 +42,7 @@ type DialogState =
   | { kind: "rename"; groove: GrooveSummary }
   | { kind: "tags"; targets: GrooveSummary[] }
   | { kind: "trash"; targets: GrooveSummary[] }
-  | { kind: "manage" };
-
-interface MenuState {
-  paths: string[];
-  anchor: ContextAnchor;
-}
+  | { kind: "manage"; initialPanel?: Panel };
 
 /**
  * The Groove library: collections and tags on the left, search / sort / tile size / view on top, then the grooves as
@@ -61,8 +57,8 @@ export function GrooveBrowser({ onOpenGroove, onBulkExport, onNewGroove, onImpor
   const search = useSearchText(library.query, library.setQuery);
   const selection = useRowSelection(library.results.map((groove) => groove.path));
   const [pendingTags, setPendingTags] = useState<string[]>([]);
-  const [menu, setMenu] = useState<MenuState | null>(null);
   const [dialog, setDialog] = useState<DialogState | null>(null);
+  const contextMenu = useContextMenu();
   const toasts = useToasts();
   const setNotice = ({ tone, text }: Notice) => void toasts.push({ title: text, tone: tone === "error" ? "error" : "neutral" });
   const returnFocus = useRef<HTMLElement | null>(null);
@@ -109,37 +105,44 @@ export function GrooveBrowser({ onOpenGroove, onBulkExport, onNewGroove, onImpor
     restoreFocus();
   }
 
-  function openMenu(groove: GrooveSummary, anchor: ContextAnchor) {
-    const inSelection = listView && selection.isSelected(groove.path);
-    if (listView && !inSelection) selection.select(groove.path, "only");
-    returnFocus.current = anchor.trigger;
-    setMenu({ paths: inSelection ? selection.selected : [groove.path], anchor });
-  }
-
   function exportGrooves(paths: string[]) {
     if (onBulkExport) onBulkExport(paths);
     else setNotice({ tone: "info", text: "Export isn't connected in this view yet." });
   }
 
-  function menuItems(state: MenuState): MenuItem[] {
-    const targets = library.grooves.filter((groove) => state.paths.includes(groove.path));
-    const [first] = targets;
-    if (!first) return [];
-    if (targets.length > 1) {
-      return [
-        { id: "tags", label: "Edit tags", onSelect: () => setDialog({ kind: "tags", targets }) },
-        { id: "export", label: "Export", onSelect: () => exportGrooves(targets.map((g) => g.path)) },
-        { id: "trash", label: "Move to Trash", destructive: true, onSelect: () => setDialog({ kind: "trash", targets }) },
-      ];
-    }
-    return [
-      { id: "open", label: "Open", onSelect: () => openGroove(first) },
-      { id: "rename", label: "Rename", onSelect: () => setDialog({ kind: "rename", groove: first }) },
-      { id: "duplicate", label: "Duplicate", onSelect: () => void actions.duplicate(first) },
-      { id: "tags", label: "Edit tags", onSelect: () => setDialog({ kind: "tags", targets: [first] }) },
-      { id: "reveal", label: "Show in Finder", onSelect: () => void actions.reveal(first) },
-      { id: "trash", label: "Move to Trash", destructive: true, onSelect: () => setDialog({ kind: "trash", targets: [first] }) },
-    ];
+  // DAW convention: right-clicking an unselected row selects just that row; on a selected row the menu covers the selection.
+  function buildGrooveMenu(groove: GrooveSummary): ContextMenuRequest | null {
+    const inSelection = listView && selection.isSelected(groove.path);
+    if (listView && !inSelection) selection.select(groove.path, "only");
+    const paths = inSelection ? selection.selected : [groove.path];
+    const targets = library.grooves.filter((g) => paths.includes(g.path));
+    return {
+      label: targets.length > 1 ? `Actions for ${targets.length} grooves` : "Groove actions",
+      entries: grooveMenuEntries(targets, {
+        open: openGroove,
+        rename: (target) => setDialog({ kind: "rename", groove: target }),
+        duplicate: (target) => void actions.duplicate(target),
+        reveal: (target) => void actions.reveal(target),
+        editTags: (list) => setDialog({ kind: "tags", targets: list }),
+        setFavorite: (list, favorite) => void actions.setFavorite(list, favorite),
+        trash: (list) => setDialog({ kind: "trash", targets: list }),
+      }),
+    };
+  }
+
+  function openContextMenu(groove: GrooveSummary, event: MouseEvent<HTMLElement>) {
+    returnFocus.current = null;
+    const request = buildGrooveMenu(groove);
+    if (request) contextMenu.openFromEvent(event, request);
+  }
+
+  function openContextKey(groove: GrooveSummary, event: KeyboardEvent<HTMLElement>) {
+    if (!isContextMenuKey(event)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    returnFocus.current = event.target instanceof HTMLElement ? event.target : null;
+    const request = buildGrooveMenu(groove);
+    if (request) contextMenu.openAtElement(event.currentTarget, request);
   }
 
   function createTag(name: string) {
@@ -157,16 +160,23 @@ export function GrooveBrowser({ onOpenGroove, onBulkExport, onNewGroove, onImpor
     }
   }
 
-  function openManage() {
+  function openManage(initialPanel?: Panel) {
     returnFocus.current = null;
-    setDialog({ kind: "manage" });
+    setDialog({ kind: "manage", ...(initialPanel ? { initialPanel } : {}) });
+  }
+
+  function mergeTag(tag: string, into: string) {
+    void actions.rewriteTag(tag, into).then((error) => {
+      setNotice(error ? { tone: "error", text: error } : { tone: "info", text: `Merged ${tag} into ${into}.` });
+    });
   }
 
   const handlers = {
     onOpen: openGroove,
     onPreview: previewGroove,
     onFavoriteChange: (groove: GrooveSummary) => void actions.toggleFavorite(groove),
-    onContextMenu: openMenu,
+    onContextMenu: openContextMenu,
+    onContextKey: openContextKey,
   };
 
   return (
@@ -182,7 +192,10 @@ export function GrooveBrowser({ onOpenGroove, onBulkExport, onNewGroove, onImpor
         onDismissPending={(tag) => setPendingTags((current) => current.filter((t) => t !== tag))}
         selectedGrooveCount={selectedPaths.length}
         onCreateTag={createTag}
-        onManageTags={openManage}
+        onManageTags={() => openManage()}
+        onRenameTag={(tag) => openManage({ tag, mode: "rename" })}
+        onDeleteTag={(tag) => openManage({ tag, mode: "delete" })}
+        onMergeTag={mergeTag}
       />
 
       <section className={styles["main"]} aria-label="Groove library">
@@ -293,19 +306,6 @@ export function GrooveBrowser({ onOpenGroove, onBulkExport, onNewGroove, onImpor
         </div>
       </section>
 
-      {menu ? (
-        <ContextMenu
-          x={menu.anchor.x}
-          y={menu.anchor.y}
-          label={menu.paths.length > 1 ? `Actions for ${menu.paths.length} grooves` : "Groove actions"}
-          items={menuItems(menu)}
-          onClose={(reason) => {
-            setMenu(null);
-            if (reason === "escape" || reason === "tab") restoreFocus();
-          }}
-        />
-      ) : null}
-
       {dialog?.kind === "rename" ? (
         <RenameDialog name={dialog.groove.name} onRename={(name) => actions.rename(dialog.groove, name)} onClose={closeDialog} />
       ) : null}
@@ -320,7 +320,7 @@ export function GrooveBrowser({ onOpenGroove, onBulkExport, onNewGroove, onImpor
       {dialog?.kind === "trash" ? (
         <TrashDialog names={dialog.targets.map((g) => g.name)} onConfirm={() => actions.trash(dialog.targets)} onClose={closeDialog} />
       ) : null}
-      {dialog?.kind === "manage" ? <ManageTagsDialog tags={library.tags} onRewrite={actions.rewriteTag} onClose={closeDialog} /> : null}
+      {dialog?.kind === "manage" ? <ManageTagsDialog tags={library.tags} onRewrite={actions.rewriteTag} onClose={closeDialog} initialPanel={dialog.initialPanel} /> : null}
     </div>
   );
 }

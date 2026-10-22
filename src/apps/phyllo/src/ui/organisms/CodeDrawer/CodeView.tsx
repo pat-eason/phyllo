@@ -1,7 +1,10 @@
 import { validatePattern } from "@phyllo/engine";
 import type { Track } from "@phyllo/model";
 import { useId, useMemo, useState } from "react";
-import type { KeyboardEvent, ReactNode } from "react";
+import type { KeyboardEvent, MouseEvent, ReactNode } from "react";
+import { isContextMenuKey, useContextMenu } from "../../../hooks";
+import { codeMenuEntries } from "./codeMenu";
+import type { CodeMenuCommands } from "./codeMenu";
 import type { CodeLine, ErrorLocation, PatternLiteral as Literal } from "./codeModel";
 import { PatternLiteral } from "./PatternLiteral";
 import styles from "./CodeDrawer.module.css";
@@ -23,6 +26,8 @@ export interface CodeViewProps {
   lineNumbers?: boolean;
   /** Commit an edited pattern (`track/setPattern`). */
   onSetPattern(trackId: string, pattern: string): void;
+  /** What the right-click menu does. Without it the code has no menu of its own. */
+  menuCommands?: CodeMenuCommands;
 }
 
 interface LiteralEdit {
@@ -40,12 +45,19 @@ function selectAllOnCommandA(event: KeyboardEvent<HTMLPreElement>) {
   window.getSelection()?.selectAllChildren(event.currentTarget);
 }
 
+/** Selected text keeps the web view's own menu (Copy, Look Up), so the code's menu stays out of the way. */
+function hasSelectionWithin(element: Element): boolean {
+  const selection = window.getSelection();
+  return selection !== null && !selection.isCollapsed && selection.rangeCount > 0 && selection.getRangeAt(0).intersectsNode(element);
+}
+
 /**
  * Line-numbered, syntax-colored code. The gutter is a separate column so selecting and copying the code never
  * picks up line numbers; error rows are `user-select: none` for the same reason. ⌘A inside selects only the code.
  */
-export function CodeView({ lines, literals, tracks, selectedTrackId, error, lineNumbers = true, onSetPattern }: CodeViewProps) {
+export function CodeView({ lines, literals, tracks, selectedTrackId, error, lineNumbers = true, onSetPattern, menuCommands }: CodeViewProps) {
   const id = useId();
+  const contextMenu = useContextMenu();
   const [edit, setEdit] = useState<LiteralEdit | null>(null);
   const names = useMemo(() => new Map(tracks.map((t) => [t.id, t.name])), [tracks]);
   // Parses and evaluates the draft (`bd*lm` parses but can't play); an invalid draft is never committed.
@@ -67,6 +79,24 @@ export function CodeView({ lines, literals, tracks, selectedTrackId, error, line
     if (current !== undefined && activeEdit.draft !== current) onSetPattern(activeEdit.trackId, activeEdit.draft);
     setEdit(null);
   };
+
+  /** `trackId`: the track of the right-clicked line, null for the code in general. */
+  function openMenu(event: MouseEvent<HTMLElement>, trackId: string | null) {
+    if (!menuCommands) return;
+    // A pattern being edited is a text field with its own menu.
+    if (event.target instanceof Element && event.target.closest("input, textarea")) return;
+    if (hasSelectionWithin(event.currentTarget)) return;
+    const track = tracks.find((t) => t.id === trackId) ?? null;
+    contextMenu.openFromEvent(event, { label: "Generated code", entries: codeMenuEntries(track, menuCommands) });
+  }
+
+  function onCodeKeyDown(event: KeyboardEvent<HTMLPreElement>) {
+    selectAllOnCommandA(event);
+    if (!menuCommands || !isContextMenuKey(event)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    contextMenu.openAtElement(event.currentTarget, { label: "Generated code", entries: codeMenuEntries(null, menuCommands) });
+  }
 
   const gutter: ReactNode[] = [];
   const rows: ReactNode[] = [];
@@ -117,6 +147,7 @@ export function CodeView({ lines, literals, tracks, selectedTrackId, error, line
         data-muted={line.muted ? "" : undefined}
         data-error={hasError ? "" : undefined}
         aria-describedby={hasError ? evalErrorId : undefined}
+        onContextMenu={(event) => openMenu(event, line.trackId)}
       >
         {content}
       </span>,
@@ -154,7 +185,7 @@ export function CodeView({ lines, literals, tracks, selectedTrackId, error, line
       <div className={styles["codeScroll"]}>
         {/* A focusable, labelled code region: keyboard users scroll it and ⌘A selects just the code. */}
         {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex, jsx-a11y/no-noninteractive-element-interactions */}
-        <pre className={styles["code"]} aria-label="Generated Strudel code" tabIndex={0} onKeyDown={selectAllOnCommandA}>
+        <pre className={styles["code"]} aria-label="Generated Strudel code" tabIndex={0} onKeyDown={onCodeKeyDown} onContextMenu={(event) => openMenu(event, null)}>
           {rows}
         </pre>
       </div>

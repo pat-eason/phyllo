@@ -403,6 +403,215 @@ describe("AppHeader", () => {
     expect(reveal).toHaveBeenCalledWith("/Users/pat/Music/Phyllo/Untitled Groove.phyllo");
   });
 
+  it("should list the project items on right-click of the project name, with Export", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    renderHeader({ onVersionHistory: vi.fn(), onExport: vi.fn() });
+
+    // Act
+    await user.pointer({ keys: "[MouseRight]", target: screen.getByRole("button", { name: /Untitled Groove/ }) });
+
+    // Assert
+    const menu = await screen.findByRole("menu", { name: "Project" });
+    // Save, Save As and Export carry their shortcut hint after the label.
+    expect(within(menu).getAllByRole("menuitem").map((item) => item.textContent)).toEqual([
+      "Rename",
+      expect.stringMatching(/^Save(Ctrl|⌘)/),
+      expect.stringMatching(/^Save As…/),
+      "Version History…",
+      expect.stringMatching(/^Export…/),
+    ]);
+  });
+
+  it("should open the project menu from the name button with Shift+F10", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    renderHeader();
+    screen.getByRole("button", { name: /Untitled Groove/ }).focus();
+
+    // Act
+    await user.keyboard("{Shift>}{F10}{/Shift}");
+
+    // Assert
+    expect(await screen.findByRole("menu", { name: "Project" })).toBeInTheDocument();
+  });
+
+  it("should rename the project inline from its right-click menu", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const { stores } = renderHeader();
+    await user.pointer({ keys: "[MouseRight]", target: screen.getByRole("button", { name: /Untitled Groove/ }) });
+
+    // Act
+    await user.click(await screen.findByRole("menuitem", { name: "Rename" }));
+    await user.keyboard("{Control>}a{/Control}Night Bus{Enter}");
+
+    // Assert
+    expect(stores.project.getState().project.name).toBe("Night Bus");
+  });
+
+  it("should run Export from the project name's right-click menu", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const onExport = vi.fn();
+    renderHeader({ onExport });
+    await user.pointer({ keys: "[MouseRight]", target: screen.getByRole("button", { name: /Untitled Groove/ }) });
+
+    // Act
+    await user.click(await screen.findByRole("menuitem", { name: /^Export…/ }));
+
+    // Assert
+    expect(onExport).toHaveBeenCalledTimes(1);
+  });
+
+  it("should leave Show in Finder out of the project right-click menu until the project has a file", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    renderHeader();
+
+    // Act
+    await user.pointer({ keys: "[MouseRight]", target: screen.getByRole("button", { name: /Untitled Groove/ }) });
+
+    // Assert
+    await screen.findByRole("menu", { name: "Project" });
+    expect(screen.queryByRole("menuitem", { name: "Show in Finder" })).not.toBeInTheDocument();
+  });
+
+  it("should set the tempo from the BPM cell's Tempo submenu and check the current one", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const { stores } = renderHeader();
+    await user.pointer({ keys: "[MouseRight]", target: screen.getByRole("button", { name: "120 BPM, edit tempo" }) });
+    await user.click(await screen.findByRole("menuitem", { name: /^Tempo/ }));
+    expect(screen.getByRole("menuitemcheckbox", { name: "120 BPM" })).toHaveAttribute("aria-checked", "true");
+
+    // Act
+    await user.click(screen.getByRole("menuitemcheckbox", { name: "90 BPM" }));
+
+    // Assert
+    expect(stores.project.getState().project.tempo.bpm).toBe(90);
+  });
+
+  it("should reset the tempo to 120 from the BPM cell menu", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const { stores } = renderHeader();
+    act(() => stores.project.getState().dispatch({ type: "tempo/set", bpm: 140 }));
+    await user.pointer({ keys: "[MouseRight]", target: screen.getByRole("button", { name: "140 BPM, edit tempo" }) });
+
+    // Act
+    await user.click(await screen.findByRole("menuitem", { name: "Reset to 120" }));
+
+    // Assert
+    expect(stores.project.getState().project.tempo.bpm).toBe(120);
+  });
+
+  it("should disable Reset to 120 while the tempo is already 120", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    renderHeader();
+
+    // Act
+    await user.pointer({ keys: "[MouseRight]", target: screen.getByRole("button", { name: "120 BPM, edit tempo" }) });
+
+    // Assert
+    expect(await screen.findByRole("menuitem", { name: "Reset to 120" })).toBeDisabled();
+  });
+
+  it("should tap a tempo from the BPM cell menu", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const { stores } = renderHeader();
+    vi.useFakeTimers({ toFake: ["Date"] });
+    for (const tapAt of [1_000, 1_750]) {
+      vi.setSystemTime(tapAt);
+      await user.pointer({ keys: "[MouseRight]", target: screen.getByRole("button", { name: /BPM, edit tempo/ }) });
+
+      // Act
+      await user.click(await screen.findByRole("menuitem", { name: "Tap tempo" }));
+    }
+
+    // Assert
+    expect(stores.project.getState().project.tempo.bpm).toBe(80);
+  });
+
+  it("should open the BPM cell menu from the keyboard with Shift+F10", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    renderHeader();
+    screen.getByRole("button", { name: "120 BPM, edit tempo" }).focus();
+
+    // Act
+    await user.keyboard("{Shift>}{F10}{/Shift}");
+
+    // Assert
+    expect(await screen.findByRole("menuitem", { name: "Tap tempo" })).toBeInTheDocument();
+  });
+
+  it("should set the key from the Key submenus and check the current one", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const { stores } = renderHeader();
+    await user.pointer({ keys: "[MouseRight]", target: screen.getByText("C minor") });
+    await user.click(await screen.findByRole("menuitem", { name: /^Key/ }));
+    await user.click(screen.getByRole("menuitem", { name: /^Minor/ }));
+    expect(screen.getByRole("menuitemcheckbox", { name: "C minor" })).toHaveAttribute("aria-checked", "true");
+    await user.click(screen.getByRole("menuitem", { name: /^Minor/ }));
+    await user.click(screen.getByRole("menuitem", { name: /^Major/ }));
+
+    // Act
+    await user.click(screen.getByRole("menuitemcheckbox", { name: "Eb major" }));
+
+    // Assert
+    expect(stores.project.getState().project.key).toBe("Eb major");
+  });
+
+  it("should set the beats per bar from the key cell's menu", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const { stores } = renderHeader();
+    await user.pointer({ keys: "[MouseRight]", target: screen.getByText("KEY · 4/4") });
+    await user.click(await screen.findByRole("menuitem", { name: /^Beats per bar/ }));
+    expect(screen.getByRole("menuitemcheckbox", { name: "4" })).toHaveAttribute("aria-checked", "true");
+
+    // Act
+    await user.click(screen.getByRole("menuitemcheckbox", { name: "3" }));
+
+    // Assert
+    expect(stores.project.getState().project.tempo.beatsPerBar).toBe(3);
+    expect(screen.getByText("KEY · 3/4")).toBeInTheDocument();
+  });
+
+  it("should switch the loop from the position cell's menu as one undo step", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const { stores } = renderHeader();
+    const before = stores.project.getState().project.loop.enabled;
+    await user.pointer({ keys: "[MouseRight]", target: screen.getByText("BAR · BEAT · 16TH") });
+    const loop = await screen.findByRole("menuitemcheckbox", { name: /^Loop/ });
+    expect(loop).toHaveAttribute("aria-checked", String(before));
+
+    // Act
+    await user.click(loop);
+
+    // Assert
+    expect(stores.project.getState().project.loop.enabled).toBe(!before);
+    stores.project.getState().undo();
+    expect(stores.project.getState().project.loop.enabled).toBe(before);
+  });
+
+  it("should offer Go to start from the position cell's menu", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    renderHeader();
+
+    // Act
+    await user.pointer({ keys: "[MouseRight]", target: screen.getByText("BAR · BEAT · 16TH") });
+
+    // Assert
+    expect(await screen.findByRole("menuitem", { name: "Go to start" })).toBeEnabled();
+  });
+
   it("should show the logo, project name, tabs and actions without transport", async () => {
     // Arrange
     const user = userEvent.setup();
