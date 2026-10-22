@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import type { DragEvent, KeyboardEvent, ReactNode } from "react";
 import type { SampleFile } from "../../../native/types";
 import type { LibraryActions } from "./useLibraryActions";
+import { useSoundMenu } from "./useLibraryMenus";
 import styles from "./LibraryPanel.module.css";
 
 /** Uppercase section label. */
@@ -39,12 +40,16 @@ export interface SoundChipProps {
   actions: LibraryActions;
 }
 
-/** Synth (code name, mono) or instrument (friendly name) chip: click or Space previews, Enter inserts, drag adds. */
+/**
+ * Synth (code name, mono) or instrument (friendly name) chip: click or Space previews, Enter inserts, drag adds;
+ * right-click or Shift+F10 opens its menu (replace, layer, add as new track).
+ */
 export function SoundChip({ entry, actions }: SoundChipProps) {
   const ref = synthRef(entry);
   const key = `${ref.source}:${entry.code}`;
   const previewing = actions.previewingKey === key;
   const isSynth = entry.group === "synth";
+  const menu = useSoundMenu(actions, { ref, previewKey: key, previewSound: notePreview(entry) });
   return (
     <li className={styles["chipItem"]}>
       <Chip
@@ -56,7 +61,11 @@ export function SoundChip({ entry, actions }: SoundChipProps) {
         aria-roledescription="draggable sound"
         draggable
         onDragStart={startDrag(ref)}
-        onKeyDown={insertOnEnter(() => actions.insertSound(ref))}
+        onContextMenu={menu.onContextMenu}
+        onKeyDown={(event) => {
+          menu.onKeyDown(event);
+          insertOnEnter(() => actions.insertSound(ref))(event);
+        }}
         onClick={() => actions.preview(key, notePreview(entry))}
       >
         {isSynth ? entry.code : entry.name}
@@ -116,6 +125,53 @@ function useRovingRows(count: number) {
   return { list, onKeyDown, rowProps };
 }
 
+interface RowProps {
+  mode: UiMode;
+  actions: LibraryActions;
+  /** Roving-tabindex props from `useRovingRows`. */
+  rowProps: ReturnType<ReturnType<typeof useRovingRows>["rowProps"]>;
+}
+
+function DrumRow({ sound, bank, mode, actions, rowProps }: RowProps & { sound: DrumSound; bank: string }) {
+  const ref = drumRef(sound, bank);
+  const key = `bank:${bank}:${sound.code}`;
+  const previewSound = drumPreview(sound, bank);
+  const menu = useSoundMenu(actions, { ref, previewKey: key, previewSound });
+  return (
+    <SoundRow
+      code={sound.code}
+      friendly={sound.name}
+      mode={mode}
+      previewing={actions.previewingKey === key}
+      onPreview={() => actions.preview(key, previewSound)}
+      dragData={ref}
+      onInsert={() => actions.insertSound(ref)}
+      {...rowProps}
+      {...menu}
+    />
+  );
+}
+
+function SampleRow({ file, mode, actions, rowProps }: RowProps & { file: SampleFile }) {
+  const ref = sampleRef(file);
+  const key = `sample:${file.path}`;
+  const previewSound = { s: file.name };
+  const menu = useSoundMenu(actions, { ref, previewKey: key, previewSound, filePath: file.path });
+  return (
+    <SoundRow
+      code={file.name}
+      friendly={baseName(file.path)}
+      mode={mode}
+      previewing={actions.previewingKey === key}
+      onPreview={() => actions.preview(key, previewSound)}
+      dragData={ref}
+      onInsert={() => actions.insertSound(ref)}
+      {...rowProps}
+      {...menu}
+    />
+  );
+}
+
 export interface DrumListProps {
   sounds: readonly DrumSound[];
   /** Bank for a sound; a function because search results can span banks. */
@@ -131,24 +187,9 @@ export function DrumList({ sounds, bankFor, mode, actions, label }: DrumListProp
     // ↑/↓ move between the focusable rows (roving tabindex); the rows themselves are the interactive elements.
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <ul ref={list} className={styles["rows"]} aria-label={label} onKeyDown={onKeyDown}>
-      {sounds.map((sound, index) => {
-        const bank = bankFor(sound);
-        const ref = drumRef(sound, bank);
-        const key = `bank:${bank}:${sound.code}`;
-        return (
-          <SoundRow
-            key={sound.code}
-            code={sound.code}
-            friendly={sound.name}
-            mode={mode}
-            previewing={actions.previewingKey === key}
-            onPreview={() => actions.preview(key, drumPreview(sound, bank))}
-            dragData={ref}
-            onInsert={() => actions.insertSound(ref)}
-            {...rowProps(index)}
-          />
-        );
-      })}
+      {sounds.map((sound, index) => (
+        <DrumRow key={sound.code} sound={sound} bank={bankFor(sound)} mode={mode} actions={actions} rowProps={rowProps(index)} />
+      ))}
     </ul>
   );
 }
@@ -165,23 +206,9 @@ export function SampleList({ files, mode, actions, label }: SampleListProps) {
   return (
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <ul ref={list} className={styles["rows"]} aria-label={label} onKeyDown={onKeyDown}>
-      {files.map((file, index) => {
-        const ref = sampleRef(file);
-        const key = `sample:${file.path}`;
-        return (
-          <SoundRow
-            key={file.path}
-            code={file.name}
-            friendly={baseName(file.path)}
-            mode={mode}
-            previewing={actions.previewingKey === key}
-            onPreview={() => actions.preview(key, { s: file.name })}
-            dragData={ref}
-            onInsert={() => actions.insertSound(ref)}
-            {...rowProps(index)}
-          />
-        );
-      })}
+      {files.map((file, index) => (
+        <SampleRow key={file.path} file={file} mode={mode} actions={actions} rowProps={rowProps(index)} />
+      ))}
     </ul>
   );
 }

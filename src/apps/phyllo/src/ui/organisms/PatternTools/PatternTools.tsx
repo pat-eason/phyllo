@@ -2,7 +2,7 @@ import { bjorklund } from "@phyllo/engine";
 import { CHEAT_SHEET, FEEL_TOOLS, createModifier, matchFeel } from "@phyllo/model";
 import type { FeelTool, Track } from "@phyllo/model";
 import { Button, IconButton, StepCell, Surface, Slider } from "@phyllo/ui";
-import { useId, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 import type { ComponentPropsWithoutRef } from "react";
 import { useUiMode } from "../../../hooks";
 import { deriveDrumGrid, usePatternEditor, useTrackEditor, withEuclid, writeSteps } from "../StepSequencer";
@@ -20,8 +20,20 @@ const MIN_HITS = 1;
 const MAX_HITS = 8;
 
 function EuclidCard({ track, editor }: { track: Track | undefined; editor: TrackEditor }) {
-  const { selectedRow, euclidHits: hits, setEuclidHits } = usePatternEditor();
+  const { selectedRow, euclidHits: hits, setEuclidHits, registerEuclidFocus } = usePatternEditor();
   const hitsId = useId();
+  const fewerRef = useRef<HTMLButtonElement>(null);
+  const moreRef = useRef<HTMLButtonElement>(null);
+
+  // "Euclid…" in a step row's menu lands here: the first hits button that can still be pressed.
+  useEffect(
+    () =>
+      registerEuclidFocus(() => {
+        const target = moreRef.current?.disabled ? fewerRef.current : moreRef.current;
+        target?.focus();
+      }),
+    [registerEuclidFocus],
+  );
   const grid = track?.kind === "drum" ? deriveDrumGrid(track.pattern, track.params.gain, selectedRow ? [selectedRow] : []) : null;
   const rows = grid?.ok ? grid.rows : [];
   const row = rows.find((r) => r.sound === selectedRow) ?? rows.find((r) => r.steps.some(Boolean)) ?? rows[0];
@@ -58,6 +70,7 @@ function EuclidCard({ track, editor }: { track: Track | undefined; editor: Track
         </span>
         <div role="group" aria-labelledby={hitsId} className={styles["stepper"]}>
           <IconButton
+            ref={fewerRef}
             icon="minus"
             label="Fewer hits"
             size={32}
@@ -68,6 +81,7 @@ function EuclidCard({ track, editor }: { track: Track | undefined; editor: Track
             {hits}
           </output>
           <IconButton
+            ref={moreRef}
             icon="plus"
             label="More hits"
             size={32}
