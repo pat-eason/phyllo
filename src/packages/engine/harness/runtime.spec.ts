@@ -361,6 +361,25 @@ test("MIDI out goes to the bridge with note on/off bytes; previews play", async 
   expect(errors.filter((m) => /not found/.test(m))).toEqual([]);
 });
 
+test("metronome: clicks over a silent song while on, never as a mixer bus, silent again when off", async () => {
+  const status = await evaluate(page, {
+    code: ["setcpm(120/4)", `$: s("~").analyze("quiet")`].join("\n"),
+    lines: { quiet: { start: 2, end: 2 } },
+    scope: "song",
+  });
+  expect(status.ok, JSON.stringify(status)).toBe(true);
+  await page.evaluate(() => window.harness.engine.play());
+
+  await page.evaluate(() => window.harness.engine.setMetronome({ on: true, beatsPerBar: 4 }));
+  expect((await peakOver(page, 1200)).master).toBeGreaterThan(0.01);
+  expect(Object.keys((await meters(page)).orbits)).not.toContain("-2");
+
+  await page.evaluate(() => window.harness.engine.setMetronome({ on: false, beatsPerBar: 4 }));
+  await page.waitForTimeout(400); // clicks already scheduled inside the look-ahead still sound
+  expect((await peakOver(page, 800)).master).toBeLessThan(0.001);
+  await page.evaluate(() => window.harness.engine.stop());
+});
+
 test("no uncaught page errors during the run", () => {
   expect(pageErrors).toEqual([]);
 });

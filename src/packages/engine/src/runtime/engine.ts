@@ -58,6 +58,8 @@ import type { MasterChain } from "./master";
 import { hapToMidiMessages, midiPortName } from "./midi";
 import { renderPatternOffline, suppressCrossContextErrors } from "./offline";
 import { hapToOscMessage } from "./osc";
+import { clickPattern, METRONOME_ORBIT } from "./metronome";
+import type { MetronomeSettings } from "./metronome";
 import {
   installUrlResolver,
   loadDefaultSamples,
@@ -280,6 +282,10 @@ export function createEngine(options: EngineOptions = {}): PhylloEngine {
 
   let current: LiveProgram | undefined;
   let previous: LiveProgram | undefined;
+  /** The metronome's click track while it is on; stacked onto the live song only (never rendered or exported). */
+  let metronome: Pattern | undefined;
+  let metronomeBeats = 0;
+  let withClick: { song: Pattern; click: Pattern; stacked: Pattern } | undefined;
   /** Runtime issues already reported for the current evaluation, keyed `trackId␀message` (dedupe). */
   let reportedIssues = new Set<string>();
   /** Silencing log messages already probed live for the current evaluation. */
@@ -550,8 +556,17 @@ export function createEngine(options: EngineOptions = {}): PhylloEngine {
     setCpsFunc(() => c.cps);
   };
 
+  const songWithClick = (song: Pattern | undefined): Pattern | undefined => {
+    if (!metronome) return song;
+    if (!song) return metronome;
+    if (withClick?.song !== song || withClick.click !== metronome) {
+      withClick = { song, click: metronome, stacked: core.stack(song, metronome) };
+    }
+    return withClick.stacked;
+  };
+
   const source = {
-    get: () => current?.pattern,
+    get: () => songWithClick(current?.pattern),
     onQueryError: (err: unknown) => {
       const failing = current;
       if (failing) {
@@ -561,7 +576,7 @@ export function createEngine(options: EngineOptions = {}): PhylloEngine {
       // fall back to the program before it (V8: keep the last good program playing)
       current = previous;
       previous = undefined;
-      return current?.pattern;
+      return songWithClick(current?.pattern);
     },
   };
   const transportPat = transportPattern(source, () => segments);
@@ -921,6 +936,17 @@ export function createEngine(options: EngineOptions = {}): PhylloEngine {
       chain?.setLimiter(on);
     },
 
+    setMetronome({ on, beatsPerBar }: MetronomeSettings) {
+      if (!on) {
+        metronome = undefined;
+        metronomeBeats = 0;
+        return;
+      }
+      if (metronome && metronomeBeats === beatsPerBar) return;
+      metronome = clickPattern(beatsPerBar);
+      metronomeBeats = beatsPerBar;
+    },
+
     getMeters(): MeterSnapshot {
       const tracks: Record<string, MeterLevel> = {};
       const ids = current ? Object.keys(current.program.lines) : [];
@@ -937,6 +963,7 @@ export function createEngine(options: EngineOptions = {}): PhylloEngine {
       }
       const orbits = orbitMeters?.read(getSuperdoughAudioController()) ?? {};
       delete orbits[PREVIEW_ORBIT]; // previews are not a mixer bus
+      delete orbits[METRONOME_ORBIT]; // nor is the metronome
       return { tracks, orbits, master: chain.readMaster() };
     },
 
