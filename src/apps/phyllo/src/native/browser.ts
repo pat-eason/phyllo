@@ -408,6 +408,9 @@ export function createBrowserApi(options: BrowserApiOptions = {}): NativeApi {
     menuSetState: async () => {},
     menuSetRecent: async () => {},
 
+    contextMenuPopup: async () => false,
+    windowSetTheme: async () => {},
+
     broadcast: async (name, payload) => {
       const event = broadcastEventName(name);
       broadcastChannel()?.postMessage({ event, payload });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { MENU_ACTIONS } from "../../native/types";
-import { SHORTCUTS, describeTarget, detectMac, matchShortcut } from "./shortcuts";
+import { SHORTCUTS, acceleratorFor, describeTarget, detectMac, matchShortcut } from "./shortcuts";
 import type { KeyLike, ShortcutContext, TargetInfo } from "./shortcuts";
 
 const BODY: TargetInfo = { field: false, editor: false, activates: false, inTransport: false };
@@ -181,5 +181,20 @@ describe("shortcuts", () => {
     expect(detectMac({ platform: "MacIntel", userAgent: "" })).toBe(true);
     expect(detectMac({ platform: "Win32", userAgent: "" })).toBe(false);
     expect(detectMac({ platform: "", userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0)" })).toBe(true);
+  });
+
+  it.each([
+    ["track.mute", "M"],
+    ["transport.playPause", "Space"],
+    ["view.library", "CmdOrCtrl+Shift+L"],
+    ["view.codeDrawer", "CmdOrCtrl+/"],
+  ] as const)("should give %s the context-menu hint %s", (action, expected) => {
+    // Arrange / Act / Assert
+    expect(acceleratorFor(action)).toBe(expected);
+  });
+
+  it("should have no hint for an action without a key", () => {
+    // Arrange / Act / Assert
+    expect(acceleratorFor("file.history")).toBeUndefined();
   });
 });
