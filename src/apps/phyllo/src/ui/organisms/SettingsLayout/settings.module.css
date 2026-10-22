@@ -59,7 +59,57 @@
   flex: 999 1 640px;
   box-sizing: border-box;
   min-width: 0;
-  padding: var(--ph-s-10) var(--ph-s-10) 48px;
+  /* Top padding clears the frosted fade, so the first heading is crisp when scrolled to the top. */
+  padding: 64px var(--ph-s-10) 48px;
+}
+
+/* Frosted fade over the content column only (the nav column stays clear): content scrolling up under the Done
+   strip blurs out gradually. Sticky in the page's scroller, zero height so it takes no layout space. */
+.topFade {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  /* Pulled up over main's top padding so it sits at the very top at rest (not at the first heading). */
+  height: 0;
+  margin-top: -64px;
+  margin-bottom: 64px;
+  pointer-events: none;
+}
+
+.topFade::before {
+  content: "";
+  position: absolute;
+  inset: 0 calc(-1 * var(--ph-s-10)) auto;
+  height: 44px;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--ph-bg) 85%, transparent), transparent);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent);
+  mask-image: linear-gradient(to bottom, #000 45%, transparent);
+}
+
+/* Same frosted fade at the bottom edge. */
+.bottomFade {
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
+  /* Mirror of topFade: pushed down over main's bottom padding so it rests at the very bottom. */
+  height: 0;
+  margin-top: 48px;
+  margin-bottom: -48px;
+  pointer-events: none;
+}
+
+.bottomFade::before {
+  content: "";
+  position: absolute;
+  inset: auto calc(-1 * var(--ph-s-10)) 0;
+  height: 44px;
+  background: linear-gradient(to top, color-mix(in srgb, var(--ph-bg) 85%, transparent), transparent);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  -webkit-mask-image: linear-gradient(to top, #000 45%, transparent);
+  mask-image: linear-gradient(to top, #000 45%, transparent);
 }
 
 .content {
@@ -74,8 +124,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--ph-s-5);
-  /* Anchor scrolling stops a little below the top edge. */
-  scroll-margin-top: var(--ph-s-8);
+  /* Anchor scrolling puts the section heading on the same line as the "Settings" title. */
+  scroll-margin-top: 64px;
 }
 
 .sectionHead {

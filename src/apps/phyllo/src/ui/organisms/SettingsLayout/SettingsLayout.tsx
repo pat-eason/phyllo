@@ -64,6 +64,7 @@ export function SettingsLayout({ onOpenHistory, initialSection, listSoundUrls, c
       </div>
 
       <main className={styles["main"]}>
+        <div className={styles["topFade"]} aria-hidden="true" />
         <div className={styles["content"]}>
           <GeneralSection />
           <SettingsSection
@@ -80,6 +81,7 @@ export function SettingsLayout({ onOpenHistory, initialSection, listSoundUrls, c
           <CodeEditorSection />
           <SystemSection onOpenHistory={onOpenHistory} />
         </div>
+        <div className={styles["bottomFade"]} aria-hidden="true" />
       </main>
     </div>
   );
