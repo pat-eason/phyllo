@@ -5,7 +5,7 @@ import { useId, useLayoutEffect, useRef, useState } from "react";
 import type { DragEvent } from "react";
 import { SearchPopover } from "./SearchPopover";
 import type { SearchItem } from "./SearchPopover";
-import { MODIFIER_DRAG_MIME, modifierDescription } from "./inspectorModel";
+import { MODIFIER_DRAG_MIME, modifierDescription, readModifierDrag } from "./inspectorModel";
 import type { InspectorActions } from "./useInspectorActions";
 import styles from "./Inspector.module.css";
 
@@ -49,7 +49,29 @@ export function ModifierList({ track, actions }: ModifierListProps) {
   const accepts = (event: DragEvent) => event.dataTransfer.types.includes(MODIFIER_DRAG_MIME);
 
   return (
-    <section className={styles["section"]} aria-labelledby={headingId}>
+    // The whole section takes drops, so the empty-state hint is a target too (the empty list has no height).
+    <section
+      className={styles["section"]}
+      aria-labelledby={headingId}
+      onDragOver={(event) => {
+        if (!accepts(event)) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "copy";
+        if (!dropping) setDropping(true);
+      }}
+      onDragLeave={(event) => {
+        const to = event.relatedTarget;
+        if (to instanceof Node && event.currentTarget.contains(to)) return;
+        setDropping(false);
+      }}
+      onDrop={(event) => {
+        if (!accepts(event)) return;
+        event.preventDefault();
+        setDropping(false);
+        const dropped = readModifierDrag(event.dataTransfer.getData(MODIFIER_DRAG_MIME));
+        if (dropped) actions.addModifier(dropped.code, { ...(dropped.label ? { label: dropped.label } : {}), origin: "user" });
+      }}
+    >
       <div className={styles["sectionHead"]}>
         <h3 id={headingId} className={styles["legend"]}>
           Modifiers · applied in order
@@ -82,21 +104,7 @@ export function ModifierList({ track, actions }: ModifierListProps) {
         role="list"
         aria-labelledby={headingId}
         className={styles["modifiers"]}
-        data-dropping={dropping ? "" : undefined}
-        onDragOver={(event) => {
-          if (!accepts(event)) return;
-          event.preventDefault();
-          event.dataTransfer.dropEffect = "copy";
-          setDropping(true);
-        }}
-        onDragLeave={() => setDropping(false)}
-        onDrop={(event) => {
-          setDropping(false);
-          const code = event.dataTransfer.getData(MODIFIER_DRAG_MIME).trim();
-          if (!code) return;
-          event.preventDefault();
-          actions.addModifier(code, { origin: "user" });
-        }}
+        data-dropping={dropping && mods.length > 0 ? "" : undefined}
       >
         {mods.map((m) => (
           <ModifierRow
@@ -112,7 +120,7 @@ export function ModifierList({ track, actions }: ModifierListProps) {
         ))}
       </div>
       {mods.length === 0 ? (
-        <p className={styles["emptyMods"]}>No modifiers yet. Add one with + or drop one from the library.</p>
+        <p className={styles["emptyMods"]} data-dropping={dropping ? "" : undefined}>No modifiers yet. Add one with + or drop one from the library.</p>
       ) : null}
     </section>
   );

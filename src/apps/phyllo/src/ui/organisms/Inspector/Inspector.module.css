@@ -385,6 +385,11 @@
   color: var(--ph-muted);
 }
 
+.emptyMods[data-dropping] {
+  border-color: var(--ph-accent);
+  color: var(--ph-text);
+}
+
 /* ---- tips "Show me" ---- */
 [data-tip-highlight] {
   outline: 2px solid var(--ph-accent);
