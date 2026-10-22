@@ -1,16 +1,19 @@
 import { newId } from "@phyllo/model";
 import type { Clip as ClipModel, TipTarget, Track } from "@phyllo/model";
 import { Clip, TrackHeader } from "@phyllo/ui";
-import type { ClipEdge, MeterSubscribe } from "@phyllo/ui";
+import type { ClipEdge, MeterSubscribe, TrackHeaderRenameHandle } from "@phyllo/ui";
 import { memo, useMemo, useRef, useState } from "react";
 import type { DragEvent, KeyboardEvent, MouseEvent, PointerEvent as ReactPointerEvent } from "react";
+import { isContextMenuKey, useContextMenu, useContextMenuTrigger } from "../../../hooks";
+import { useTrackMenu } from "../../contextMenu";
 import { usePointerDrag } from "./pointerDrag";
 import { isSoundDrag, readSoundRef } from "./soundDrop";
 import styles from "./Timeline.module.css";
-import { snapDelta, wholeBarStep } from "./timelineModel";
+import { isPrimaryPress, snapDelta, wholeBarStep } from "./timelineModel";
 import type { EditTool, Snap } from "./timelineModel";
 import { trackSoundCode, trackViz } from "./trackDisplay";
 import type { TimelineActions } from "./useTimelineActions";
+import { useTimelineMenus } from "./useTimelineMenus";
 
 export interface LaneProps {
   track: Track;
@@ -69,6 +72,7 @@ export const Lane = memo(function Lane({
   setSize,
 }: LaneProps) {
   const header = useRef<HTMLDivElement>(null);
+  const renameHandle = useRef<TrackHeaderRenameHandle>(null);
   const lane = useRef<HTMLDivElement>(null);
   const startDrag = usePointerDrag();
   const [preview, setPreview] = useState<Preview | null>(null);
@@ -77,6 +81,11 @@ export const Lane = memo(function Lane({
   const trackId = track.id;
   const { kind, pattern, source } = track;
   const viz = useMemo(() => trackViz({ kind, pattern, source }, lengthBars), [kind, pattern, source, lengthBars]);
+  const menu = useContextMenu();
+  const menus = useTimelineMenus(actions);
+  const buildTrackMenu = useTrackMenu();
+  const headerMenu = useContextMenuTrigger(() => buildTrackMenu(trackId, { rename: () => renameHandle.current?.start() }));
+  const clipMenu = useContextMenuTrigger((target) => menus.clip(trackId, target.dataset["clipId"] ?? "", onEditPattern));
   const label = kind === "code" ? ((track.rawCode ?? "").split("\n")[0]?.trim() ?? "") : pattern;
 
   /** 1-based fractional bar under the pointer. */
@@ -84,6 +93,7 @@ export const Lane = memo(function Lane({
   const gridStart = (bar: number) => 1 + Math.floor((bar - 1) / step) * step;
 
   function dragClip(clip: ClipModel, mode: "move" | ClipEdge, event: ReactPointerEvent<HTMLElement>, duplicate: boolean) {
+    if (!isPrimaryPress(event)) return;
     const len = clip.endBar - clip.startBar;
     const next = (dx: number): Range => {
       const delta = snapDelta(dx / barWidth, step);
@@ -111,7 +121,7 @@ export const Lane = memo(function Lane({
   }
 
   function onLanePointerDown(event: ReactPointerEvent<HTMLDivElement>) {
-    if (event.button !== 0 || event.target !== event.currentTarget) return;
+    if (!isPrimaryPress(event) || event.target !== event.currentTarget) return;
     if (tool !== "draw") {
       actions.select(trackId);
       return;
@@ -150,7 +160,31 @@ export const Lane = memo(function Lane({
     }
   }
 
+  /** Whole bar (inside the song) under the pointer. */
+  const wholeBarAt = (clientX: number) => Math.min(lengthBars, Math.max(1, Math.floor(barAt(clientX))));
+
+  function onLaneContextMenu(event: MouseEvent<HTMLDivElement>) {
+    menu.openFromEvent(event, menus.lane(trackId, wholeBarAt(event.clientX), snap));
+  }
+
+  /** Shift+F10 on the lane itself: "here" is the playhead. */
+  function onLaneKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.target !== event.currentTarget || !isContextMenuKey(event)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const bar = Math.min(lengthBars, Math.max(1, actions.playheadBar()));
+    menu.openAtElement(event.currentTarget, menus.lane(trackId, bar, snap));
+  }
+
+  /** Not while the name is being edited: Shift+F10 belongs to the text field there. */
+  function onHeaderKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.target instanceof HTMLInputElement) return;
+    headerMenu.onKeyDown(event);
+  }
+
   function onClipKeyDown(clip: ClipModel, event: KeyboardEvent<HTMLButtonElement>) {
+    clipMenu.onKeyDown(event);
+    if (event.defaultPrevented) return;
     if (event.altKey || event.metaKey || event.ctrlKey) return;
     if (event.key === "Delete" || event.key === "Backspace") {
       event.preventDefault();
@@ -238,14 +272,20 @@ export const Lane = memo(function Lane({
         onMuteChange={(mute, event) => actions.setMute(trackId, mute, event.metaKey || event.ctrlKey)}
         onSoloChange={(solo, event) => actions.setSolo(trackId, solo, event.altKey)}
         onRename={(name) => actions.dispatch({ type: "track/update", trackId, patch: { name } })}
+        renameHandle={renameHandle}
+        onContextMenu={headerMenu.onContextMenu}
+        onKeyDown={onHeaderKeyDown}
         onRemove={() => actions.dispatch({ type: "track/remove", trackId })}
       />
+      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- Shift+F10 on the focused lane opens its menu */}
       <div
         ref={lane}
         className={styles["clipLane"]}
         data-tool={tool}
         tabIndex={-1}
         onPointerDown={onLanePointerDown}
+        onContextMenu={onLaneContextMenu}
+        onKeyDown={onLaneKeyDown}
         data-testid={`lane-${trackId}`}
       >
         {track.clips.map((clip) => {
@@ -263,6 +303,7 @@ export const Lane = memo(function Lane({
                 audible={audible}
                 dragging={moving?.clipId === clip.id}
                 data-tool={tool}
+                data-clip-id={clip.id}
                 aria-keyshortcuts={CLIP_KEYS}
                 {...(tool === "split"
                   ? {}
@@ -272,6 +313,7 @@ export const Lane = memo(function Lane({
                     })}
                 onClick={(event) => onClipClick(clip, event)}
                 onDoubleClick={() => onEditPattern?.(trackId)}
+                onContextMenu={clipMenu.onContextMenu}
                 onKeyDown={(event) => onClipKeyDown(clip, event)}
               />
             </div>

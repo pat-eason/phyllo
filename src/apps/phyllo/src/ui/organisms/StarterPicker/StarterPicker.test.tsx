@@ -257,6 +257,73 @@ describe("StarterPicker", () => {
     expect(stores.project.getState().dirty).toBe(false);
   });
 
+  it("should open a recent project from its right-click menu", async () => {
+    // Arrange
+    const native = createMockNative();
+    const stores = createMockStores({ native });
+    await seedLibrary(native, [fixtureProject({ id: "p2", name: "Night bus", modified: atOffset(2) })]);
+    await stores.library.getState().refresh();
+    const { user, onOpened } = renderPicker({}, stores);
+    await user.pointer({ keys: "[MouseRight]", target: screen.getByRole("button", { name: /Night bus/ }) });
+
+    // Act
+    await user.click(await screen.findByRole("menuitem", { name: "Open" }));
+
+    // Assert
+    await waitFor(() => expect(onOpened).toHaveBeenCalledTimes(1));
+    expect(stores.project.getState().project.name).toBe("Night bus");
+  });
+
+  it("should show a recent project in Finder from its right-click menu", async () => {
+    // Arrange
+    const native = createMockNative();
+    const reveal = vi.spyOn(native, "revealInFinder").mockResolvedValue();
+    const stores = createMockStores({ native });
+    const [path] = await seedLibrary(native, [fixtureProject({ id: "p2", name: "Night bus", modified: atOffset(2) })]);
+    await stores.library.getState().refresh();
+    const { user } = renderPicker({}, stores);
+    await user.pointer({ keys: "[MouseRight]", target: screen.getByRole("button", { name: /Night bus/ }) });
+
+    // Act
+    await user.click(await screen.findByRole("menuitem", { name: "Show in Finder" }));
+
+    // Assert
+    expect(reveal).toHaveBeenCalledWith(path);
+  });
+
+  it("should open the recent project menu from the keyboard with Shift+F10", async () => {
+    // Arrange
+    const native = createMockNative();
+    const stores = createMockStores({ native });
+    await seedLibrary(native, [fixtureProject({ id: "p2", name: "Night bus", modified: atOffset(2) })]);
+    await stores.library.getState().refresh();
+    const { user } = renderPicker({}, stores);
+    screen.getByRole("button", { name: /Night bus/ }).focus();
+
+    // Act
+    await user.keyboard("{Shift>}{F10}{/Shift}");
+
+    // Assert
+    expect(await screen.findByRole("menu", { name: "Project Night bus" })).toBeInTheDocument();
+  });
+
+  it("should report a failed Show in Finder under the recent list", async () => {
+    // Arrange
+    const native = createMockNative();
+    vi.spyOn(native, "revealInFinder").mockRejectedValue(new Error("Finder is busy"));
+    const stores = createMockStores({ native });
+    await seedLibrary(native, [fixtureProject({ id: "p2", name: "Night bus", modified: atOffset(2) })]);
+    await stores.library.getState().refresh();
+    const { user } = renderPicker({}, stores);
+    await user.pointer({ keys: "[MouseRight]", target: screen.getByRole("button", { name: /Night bus/ }) });
+
+    // Act
+    await user.click(await screen.findByRole("menuitem", { name: "Show in Finder" }));
+
+    // Assert
+    expect(await screen.findByRole("alert")).toHaveTextContent("Couldn't show Night bus in Finder: Finder is busy");
+  });
+
   it("should open the file chosen in the Open project dialog", async () => {
     // Arrange
     const native = createMockNative();

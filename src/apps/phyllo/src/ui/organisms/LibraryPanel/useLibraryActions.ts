@@ -3,7 +3,8 @@ import type { PreviewSound } from "@phyllo/engine";
 import type { SoundRef } from "@phyllo/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAppStores, useEngine } from "../../../hooks";
-import { modifierInsertActions, soundInsertActions } from "./insert";
+import { layerSoundActions, replaceSoundActions } from "../Timeline/soundDrop";
+import { modifierInsertActions, newTrackActions, soundInsertActions } from "./insert";
 
 /** How long a preview shows as "playing" (the engine plays a short hit or phrase). */
 const PREVIEW_MS = 700;
@@ -16,6 +17,14 @@ export interface LibraryActions {
   preview(key: string, sound: PreviewSound): void;
   /** Enter on a row or chip: swap the selected track's sound, or add a new track. */
   insertSound(ref: SoundRef): void;
+  /** Menu: swap the selected track's sound for `ref` (what dropping it on the track does). No-op when it doesn't fit. */
+  replaceSound(ref: SoundRef): void;
+  /** Menu: layer `ref` onto the selected track (what ⇧-dropping it does). No-op when it doesn't fit. */
+  layerSound(ref: SoundRef): void;
+  /** Menu: add `ref` as a new track and select it, even when a compatible track is selected. */
+  addSoundAsTrack(ref: SoundRef): void;
+  /** Menu: put `text` on the system clipboard; `what` names it in the status line ("code"). */
+  copyText(text: string, what: string): void;
   /** Enter on a snippet: add the modifier to the selected track. */
   insertModifier(def: Pick<ModifierDef, "name" | "template" | "description">): void;
   /** Short status line (aria-live) such as "Select a track first". */
@@ -90,6 +99,45 @@ export function useLibraryActions(): LibraryActions {
     [project, run],
   );
 
+  const replaceSound = useCallback(
+    (ref: SoundRef) => {
+      const { project: current } = project.getState();
+      const track = current.tracks.find((t) => t.id === current.ui.selectedTrack);
+      const actions = track ? replaceSoundActions(track, ref) : null;
+      if (actions && actions.length > 0) run(actions);
+    },
+    [project, run],
+  );
+
+  const layerSound = useCallback(
+    (ref: SoundRef) => {
+      const { project: current } = project.getState();
+      const track = current.tracks.find((t) => t.id === current.ui.selectedTrack);
+      const actions = track ? layerSoundActions(track, ref) : null;
+      if (actions && actions.length > 0) run(actions);
+    },
+    [project, run],
+  );
+
+  const addSoundAsTrack = useCallback(
+    (ref: SoundRef) => {
+      run(newTrackActions(project.getState().project, ref));
+    },
+    [project, run],
+  );
+
+  const copyText = useCallback(
+    (text: string, what: string) => {
+      // The clipboard can be missing or refuse (permissions, an unfocused window): say so rather than fail silently.
+      const written = navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject(new Error("No clipboard"));
+      written.then(
+        () => say(`Copied ${what}`),
+        () => say(`Couldn't copy ${what}`),
+      );
+    },
+    [say],
+  );
+
   const insertModifier = useCallback(
     (def: Pick<ModifierDef, "name" | "template" | "description">) => {
       const actions = modifierInsertActions(project.getState().project, def);
@@ -103,5 +151,5 @@ export function useLibraryActions(): LibraryActions {
     [project, run, say],
   );
 
-  return { previewingKey, preview, insertSound, insertModifier, notice };
+  return { previewingKey, preview, insertSound, replaceSound, layerSound, addSoundAsTrack, copyText, insertModifier, notice };
 }

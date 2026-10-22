@@ -1,10 +1,11 @@
 import { ThemeProvider } from "@phyllo/ui";
-import { act, screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { MockStores, MockStoresOptions } from "../../../state/mocks";
 import { PINNED_NOW, renderWithStores } from "../../../state/testUtils";
 import { KEYSTEP_PORT, STORY_FILE, mockupProject } from "../AppHeader/storyFixtures";
+import { ToastProvider } from "../../toasts";
 import { StatusBar } from "./StatusBar";
 import type { StatusBarProps } from "./StatusBar";
 
@@ -247,6 +248,80 @@ describe("StatusBar", () => {
 
     // Assert
     expect(reveal).toHaveBeenCalledWith(STORY_FILE);
+  });
+
+  it("should offer Show in Finder and Copy path when the file path is right-clicked", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    renderBar({}, { initialFilePath: STORY_FILE });
+
+    // Act
+    await user.pointer({ keys: "[MouseRight]", target: screen.getByRole("button", { name: "~/Music/Phyllo/Untitled Groove.phyllo" }) });
+
+    // Assert
+    const menu = await screen.findByRole("menu", { name: "File path" });
+    expect(within(menu).getAllByRole("menuitem").map((item) => item.textContent)).toEqual(["Show in Finder", "Copy path"]);
+  });
+
+  it("should reveal the file in Finder from the path's menu", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const target = renderBar({}, { initialFilePath: STORY_FILE });
+    const reveal = vi.spyOn(target.native, "revealInFinder").mockResolvedValue();
+    await user.pointer({ keys: "[MouseRight]", target: screen.getByRole("button", { name: "~/Music/Phyllo/Untitled Groove.phyllo" }) });
+
+    // Act
+    await user.click(await screen.findByRole("menuitem", { name: "Show in Finder" }));
+
+    // Assert
+    expect(reveal).toHaveBeenCalledWith(STORY_FILE);
+  });
+
+  it("should copy the full file path to the clipboard from the path's menu", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    renderBar({}, { initialFilePath: STORY_FILE });
+    await user.pointer({ keys: "[MouseRight]", target: screen.getByRole("button", { name: "~/Music/Phyllo/Untitled Groove.phyllo" }) });
+
+    // Act
+    await user.click(await screen.findByRole("menuitem", { name: "Copy path" }));
+
+    // Assert
+    expect(await navigator.clipboard.readText()).toBe(STORY_FILE);
+  });
+
+  it("should open the path's menu from the keyboard with Shift+F10", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    renderBar({}, { initialFilePath: STORY_FILE });
+    screen.getByRole("button", { name: "~/Music/Phyllo/Untitled Groove.phyllo" }).focus();
+
+    // Act
+    await user.keyboard("{Shift>}{F10}{/Shift}");
+
+    // Assert
+    expect(await screen.findByRole("menu", { name: "File path" })).toBeInTheDocument();
+  });
+
+  it("should say so when the path can't be copied", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const result = renderWithStores(
+      <ToastProvider>
+        <StatusBar />
+      </ToastProvider>,
+      { initialProject: mockupProject(), initialFilePath: STORY_FILE },
+    );
+    stores = result.stores;
+    vi.spyOn(navigator.clipboard, "writeText").mockRejectedValue(new Error("Clipboard blocked"));
+    await user.pointer({ keys: "[MouseRight]", target: screen.getByRole("button", { name: "~/Music/Phyllo/Untitled Groove.phyllo" }) });
+
+    // Act
+    await user.click(await screen.findByRole("menuitem", { name: "Copy path" }));
+
+    // Assert
+    expect(await screen.findByText("Couldn't copy the path")).toBeInTheDocument();
+    expect(screen.getByText("Clipboard blocked")).toBeInTheDocument();
   });
 
   it("should show a save failure instead of the autosave time", async () => {

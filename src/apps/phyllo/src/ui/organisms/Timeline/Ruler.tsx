@@ -1,12 +1,15 @@
 import type { Project, Section } from "@phyllo/model";
 import { memo, useRef, useState } from "react";
-import type { KeyboardEvent, PointerEvent as ReactPointerEvent, RefObject } from "react";
+import type { KeyboardEvent, MouseEvent, PointerEvent as ReactPointerEvent, RefObject } from "react";
+import { useContextMenu, useContextMenuTrigger } from "../../../hooks";
 import { usePointerDrag } from "./pointerDrag";
 import { SectionChips } from "./SectionChips";
+import type { SectionChipsHandle } from "./SectionChips";
 import styles from "./Timeline.module.css";
-import { snapDelta, snapPosition, wholeBarStep } from "./timelineModel";
+import { isPrimaryPress, snapDelta, snapPosition, wholeBarStep } from "./timelineModel";
 import type { Snap } from "./timelineModel";
 import type { TimelineActions } from "./useTimelineActions";
+import { useTimelineMenus } from "./useTimelineMenus";
 
 type Loop = Project["loop"];
 type LoopRange = { startBar: number; endBar: number };
@@ -41,10 +44,16 @@ function clampRange(start: number, end: number, lengthBars: number): LoopRange {
  * (snapped), inside the loop band too, and dragging over it scrubs; ⇧-drag draws a new loop region. Only the
  * band's top border strip (drag to move) and its edge handles (drag to resize) edit the loop (snapped, one undo
  * step); the rest of the band lets pointer events through to the ruler. The band is also a button: ←/→ move
- * it, ⇧←/→ change its length.
+ * it, ⇧←/→ change its length. Right-click on the ruler opens a menu for the bar under the pointer (play from there,
+ * loop start/end, add section, song end); the loop band has its own menu (also Shift+F10 on the band).
  */
 export const Ruler = memo(function Ruler({ lengthBars, barWidth, sections, loop, snap, summary, marker, actions }: RulerProps) {
   const track = useRef<HTMLDivElement>(null);
+  const chips = useRef<SectionChipsHandle>(null);
+  const menu = useContextMenu();
+  const menus = useTimelineMenus(actions);
+  const renameNewSection = (sectionId: string) => chips.current?.rename(sectionId);
+  const loopMenu = useContextMenuTrigger(() => menus.loop(renameNewSection));
   const startDrag = usePointerDrag();
   const [draft, setDraft] = useState<LoopRange | null>(null);
   const step = wholeBarStep(snap);
@@ -58,8 +67,19 @@ export const Ruler = memo(function Ruler({ lengthBars, barWidth, sections, loop,
     actions.seek(Math.min(lengthBars + 1, Math.max(1, bar)));
   };
 
+  function onTrackContextMenu(event: MouseEvent<HTMLDivElement>) {
+    const bar = barAt(event.clientX);
+    const request = menus.ruler({
+      bar: Math.min(lengthBars, Math.max(1, Math.floor(bar))),
+      seekBar: Math.min(lengthBars + 1, Math.max(1, snapPosition(bar, snap))),
+      snap,
+      renameNewSection,
+    });
+    menu.openFromEvent(event, request);
+  }
+
   function onTrackPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
-    if (event.button !== 0) return;
+    if (!isPrimaryPress(event)) return;
     event.preventDefault();
     if (event.shiftKey) {
       // ⇧-drag: draw a loop region from the bar under the pointer.
@@ -89,7 +109,7 @@ export const Ruler = memo(function Ruler({ lengthBars, barWidth, sections, loop,
   }
 
   function onLoopPointerDown(mode: "move" | "start" | "end", event: ReactPointerEvent<HTMLElement>) {
-    if (event.button !== 0) return;
+    if (!isPrimaryPress(event)) return;
     event.preventDefault();
     event.stopPropagation();
     const origin = { startBar: loop.startBar, endBar: loop.endBar };
@@ -120,6 +140,8 @@ export const Ruler = memo(function Ruler({ lengthBars, barWidth, sections, loop,
   }
 
   function onLoopKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
+    loopMenu.onKeyDown(event);
+    if (event.defaultPrevented) return;
     const dir = event.key === "ArrowLeft" ? -1 : event.key === "ArrowRight" ? 1 : 0;
     if (dir === 0) return;
     event.preventDefault();
@@ -142,8 +164,8 @@ export const Ruler = memo(function Ruler({ lengthBars, barWidth, sections, loop,
   return (
     <div className={styles["ruler"]}>
       <div className={styles["rulerCorner"]}>{summary}</div>
-      <div ref={track} className={styles["rulerTrack"]} onPointerDown={onTrackPointerDown} data-testid="ruler">
-        <SectionChips sections={sections} barWidth={barWidth} actions={actions} />
+      <div ref={track} className={styles["rulerTrack"]} onPointerDown={onTrackPointerDown} onContextMenu={onTrackContextMenu} data-testid="ruler">
+        <SectionChips sections={sections} barWidth={barWidth} actions={actions} handle={chips} />
         {showLoop ? (
           <button
             type="button"
@@ -154,6 +176,7 @@ export const Ruler = memo(function Ruler({ lengthBars, barWidth, sections, loop,
             aria-keyshortcuts="ArrowLeft ArrowRight Shift+ArrowLeft Shift+ArrowRight"
             title="Drag the top edge to move the loop, drag a side to resize. Arrow keys move it, ⇧ + arrow keys resize."
             onKeyDown={onLoopKeyDown}
+            onContextMenu={loopMenu.onContextMenu}
           >
             <span className={styles["loopGrip"]} aria-hidden="true" data-testid="loop-grip" onPointerDown={(e) => onLoopPointerDown("move", e)} />
             <span className={styles["loopEdge"]} data-edge="start" aria-hidden="true" onPointerDown={(e) => onLoopPointerDown("start", e)} />

@@ -4,7 +4,7 @@ export { AppThemeProvider } from "./AppThemeProvider";
 export { ExportSlot } from "./ExportSlot";
 export { formatRoute, navigate, parseHash, useHashRoute } from "./router";
 export type { Route, ScreenName } from "./router";
-export { SHORTCUTS, describeTarget, detectMac, matchShortcut } from "./shortcuts";
+export { SHORTCUTS, acceleratorFor, describeTarget, detectMac, matchShortcut } from "./shortcuts";
 export type { ShellActionId, ShortcutContext, ShortcutDef } from "./shortcuts";
 export { useShell } from "./shellContext";
 export type { ShellState, ShellToast } from "./shellContext";

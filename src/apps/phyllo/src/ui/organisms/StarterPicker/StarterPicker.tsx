@@ -4,7 +4,7 @@ import type { GrooveSummary, StarterDef, StarterId } from "@phyllo/model";
 import { Button, Logo, Select, StarterCard } from "@phyllo/ui";
 import type { SelectOption } from "@phyllo/ui";
 import { useEffect, useId, useMemo, useState } from "react";
-import { useAudition, useLibrary, useProject, useTips, useUiMode } from "../../../hooks";
+import { useAudition, useLibrary, useNative, useProject, useTips, useUiMode } from "../../../hooks";
 import { CodePreview } from "./CodePreview";
 import { StarterPickerHeaderActions } from "./HeaderActions";
 import { ImportLink } from "./ImportLink";
@@ -67,6 +67,7 @@ export function StarterPicker({
   const { newProject } = useProject();
   const { setMode } = useUiMode();
   const { grooves, open } = useLibrary();
+  const native = useNative();
   const { highlight } = useTips();
   const audition = useAudition();
   const auditioning = audition.auditioning === STARTER_AUDITION;
@@ -111,7 +112,16 @@ export function StarterPicker({
     else if (result.cancelled !== true) setOpenError(result.error);
   };
 
-  const rootClasses = className ? `${styles["root"]} ${className}` : styles["root"];
+  const revealRecent = async (groove: GrooveSummary) => {
+    setOpenError(null);
+    try {
+      await native.revealInFinder(groove.path);
+    } catch (caught) {
+      setOpenError(`Couldn't show ${groove.name} in Finder: ${caught instanceof Error ? caught.message : String(caught)}`);
+    }
+  };
+
+  const rootClasses =className ? `${styles["root"]} ${className}` : styles["root"];
 
   return (
     <div className={rootClasses}>
@@ -146,7 +156,13 @@ export function StarterPicker({
             </p>
           </div>
 
-          <RecentProjects grooves={recents} nowMs={nowMs} error={openError} onOpen={(groove) => void openRecent(groove)} />
+          <RecentProjects
+            grooves={recents}
+            nowMs={nowMs}
+            error={openError}
+            onOpen={(groove) => void openRecent(groove)}
+            onReveal={(groove) => void revealRecent(groove)}
+          />
           <ImportLink onImported={opened} />
         </section>
 

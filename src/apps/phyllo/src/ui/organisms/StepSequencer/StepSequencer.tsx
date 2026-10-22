@@ -107,7 +107,8 @@ function LiveCode({ track, editor }: { track: Track; editor: TrackEditor }) {
 }
 
 function StepsTab({ track, editor }: { track: Track; editor: TrackEditor }) {
-  const { selectedRow, setSelectedRow } = usePatternEditor();
+  const editorState = usePatternEditor();
+  const { selectedRow, setSelectedRow } = editorState;
   const [extra, setExtra] = useState<{ trackId: string; sounds: string[] }>({ trackId: track.id, sounds: [] });
   const extraSounds = extra.trackId === track.id ? extra.sounds : [];
 
@@ -134,9 +135,11 @@ function StepsTab({ track, editor }: { track: Track; editor: TrackEditor }) {
         setExtra({ trackId: track.id, sounds: [...extraSounds, sound] });
         setSelectedRow(sound);
       }}
+      onRemoveSound={(sound) => setExtra({ trackId: track.id, sounds: extraSounds.filter((s) => s !== sound) })}
       selectedRow={selected}
       onSelectRow={setSelectedRow}
       editor={editor}
+      euclid={editorState}
     />
   );
 }

@@ -4,7 +4,6 @@ import type { CSSProperties } from "react";
 import type { TileSize } from "../../../state/libraryStore";
 import { toCardData } from "./format";
 import styles from "./GrooveGrid.module.css";
-import { contextAnchorFromKey } from "./interaction";
 import type { GrooveHandlers } from "./interaction";
 
 export interface GrooveGridProps extends GrooveHandlers {
@@ -25,7 +24,7 @@ const TILE_LAYOUT: Record<TileSize, { min: number; gap: number }> = {
 };
 
 /** Auto-filling CSS grid of GrooveCard tiles. */
-export function GrooveGrid({ grooves, size, now, previewingPath, onOpen, onPreview, onFavoriteChange, onContextMenu }: GrooveGridProps) {
+export function GrooveGrid({ grooves, size, now, previewingPath, onOpen, onPreview, onFavoriteChange, onContextMenu, onContextKey }: GrooveGridProps) {
   const { min, gap } = TILE_LAYOUT[size];
   const style = { gridTemplateColumns: `repeat(auto-fill, minmax(min(${min}px, 100%), 1fr))`, gap } satisfies CSSProperties;
 
@@ -41,16 +40,8 @@ export function GrooveGrid({ grooves, size, now, previewingPath, onOpen, onPrevi
           onOpen={() => onOpen(groove)}
           onPreview={() => onPreview(groove)}
           onFavoriteChange={(favorite) => onFavoriteChange(groove, favorite)}
-          onContextMenu={(event) => {
-            event.preventDefault();
-            onContextMenu(groove, { x: event.clientX, y: event.clientY, trigger: null });
-          }}
-          onKeyDown={(event) => {
-            const anchor = contextAnchorFromKey(event);
-            if (!anchor) return;
-            event.preventDefault();
-            onContextMenu(groove, anchor);
-          }}
+          onContextMenu={(event) => onContextMenu(groove, event)}
+          onKeyDown={(event) => onContextKey(groove, event)}
         />
       ))}
     </div>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNative, useSettings } from "../../../hooks";
+import { useAppStores, useNative, useSettings } from "../../../hooks";
 import type { SampleFile } from "../../../native/types";
 
 export type FolderScan =
@@ -17,6 +17,8 @@ export interface SampleFolders {
   /** Opens the native folder picker and adds the choice to `settings.sampleFolders`. */
   link(): Promise<void>;
   unlink(path: string): void;
+  /** Scan `path` again now (the watcher does it on change; the menu's "Rescan" does it on demand) and re-register the samples. */
+  rescan(path: string): void;
 }
 
 const LOADING: FolderScan = { status: "loading", files: [] };
@@ -27,6 +29,7 @@ const LOADING: FolderScan = { status: "loading", files: [] };
  */
 export function useSampleFolders(): SampleFolders {
   const native = useNative();
+  const { samples: registered } = useAppStores();
   const { settings, set } = useSettings();
   const paths = settings.sampleFolders;
   const [scans, setScans] = useState<Readonly<Record<string, FolderScan>>>({});
@@ -105,9 +108,19 @@ export function useSampleFolders(): SampleFolders {
     [paths, set],
   );
 
+  const rescan = useCallback(
+    (path: string) => {
+      setScans((prev) => ({ ...prev, [path]: { status: "loading", files: prev[path]?.files ?? [] } }));
+      scan(path);
+      void registered.getState().rescan();
+    },
+    [scan, registered],
+  );
+
   return {
     folders: paths.map((path) => ({ path, scan: scans[path] ?? LOADING })),
     link,
     unlink,
+    rescan,
   };
 }

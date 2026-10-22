@@ -130,6 +130,17 @@ export const SHORTCUTS: readonly ShortcutDef[] = [
   { action: "file.open", key: "o", mod: true, menu: "file.open", inFields: true, label: "Open…", keys: ["⌘", "O"] },
 ];
 
+/**
+ * Context-menu shortcut hint (accelerator syntax) for the first shortcut bound to `action`: `M`, `CmdOrCtrl+Shift+L`.
+ * Note `S` is the Split tool in Pro on Arrange and Solo elsewhere; don't show it for Solo there.
+ */
+export function acceleratorFor(action: ShellActionId): string | undefined {
+  const def = SHORTCUTS.find((candidate) => candidate.action === action);
+  if (!def) return undefined;
+  const key = def.key === " " ? "Space" : def.key.length === 1 ? def.key.toUpperCase() : def.key;
+  return [def.mod ? "CmdOrCtrl" : null, def.shift ? "Shift" : null, key].filter(Boolean).join("+");
+}
+
 export interface KeyLike {
   key: string;
   metaKey: boolean;

@@ -1,6 +1,8 @@
 // Hooks organisms use to reach the stores (design-system §5). Render under <PhylloProvider>.
 export { useProject, useProjectFile, useProjectSelector } from "./useProject";
 export type { UseProject, UseProjectFile } from "./useProject";
+export { clipboardOf, useClipboard } from "./useClipboard";
+export type { UseClipboard } from "./useClipboard";
 export { useSelection } from "./useSelection";
 export type { UseSelection } from "./useSelection";
 export { usePositionFeed, useTransport } from "./useTransport";
@@ -20,3 +22,6 @@ export { useCanRecord, useMidiInput, useRecorder, useSampleNames, useSamples } f
 export type { UseRecorder } from "./useRecorder";
 export { useAudition, AUDITION_PROJECT_ID } from "./useAudition";
 export type { Audition, AuditionOptions, AuditionSource } from "./useAudition";
+export type { ClipboardItem, ClipboardKind } from "../state/clipboardStore";
+export { ContextMenuContext, isContextMenuKey, useContextMenu, useContextMenuTrigger } from "./useContextMenu";
+export type { ContextMenuApi, ContextMenuRequest, ContextMenuTrigger } from "./useContextMenu";

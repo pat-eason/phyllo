@@ -1,6 +1,7 @@
 import { convertFileSrc, invoke } from '@tauri-apps/api/core';
 import { emit, listen } from '@tauri-apps/api/event';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification';
 import { revealItemInDir } from '@tauri-apps/plugin-opener';
@@ -8,6 +9,7 @@ import { load } from '@tauri-apps/plugin-store';
 
 import type { NativeApi } from './api';
 import { broadcastEventName, isEnvelope } from './broadcast';
+import { createNativeContextMenu } from './contextMenu';
 import { toNativeError } from './errors';
 import {
   type MediaSessionBridge,
@@ -98,6 +100,7 @@ export function createTauriApi(options: TauriApiOptions = {}): NativeApi {
   /** Which side answers now-playing updates: native after `media_set_enabled` returned true, else the web view. */
   let nativeMedia = false;
   const label = () => getCurrentWebviewWindow().label;
+  const contextMenu = createNativeContextMenu();
 
   return {
     kind: 'tauri',
@@ -162,6 +165,12 @@ export function createTauriApi(options: TauriApiOptions = {}): NativeApi {
     onMenuAction: (callback) => subscribeWindow<MenuActionEvent>(EVENTS.menuAction, callback),
     menuSetState: (item) => call<void>(COMMANDS.menuSetState, { item }),
     menuSetRecent: (items) => call<void>(COMMANDS.menuSetRecent, { items }),
+
+    contextMenuPopup: async (entries, at) => {
+      await contextMenu.popup(entries, at);
+      return true;
+    },
+    windowSetTheme: (theme) => guard(() => getCurrentWindow().setTheme(theme)),
 
     broadcast: (channel, payload) =>
       guard(async () => {

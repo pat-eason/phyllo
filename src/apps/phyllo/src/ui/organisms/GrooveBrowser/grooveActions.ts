@@ -27,6 +27,8 @@ export interface GrooveActions {
   /** Export works on the open project, so this opens the groove first (pending edits are saved), then exports it. */
   exportGroove: (groove: GrooveSummary) => Promise<void>;
   toggleFavorite: (groove: GrooveSummary) => Promise<void>;
+  /** Sets the flag on each target that doesn't have it yet. */
+  setFavorite: (targets: GrooveSummary[], favorite: boolean) => Promise<void>;
   rename: (groove: GrooveSummary, name: string) => ActionResult;
   duplicate: (groove: GrooveSummary) => Promise<void>;
   reveal: (groove: GrooveSummary) => Promise<void>;
@@ -70,6 +72,13 @@ export function createGrooveActions({ library, native, notify, onOpenGroove, onE
     async toggleFavorite(groove) {
       const result = await library.toggleFavorite(groove.path);
       if (!result.ok) fail(`Couldn't update ${groove.name}: ${result.error}`);
+    },
+    async setFavorite(targets, favorite) {
+      const error = await eachGroove(
+        targets.filter((groove) => groove.favorite !== favorite),
+        (groove) => library.toggleFavorite(groove.path),
+      );
+      if (error !== null) fail(`Couldn't update favourites. ${error}`);
     },
     async rename(groove, name) {
       const result = await library.rename(groove.path, name);

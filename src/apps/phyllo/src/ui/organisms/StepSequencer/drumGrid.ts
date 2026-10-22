@@ -276,3 +276,69 @@ export function withEuclid(rows: readonly DrumRow[], sound: string, hits: number
     };
   });
 }
+
+/** The grid a successful `deriveDrumGrid` returns. */
+export type OkDrumGrid = Extract<DrumGrid, { ok: true }>;
+
+/**
+ * Same rows with one row's steps replaced wholesale (fill, clear, paste): a hand edit, so the Euclid flag goes.
+ * Hits that stay keep their level; new hits sound at the row's usual level, like a click on an empty step.
+ */
+export function withRowSteps(rows: readonly DrumRow[], sound: string, steps: readonly boolean[]): DrumRow[] {
+  return rows.map((row) => {
+    if (row.sound !== sound) return row;
+    const usual = row.velocities?.find((v) => v > 0) ?? DEFAULT_GAIN;
+    const next: DrumRow = {
+      ...row,
+      steps: steps.slice(),
+      tokenGains: steps.map((on, i) => (on && row.steps[i] ? row.tokenGains[i] : undefined)),
+      velocities: row.velocities ? steps.map((on, i) => (on ? (row.steps[i] ? (row.velocities?.[i] ?? usual) : usual) : 0)) : null,
+    };
+    delete next.euclid;
+    return next;
+  });
+}
+
+function rotate<T>(values: readonly T[], by: number): T[] {
+  const n = values.length;
+  return values.map((_, i) => values[(((i - by) % n) + n) % n] as T);
+}
+
+/** Same rows with one row rotated by `by` steps (+1 = one step later), every hit keeping its own level. */
+export function shiftRow(rows: readonly DrumRow[], sound: string, by: number): DrumRow[] {
+  return rows.map((row) => {
+    if (row.sound !== sound) return row;
+    const next: DrumRow = {
+      ...row,
+      steps: rotate(row.steps, by),
+      tokenGains: rotate(row.tokenGains, by),
+      velocities: row.velocities ? rotate(row.velocities, by) : null,
+    };
+    delete next.euclid;
+    return next;
+  });
+}
+
+/** Whether "Reset velocities" would change `sound`: its hits aren't all at the default level (or can't be read). */
+export function canResetVelocities(grid: OkDrumGrid, sound: string): boolean {
+  const row = grid.rows.find((r) => r.sound === sound);
+  if (!row?.velocities) return false;
+  const velocities = row.velocities;
+  return row.steps.some((on, i) => on && Math.abs((velocities[i] ?? DEFAULT_GAIN) - DEFAULT_GAIN) > 1e-9);
+}
+
+/**
+ * Write every hit of one row back at the default level. `.gain()` mode drops the param (no gain = default);
+ * token mode writes plain tokens, baking any track gain into the other rows first (`writeVelocities`).
+ */
+export function resetVelocities(grid: OkDrumGrid, sound: string, gain: ParamValue | undefined): DrumWrite | null {
+  const row = grid.rows.find((r) => r.sound === sound);
+  if (!row) return null;
+  if (grid.velocityMode === "param") return { pattern: drumGridMini(grid.rows), gain: null };
+  return writeVelocities(
+    grid,
+    sound,
+    row.steps.map((on) => (on ? DEFAULT_GAIN : 0)),
+    gain,
+  );
+}

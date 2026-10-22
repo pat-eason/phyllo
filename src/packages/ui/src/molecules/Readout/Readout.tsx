@@ -6,6 +6,7 @@ import {
   useState,
   type ComponentPropsWithoutRef,
   type KeyboardEvent,
+  type MouseEvent,
 } from "react";
 import styles from "./Readout.module.css";
 
@@ -43,6 +44,8 @@ export interface ReadoutCell {
   minWidth?: number;
   /** 15 px value instead of 18. Defaults to true for the `key` and `cycle` cells. */
   compact?: boolean;
+  /** Right-click on the cell, for a context menu. Also fires from a button inside the cell. */
+  onContextMenu?: (event: MouseEvent<HTMLElement>) => void;
   /**
    * Live feed for values that change every animation frame (position, cycle). The cell writes each text
    * straight to its DOM node and never re-renders; `value` is only the initial text. Return an unsubscribe.
@@ -73,7 +76,7 @@ export const Readout = forwardRef<HTMLDivElement, ReadoutProps>(function Readout
 });
 
 function Cell({ cell }: { cell: ReadoutCell }) {
-  const { id, value, caption, mono = false, onActivate, onEdit, onNudge, onCaptionClick, captionLabel, label, minWidth, subscribe } = cell;
+  const { id, value, caption, mono = false, onActivate, onEdit, onNudge, onCaptionClick, captionLabel, label, minWidth, subscribe, onContextMenu } = cell;
   const compact = cell.compact ?? (id === "key" || id === "cycle");
   const interactive = Boolean(onActivate ?? onEdit);
   const [editing, setEditing] = useState(false);
@@ -198,7 +201,7 @@ function Cell({ cell }: { cell: ReadoutCell }) {
     return (
       <>
         <span className={styles["rule"]} aria-hidden="true" />
-        <div className={styles["cell"]} data-interactive="" style={style} data-cell={id}>
+        <div className={styles["cell"]} data-interactive="" style={style} data-cell={id} onContextMenu={onContextMenu}>
           {valuePart}
           <button type="button" className={styles["captionButton"]} aria-label={captionLabel} onClick={onCaptionClick}>
             {caption}
@@ -212,7 +215,7 @@ function Cell({ cell }: { cell: ReadoutCell }) {
     <>
       <span className={styles["rule"]} aria-hidden="true" />
       {interactive ? (
-        <div className={styles["cell"]} data-interactive="" style={style} data-cell={id}>
+        <div className={styles["cell"]} data-interactive="" style={style} data-cell={id} onContextMenu={onContextMenu}>
           {editing ? (
             <div className={styles["button"]}>
               {body}
@@ -238,7 +241,7 @@ function Cell({ cell }: { cell: ReadoutCell }) {
           )}
         </div>
       ) : (
-        <div className={styles["cell"]} style={style} data-cell={id} aria-live="off">
+        <div className={styles["cell"]} style={style} data-cell={id} aria-live="off" onContextMenu={onContextMenu}>
           {body}
           {captionEl}
         </div>

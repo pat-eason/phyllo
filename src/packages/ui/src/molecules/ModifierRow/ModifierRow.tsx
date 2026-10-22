@@ -1,6 +1,7 @@
 import {
   forwardRef,
   useEffect,
+  useEffectEvent,
   useId,
   useRef,
   useState,
@@ -32,6 +33,11 @@ export interface ModifierRowProps extends Omit<ComponentPropsWithoutRef<"div">, 
   onRemove: () => void;
   /** Inline edit: double-click the code or press Enter on it; Enter commits, Esc cancels. Omit for read-only code. */
   onEdit?: (code: string) => void;
+  /**
+   * Opens the inline code editor from outside (a context menu's "Edit code"): each time this changes to a positive
+   * number the editor opens, like a double-click. The value it has on mount is ignored; 0 never opens it.
+   */
+  editRequest?: number;
   /** The code doesn't parse: `--ph-rec` border and the message under the row. */
   error?: string;
   /** Extra props for the handle from an external DnD library. Its own `onPointerDown` can `preventDefault()` to opt out. */
@@ -58,6 +64,7 @@ export const ModifierRow = forwardRef<HTMLDivElement, ModifierRowProps>(function
     onMove,
     onRemove,
     onEdit,
+    editRequest = 0,
     error,
     dragHandleProps,
     reorderLabel,
@@ -91,6 +98,14 @@ export const ModifierRow = forwardRef<HTMLDivElement, ModifierRowProps>(function
   }, [editing]);
 
   useEffect(() => () => stopDrag.current?.(), []);
+
+  const seenRequest = useRef(editRequest);
+  const beginEdit = useEffectEvent(() => startEdit());
+  useEffect(() => {
+    if (editRequest === seenRequest.current) return;
+    seenRequest.current = editRequest;
+    if (editRequest > 0) beginEdit();
+  }, [editRequest]);
 
   function startEdit() {
     if (!onEdit) return;

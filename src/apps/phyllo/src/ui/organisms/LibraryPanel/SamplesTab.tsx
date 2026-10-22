@@ -8,6 +8,7 @@ import { GroupHeading, SampleList } from "./parts";
 import { shortPath } from "./soundRefs";
 import type { LinkedFolder, SampleFolders } from "./useSampleFolders";
 import type { LibraryActions } from "./useLibraryActions";
+import { useFolderMenu } from "./useLibraryMenus";
 import styles from "./LibraryPanel.module.css";
 
 /** Files listed per folder before "Show all". */
@@ -43,10 +44,11 @@ interface FolderSectionProps {
   mode: UiMode;
   query: string;
   actions: LibraryActions;
-  onUnlink(): void;
+  samples: SampleFolders;
 }
 
-function FolderSection({ folder, names, mode, query, actions, onUnlink }: FolderSectionProps) {
+function FolderSection({ folder, names, mode, query, actions, samples }: FolderSectionProps) {
+  const menu = useFolderMenu(samples, folder.path);
   const [open, setOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const listId = useId();
@@ -61,7 +63,8 @@ function FolderSection({ folder, names, mode, query, actions, onUnlink }: Folder
   const count = folder.scan.status === "loading" ? "…" : String(folder.scan.files.length);
 
   return (
-    <li className={styles["folder"]}>
+    // Right-click (or Shift+F10 on the folder button) anywhere on the folder; a sample row inside has its own menu.
+    <li className={styles["folder"]} {...menu}>
       <button
         type="button"
         className={styles["folderToggle"]}
@@ -77,7 +80,7 @@ function FolderSection({ folder, names, mode, query, actions, onUnlink }: Folder
       </button>
       <div className={styles["folderMeta"]}>
         <StatusDot status={status.dot} label={status.label} labelTone={status.dot === "ok" ? "accent" : "default"} />
-        <IconButton icon="close" label={`Unlink ${folder.path}`} size={26} variant="plain" onClick={onUnlink} />
+        <IconButton icon="close" label={`Unlink ${folder.path}`} size={26} variant="plain" onClick={() => samples.unlink(folder.path)} />
       </div>
       <div id={listId} hidden={!expanded}>
         {matches.length === 0 ? (
@@ -138,7 +141,7 @@ export function SamplesTab({ mode, query, actions, samples, onClearSearch }: Sam
             mode={mode}
             query={query}
             actions={actions}
-            onUnlink={() => samples.unlink(folder.path)}
+            samples={samples}
           />
         ))}
       </ul>

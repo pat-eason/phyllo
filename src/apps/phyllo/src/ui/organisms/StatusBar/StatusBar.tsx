@@ -4,6 +4,7 @@ import { StatusDot } from "@phyllo/ui";
 import {
   useAppStores,
   useCodeDrawer,
+  useContextMenuTrigger,
   useEngine,
   useNative,
   useProjectFile,
@@ -11,9 +12,11 @@ import {
   useSettings,
 } from "../../../hooks";
 import { formatAutosaved, formatClock } from "../../../state/format";
+import { useToasts } from "../../toasts";
 import { useOpenSettings } from "../AppHeader/useOpenSettings";
 import { EvaluatedAgo } from "./EvaluatedAgo";
 import styles from "./StatusBar.module.css";
+import { pathMenuEntries } from "./pathMenu";
 import { StatusNotices } from "./StatusNotices";
 import { describeAudioOutput, describeEngineError, describeMidiInput, tildify } from "./statusText";
 
@@ -109,6 +112,18 @@ function MidiInput() {
 function SaveState() {
   const { filePath, autosavedAt, lastSavedAt, saveError } = useProjectFile();
   const native = useNative();
+  const toasts = useToasts();
+
+  const reveal = (path: string) => void native.revealInFinder(path);
+  const copyPath = (path: string) => {
+    navigator.clipboard.writeText(path).catch((caught: unknown) => {
+      // Clipboard access can be refused (permissions, unfocused window); say so instead of failing silently.
+      toasts.push({ title: "Couldn't copy the path", body: caught instanceof Error ? caught.message : String(caught), tone: "error" });
+    });
+  };
+  const pathMenu = useContextMenuTrigger(() =>
+    filePath === null ? null : { label: "File path", entries: pathMenuEntries({ reveal: () => reveal(filePath), copyPath: () => copyPath(filePath) }) },
+  );
 
   if (saveError !== null) {
     return <StatusDot className={styles["dot"]} status="warn" label={`Couldn't save · ${saveError}`} />;
@@ -126,7 +141,8 @@ function SaveState() {
         type="button"
         className={styles["link"]}
         title="Show in Finder"
-        onClick={() => void native.revealInFinder(filePath)}
+        onClick={() => reveal(filePath)}
+        {...pathMenu}
       >
         {tildify(filePath)}
       </button>

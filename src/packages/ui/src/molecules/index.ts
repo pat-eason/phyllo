@@ -1,5 +1,6 @@
 // Molecules are re-exported from here as they are added (one folder per component).
 export * from "./Clip";
+export * from "./ContextMenu";
 export * from "./EmptyState";
 export * from "./GrooveCard";
 export * from "./ModifierRow";

@@ -3,6 +3,7 @@ import type { Project, ProjectAction, Track, TrackKind } from "@phyllo/model";
 import type { SoundRef } from "@phyllo/ui";
 import { useMemo } from "react";
 import { useAppStores } from "../../../hooks";
+import type { ClipboardItem } from "../../../state/clipboardStore";
 import { layerSoundActions, replaceSoundActions, trackForSound } from "./soundDrop";
 
 /** Where a library sound was dropped. */
@@ -18,7 +19,15 @@ export interface TimelineActions {
   endGesture(): void;
   select(trackId: string | null): void;
   seek(bar: number): void;
+  /** Moves the playhead to `bar` and starts playback when stopped (Ruler menu "Play from here"). */
+  playFrom(bar: number): void;
+  /** The 1-based bar under the playhead right now. */
+  playheadBar(): number;
   setLoop(patch: Partial<Project["loop"]>): void;
+  toggleLoop(): void;
+  /** What Copy last put on the app clipboard (context menus). */
+  clipboard(): ClipboardItem | null;
+  copy(item: ClipboardItem): void;
   /** `othersOnly` (⌘-click): mute every other track and unmute this one; again on that exact state unmutes them all. */
   setMute(trackId: string, mute: boolean, othersOnly: boolean): void;
   /** `exclusive` (⌥-click): solo only this track, or clear every solo when it already was the only one. */
@@ -62,7 +71,15 @@ export function useTimelineActions(): TimelineActions {
       endGesture: () => project().endGesture(),
       select: (trackId) => dispatch({ type: "ui/select", trackId }),
       seek: (bar) => transport().seek(bar),
+      playFrom(bar) {
+        transport().seek(bar);
+        if (!transport().playing) void transport().play();
+      },
+      playheadBar: () => transport().getPosition().bar,
       setLoop: (patch) => transport().setLoop(patch),
+      toggleLoop: () => transport().toggleLoop(),
+      clipboard: () => stores.clipboard.getState().item,
+      copy: (item) => stores.clipboard.getState().copy(item),
       setMute(trackId, mute, othersOnly) {
         if (!othersOnly) {
           dispatch({ type: "track/setMute", trackId, mute });

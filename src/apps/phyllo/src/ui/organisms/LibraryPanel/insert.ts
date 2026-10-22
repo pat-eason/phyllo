@@ -42,7 +42,8 @@ function uniqueName(base: string, existing: readonly Pick<Track, "name">[]): str
   return `${base} ${n}`;
 }
 
-function newTrackActions(project: Project, ref: SoundRef): ProjectAction[] {
+/** A new track playing `ref`, selected: what inserting a sound does with no compatible track selected. */
+export function newTrackActions(project: Project, ref: SoundRef): ProjectAction[] {
   const base = {
     existing: project.tracks,
     lengthBars: project.lengthBars,

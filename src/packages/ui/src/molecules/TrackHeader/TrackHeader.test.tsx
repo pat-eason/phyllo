@@ -1,8 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRef } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { TrackHeader, type TrackHeaderProps } from "./TrackHeader";
+import { TrackHeader, type TrackHeaderProps, type TrackHeaderRenameHandle } from "./TrackHeader";
 
 function setup(overrides: Partial<TrackHeaderProps> = {}) {
   const handlers = { onSelect: vi.fn(), onMuteChange: vi.fn(), onSoloChange: vi.fn() };
@@ -207,6 +207,34 @@ describe("TrackHeader", () => {
     // Assert
     expect(onRename).not.toHaveBeenCalled();
     expect(screen.getByRole("button", { name: "Kick" })).toBeInTheDocument();
+  });
+
+  it("should start the inline rename from its rename handle", () => {
+    // Arrange
+    const renameHandle = createRef<TrackHeaderRenameHandle>();
+    setup({ onRename: vi.fn(), renameHandle });
+
+    // Act
+    act(() => renameHandle.current?.start());
+
+    // Assert
+    expect(screen.getByRole("textbox", { name: "Rename track Kick" })).toHaveFocus();
+  });
+
+  it("should pass context-menu and key handlers through to the header", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const onContextMenu = vi.fn();
+    const onKeyDown = vi.fn();
+    setup({ onContextMenu, onKeyDown });
+
+    // Act
+    await user.pointer({ keys: "[MouseRight]", target: screen.getByRole("button", { name: "Kick" }) });
+    await user.keyboard("{Shift>}{F10}{/Shift}");
+
+    // Assert
+    expect(onContextMenu).toHaveBeenCalledTimes(1);
+    expect(onKeyDown).toHaveBeenCalled();
   });
 
   it("should not enter rename mode without onRename", async () => {

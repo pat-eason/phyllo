@@ -1,3 +1,5 @@
+import type { MenuEntry } from '@phyllo/ui';
+
 import type {
   ExportBeginOptions,
   ExportFinishedNotification,
@@ -149,6 +151,19 @@ export interface NativeApi {
   menuSetState(state: MenuItemState): Promise<void>;
   /** Replace File › Open Recent (first 10 shown, in the given order). */
   menuSetRecent(items: RecentItem[]): Promise<void>;
+
+  // Context menus (right-click, Shift+F10). Most callers want `useContextMenu()`, which falls back to a DOM menu.
+  /**
+   * Show `entries` as an OS-drawn context menu at `at` (CSS px from the window's top-left); a chosen item's
+   * `onSelect` runs. Resolves `true` once the menu was shown (on macOS: once it has closed again), `false` where
+   * there is no native menu (browser), so the caller draws its own.
+   */
+  contextMenuPopup(entries: MenuEntry[], at: { x: number; y: number }): Promise<boolean>;
+  /**
+   * Draw OS chrome (context menus, the title bar) in the app's theme instead of the system one; `null` follows the
+   * system again. Browser: no-op.
+   */
+  windowSetTheme(theme: 'dark' | 'light' | null): Promise<void>;
 
   // Windows
   /**

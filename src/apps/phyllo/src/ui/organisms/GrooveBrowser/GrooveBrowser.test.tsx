@@ -36,8 +36,10 @@ async function setup({ library, props, empty = false }: SetupOptions = {}) {
 
 const names = () => screen.getAllByRole("heading", { level: 3 }).map((heading) => heading.textContent);
 
+/** Right-clicks `element` and waits for the menu, which opens after a microtask. */
 async function rightClick(user: UserEvent, element: HTMLElement) {
   await user.pointer({ keys: "[MouseRight]", target: element });
+  return screen.findByRole("menu");
 }
 
 describe("GrooveBrowser", () => {
@@ -316,25 +318,25 @@ describe("GrooveBrowser", () => {
     await screen.findByText("12 grooves");
 
     // Act
-    await rightClick(user, screen.getByRole("button", { name: "Open Night bus" }));
+    const menu = await rightClick(user, screen.getByRole("button", { name: "Open Night bus" }));
 
     // Assert
-    const menu = screen.getByRole("menu");
     expect(within(menu).getAllByRole("menuitem").map((item) => item.textContent)).toEqual([
       "Open",
-      "Rename",
+      "Rename…",
       "Duplicate",
-      "Edit tags",
+      "Edit tags…",
       "Show in Finder",
-      "Move to Trash",
+      "Move to Trash…",
     ]);
+    expect(within(menu).getByRole("menuitemcheckbox", { name: "Favourite" })).toHaveAttribute("aria-checked", "false");
     expect(within(menu).getByRole("menuitem", { name: "Open" })).toHaveFocus();
 
     // Act
     await user.keyboard("{ArrowDown}");
 
     // Assert
-    expect(within(menu).getByRole("menuitem", { name: "Rename" })).toHaveFocus();
+    expect(within(menu).getByRole("menuitem", { name: "Rename…" })).toHaveFocus();
 
     // Act
     await user.keyboard("{Escape}");
@@ -353,7 +355,7 @@ describe("GrooveBrowser", () => {
     await user.keyboard("{Shift>}{F10}{/Shift}");
 
     // Assert
-    expect(screen.getByRole("menu")).toBeInTheDocument();
+    expect(await screen.findByRole("menu")).toBeInTheDocument();
 
     // Act
     await user.keyboard("{Escape}");
@@ -370,7 +372,7 @@ describe("GrooveBrowser", () => {
     await rightClick(user, screen.getByRole("button", { name: "Open Night bus" }));
 
     // Act
-    await user.click(screen.getByRole("menuitem", { name: "Rename" }));
+    await user.click(screen.getByRole("menuitem", { name: "Rename…" }));
     const field = screen.getByRole("textbox", { name: "Name" });
     await user.clear(field);
     await user.type(field, "Last bus{Enter}");
@@ -415,7 +417,7 @@ describe("GrooveBrowser", () => {
     await rightClick(user, screen.getByRole("button", { name: "Open Night bus" }));
 
     // Act
-    await user.click(screen.getByRole("menuitem", { name: "Move to Trash" }));
+    await user.click(screen.getByRole("menuitem", { name: "Move to Trash…" }));
 
     // Assert
     const dialog = screen.getByRole("dialog", { name: "Move Night bus to the Trash?" });
@@ -434,7 +436,7 @@ describe("GrooveBrowser", () => {
     const { user } = await setup();
     await screen.findByText("12 grooves");
     await rightClick(user, screen.getByRole("button", { name: "Open Night bus" }));
-    await user.click(screen.getByRole("menuitem", { name: "Move to Trash" }));
+    await user.click(screen.getByRole("menuitem", { name: "Move to Trash…" }));
 
     // Act
     await user.keyboard("{Escape}");
@@ -451,7 +453,7 @@ describe("GrooveBrowser", () => {
     await rightClick(user, screen.getByRole("button", { name: "Open Night bus" }));
 
     // Act
-    await user.click(screen.getByRole("menuitem", { name: "Edit tags" }));
+    await user.click(screen.getByRole("menuitem", { name: "Edit tags…" }));
     await user.type(screen.getByRole("textbox", { name: "Add a tag" }), "rainy, late{Enter}");
     await user.click(screen.getByRole("button", { name: "Remove lo-fi" }));
     await user.click(screen.getByRole("button", { name: "Save tags" }));
@@ -647,6 +649,165 @@ describe("GrooveBrowser", () => {
     // Assert
     expect(onNewGroove).toHaveBeenCalledTimes(1);
     expect(onImport).toHaveBeenCalledTimes(1);
+  });
+
+  const grooveNamed = (stores: { library: { getState(): { grooves: { name: string; favorite: boolean }[] } } }, name: string) =>
+    stores.library.getState().grooves.find((groove) => groove.name === name);
+
+  it("should show Favourite checked for a favourite groove and clear it when chosen", async () => {
+    // Arrange
+    const { user, stores } = await setup();
+    await screen.findByText("12 grooves");
+    const menu = await rightClick(user, screen.getByRole("button", { name: "Open Untitled Groove" }));
+    const favourite = within(menu).getByRole("menuitemcheckbox", { name: "Favourite" });
+    expect(favourite).toHaveAttribute("aria-checked", "true");
+
+    // Act
+    await user.click(favourite);
+
+    // Assert
+    await waitFor(() => expect(grooveNamed(stores, "Untitled Groove")?.favorite).toBe(false));
+  });
+
+  it("should select only the right-clicked row in list view", async () => {
+    // Arrange
+    const { user } = await setup({ library: { view: "list" } });
+    await screen.findByText("12 grooves");
+
+    // Act
+    const menu = await rightClick(user, screen.getByRole("row", { name: /Night bus/ }));
+
+    // Assert
+    expect(screen.getByText("1 selected")).toBeInTheDocument();
+    expect(within(menu).getByRole("menuitem", { name: "Open" })).toBeInTheDocument();
+  });
+
+  it("should apply the menu to the whole selection when a selected row is right-clicked", async () => {
+    // Arrange
+    const { user } = await setup({ library: { view: "list" } });
+    await screen.findByText("12 grooves");
+    await user.keyboard("{Meta>}");
+    await user.click(screen.getByRole("button", { name: "Night bus" }));
+    await user.click(screen.getByRole("button", { name: "Kite season" }));
+    await user.keyboard("{/Meta}");
+
+    // Act
+    const menu = await rightClick(user, screen.getByRole("row", { name: /Night bus/ }));
+
+    // Assert
+    expect(within(menu).getAllByRole("menuitem").map((item) => item.textContent)).toEqual(["Edit tags…", "Favourite all", "Move to Trash…"]);
+    expect(screen.getByText("2 selected")).toBeInTheDocument();
+  });
+
+  it("should favourite every selected groove with Favourite all", async () => {
+    // Arrange
+    const { user, stores } = await setup({ library: { view: "list" } });
+    await screen.findByText("12 grooves");
+    await user.keyboard("{Meta>}");
+    await user.click(screen.getByRole("button", { name: "Night bus" }));
+    await user.click(screen.getByRole("button", { name: "Kite season" }));
+    await user.keyboard("{/Meta}");
+    await rightClick(user, screen.getByRole("row", { name: /Night bus/ }));
+
+    // Act
+    await user.click(screen.getByRole("menuitem", { name: "Favourite all" }));
+
+    // Assert
+    await waitFor(() => expect(grooveNamed(stores, "Kite season")?.favorite).toBe(true));
+    expect(grooveNamed(stores, "Night bus")?.favorite).toBe(true);
+  });
+
+  it("should offer Unfavourite all when every selected groove is a favourite", async () => {
+    // Arrange
+    const { user, stores } = await setup({ library: { view: "list" } });
+    await screen.findByText("12 grooves");
+    await user.keyboard("{Meta>}");
+    await user.click(screen.getByRole("button", { name: "Untitled Groove" }));
+    await user.click(screen.getByRole("button", { name: "Tidal study 2" }));
+    await user.keyboard("{/Meta}");
+    await rightClick(user, screen.getByRole("row", { name: /Untitled Groove/ }));
+
+    // Act
+    await user.click(screen.getByRole("menuitem", { name: "Unfavourite all" }));
+
+    // Assert
+    await waitFor(() => expect(grooveNamed(stores, "Tidal study 2")?.favorite).toBe(false));
+    expect(grooveNamed(stores, "Untitled Groove")?.favorite).toBe(false);
+  });
+
+  it("should open the list row menu from the keyboard with Shift+F10", async () => {
+    // Arrange
+    const { user } = await setup({ library: { view: "list" } });
+    await screen.findByText("12 grooves");
+    screen.getByRole("row", { name: /Night bus/ }).focus();
+
+    // Act
+    await user.keyboard("{Shift>}{F10}{/Shift}");
+
+    // Assert
+    expect(await screen.findByRole("menu")).toBeInTheDocument();
+    expect(screen.getByText("1 selected")).toBeInTheDocument();
+  });
+
+  it("should filter by a tag from its context menu", async () => {
+    // Arrange
+    const { user } = await setup();
+    await screen.findByText("12 grooves");
+    const menu = await rightClick(user, screen.getByRole("button", { name: "lo-fi 2 grooves" }));
+
+    // Act
+    await user.click(within(menu).getByRole("menuitemcheckbox", { name: "Filter by this tag" }));
+
+    // Assert
+    expect(screen.getByRole("button", { name: "lo-fi 2 grooves" })).toHaveAttribute("aria-pressed", "true");
+    expect(await screen.findByText("2 grooves", { selector: "[role='status']" })).toBeInTheDocument();
+  });
+
+  it("should rename a tag from its context menu in a pre-targeted Manage tags dialog", async () => {
+    // Arrange
+    const { user } = await setup();
+    await screen.findByText("12 grooves");
+    const menu = await rightClick(user, screen.getByRole("button", { name: "lo-fi 2 grooves" }));
+
+    // Act
+    await user.click(within(menu).getByRole("menuitem", { name: "Rename…" }));
+    const field = screen.getByRole("textbox", { name: "New name for lo-fi" });
+    await user.clear(field);
+    await user.type(field, "mellow{Enter}");
+
+    // Assert
+    expect(await screen.findByRole("button", { name: "mellow 2 grooves" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "lo-fi 2 grooves" })).not.toBeInTheDocument();
+  });
+
+  it("should merge a tag into another from the Merge into submenu", async () => {
+    // Arrange
+    const { user } = await setup();
+    await screen.findByText("12 grooves");
+    await rightClick(user, screen.getByRole("button", { name: "study 1 groove" }));
+
+    // Act
+    await user.click(screen.getByRole("menuitem", { name: /Merge into/ }));
+    await user.click(screen.getByRole("menuitem", { name: "sketch" }));
+
+    // Assert
+    expect(await screen.findByRole("button", { name: "sketch 4 grooves" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^study/ })).not.toBeInTheDocument();
+  });
+
+  it("should confirm before deleting a tag from its context menu", async () => {
+    // Arrange
+    const { user } = await setup();
+    await screen.findByText("12 grooves");
+    await rightClick(user, screen.getByRole("button", { name: "study 1 groove" }));
+
+    // Act
+    await user.click(screen.getByRole("menuitem", { name: "Delete…" }));
+    const dialog = screen.getByRole("dialog", { name: "Manage tags" });
+    await user.click(within(dialog).getByRole("button", { name: "Delete tag" }));
+
+    // Assert
+    await waitFor(() => expect(screen.queryByRole("button", { name: "study 1 groove" })).not.toBeInTheDocument());
   });
 
   it("should expose the sidebar as a labelled landmark with the footnote", async () => {

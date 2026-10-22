@@ -6,6 +6,8 @@ import type { StoreApi } from "zustand/vanilla";
 import type { NativeApi } from "../native/api";
 import { createCachedUrlResolver } from "../native/soundCache";
 import { createNativeBridge } from "./bridge";
+import { createClipboardStore } from "./clipboardStore";
+import type { ClipboardStoreState } from "./clipboardStore";
 import { createEngineHost } from "./engineHost";
 import type { EngineHost } from "./engineHost";
 import { createEngineStore } from "./engineStore";
@@ -83,6 +85,8 @@ export interface AppStores {
   midiInput: StoreApi<MidiInputState>;
   /** MIDI record onto the selected track (SPEC §6.1). */
   recorder: StoreApi<RecorderState>;
+  /** Copy/Paste of tracks, clips, modifiers and step rows from context menus. */
+  clipboard: StoreApi<ClipboardStoreState>;
   /** The lazily created engine (export pipeline, tests). */
   engineHost: EngineHost;
   /** Load settings, apply their side effects, scan + watch the library. Idempotent. */
@@ -238,6 +242,7 @@ export function createAppStores(deps: AppDeps): AppStores {
     samples: samples.store,
     midiInput: midiInput.store,
     recorder: recorder.store,
+    clipboard: createClipboardStore(),
     engineHost,
     start() {
       started ??= (async () => {

@@ -1,6 +1,8 @@
 import type { Track } from "@phyllo/model";
 import { Button, TextField } from "@phyllo/ui";
 import { useLayoutEffect, useRef, useState } from "react";
+import { useContextMenuTrigger } from "../../../hooks";
+import { useTrackMenu } from "../../contextMenu";
 import { friendlyDescription } from "./inspectorModel";
 import styles from "./Inspector.module.css";
 
@@ -18,6 +20,9 @@ export function InspectorHeader({ track, onRename, onEditPattern }: InspectorHea
   const input = useRef<HTMLInputElement | null>(null);
   const refocus = useRef(false);
   const editing = draft !== null;
+  const buildTrackMenu = useTrackMenu();
+  // While the name field is open it keeps the browser's own text menu.
+  const menu = useContextMenuTrigger(() => (editing ? null : buildTrackMenu(track.id, { rename: () => setDraft(track.name) })));
 
   useLayoutEffect(() => {
     if (editing) {
@@ -38,7 +43,7 @@ export function InspectorHeader({ track, onRename, onEditPattern }: InspectorHea
   }
 
   return (
-    <header className={styles["header"]}>
+    <header className={styles["header"]} {...menu}>
       <span className={styles["tile"]} style={{ background: track.color }} aria-hidden="true" />
       <div className={styles["titles"]}>
         {editing ? (
