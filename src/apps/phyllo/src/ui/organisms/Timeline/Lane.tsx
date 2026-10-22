@@ -238,6 +238,7 @@ export const Lane = memo(function Lane({
         onMuteChange={(mute) => actions.setMute(trackId, mute)}
         onSoloChange={(solo, event) => actions.setSolo(trackId, solo, event.altKey)}
         onRename={(name) => actions.dispatch({ type: "track/update", trackId, patch: { name } })}
+        onRemove={() => actions.dispatch({ type: "track/remove", trackId })}
       />
       <div
         ref={lane}
