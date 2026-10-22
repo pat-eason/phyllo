@@ -17,6 +17,7 @@ import {
   sectionName,
 } from "./codeModel";
 import { useCodeEditorPrefs } from "../SettingsLayout";
+import { navigate } from "../../shell/router";
 import { CodeView } from "./CodeView";
 import type { CodeViewError } from "./CodeView";
 import { EditCodePanel } from "./EditCodePanel";
@@ -33,6 +34,8 @@ export interface CodeDrawerProps extends Omit<HTMLAttributes<HTMLElement>, "chil
 }
 
 type CopyState = "idle" | "copied" | "failed";
+/** What the last copy put on the clipboard. */
+type CopyKind = "link" | "code";
 
 const DEFAULT_HEIGHT = 196;
 const COPY_FEEDBACK_MS = 2500;
@@ -78,6 +81,7 @@ export function CodeDrawer({ defaultHeight = DEFAULT_HEIGHT, className, ...rest 
 
   const [editSeed, setEditSeed] = useState<string | null>(null);
   const [copyState, setCopyState] = useState<CopyState>("idle");
+  const [copyKind, setCopyKind] = useState<CopyKind>("link");
   const copyTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => () => clearTimeout(copyTimer.current), []);
 
@@ -102,18 +106,21 @@ export function CodeDrawer({ defaultHeight = DEFAULT_HEIGHT, className, ...rest 
     { value: "song", label: "Whole song · arrange()", disabled: editing },
   ];
 
-  const copyLink = async () => {
+  const copyToClipboard = async (kind: CopyKind, text: string) => {
     clearTimeout(copyTimer.current);
+    setCopyKind(kind);
     try {
-      await navigator.clipboard.writeText(toShareUrl(code));
+      await navigator.clipboard.writeText(text);
       setCopyState("copied");
-      complete(SHARE_TIP_STEP);
+      if (kind === "link") complete(SHARE_TIP_STEP);
     } catch {
       // Clipboard access can be refused (permissions, unfocused window); say so instead of failing silently.
       setCopyState("failed");
     }
     copyTimer.current = setTimeout(() => setCopyState("idle"), COPY_FEEDBACK_MS);
   };
+  const copyLink = () => copyToClipboard("link", toShareUrl(code));
+  const copyCode = () => copyToClipboard("code", code);
 
   // Edit code always works on the whole song: `applyCode` replaces every track, so section code would drop the rest.
   const startEditing = () => {
@@ -166,7 +173,7 @@ export function CodeDrawer({ defaultHeight = DEFAULT_HEIGHT, className, ...rest 
               </Button>
             ) : null}
             <Button size="sm" onClick={() => void copyLink()}>
-              {copyState === "copied" ? "Link copied" : "Copy strudel.cc link"}
+              {copyState === "copied" && copyKind === "link" ? "Link copied" : "Copy strudel.cc link"}
             </Button>
           </div>
         ) : null}
@@ -176,8 +183,12 @@ export function CodeDrawer({ defaultHeight = DEFAULT_HEIGHT, className, ...rest 
       </div>
       <div className={styles["messages"]} aria-live="polite">
         {errorBanner ? <p className={styles["errorBanner"]}>{errorBanner}</p> : null}
-        {copyState === "copied" ? <p className={styles["visuallyHidden"]}>strudel.cc link copied to the clipboard</p> : null}
-        {copyState === "failed" ? <p className={styles["errorBanner"]}>Couldn&apos;t copy the link. Check clipboard permissions.</p> : null}
+        {copyState === "copied" ? (
+          <p className={styles["visuallyHidden"]}>{copyKind === "link" ? "strudel.cc link copied to the clipboard" : "Code copied to the clipboard"}</p>
+        ) : null}
+        {copyState === "failed" ? (
+          <p className={styles["errorBanner"]}>Couldn&apos;t copy the {copyKind === "link" ? "link" : "code"}. Check clipboard permissions.</p>
+        ) : null}
       </div>
       {open ? (
         <div id={bodyId} className={styles["body"]} style={bodyStyle}>
@@ -192,6 +203,15 @@ export function CodeDrawer({ defaultHeight = DEFAULT_HEIGHT, className, ...rest 
               error={codeError}
               lineNumbers={editorPrefs.lineNumbers}
               onSetPattern={(trackId, pattern) => dispatch({ type: "track/setPattern", trackId, pattern })}
+              menuCommands={{
+                selectTrack: (trackId) => dispatch({ type: "ui/select", trackId }),
+                editPattern: (trackId) => {
+                  dispatch({ type: "ui/select", trackId });
+                  navigate({ screen: "pattern", trackId });
+                },
+                copyCode: () => void copyCode(),
+                copyLink: () => void copyLink(),
+              }}
             />
           )}
         </div>

@@ -13,27 +13,33 @@ export interface ManageTagsDialogProps {
   /** Rewrites `from` in every groove that has it: `to` renames or merges, null deletes. Resolves with an error or null. */
   onRewrite: (from: string, to: string | null) => Promise<string | null>;
   onClose: () => void;
+  /** Open with this tag's rename / merge / delete panel already showing (the sidebar's tag menu). */
+  initialPanel?: Panel;
 }
 
-type Panel = { tag: string; mode: "rename" | "merge" | "delete" };
+export type Panel = { tag: string; mode: "rename" | "merge" | "delete" };
 
 const COLOR_UNAVAILABLE = "Tag colors come from the tag's name, so they can't be changed yet.";
+
+function firstOtherTag(tags: TagInfo[], tag: string): string {
+  return tags.find((t) => !sameTag(t.name, tag))?.name ?? "";
+}
 
 /**
  * Rename, merge or delete a tag across every file that uses it. Recolor is shown disabled: a tag's color is derived
  * from its name (`tagColor`) and the file format has no field to store a chosen one.
  */
-export function ManageTagsDialog({ tags, onRewrite, onClose }: ManageTagsDialogProps) {
-  const [panel, setPanel] = useState<Panel | null>(null);
-  const [draft, setDraft] = useState("");
-  const [mergeInto, setMergeInto] = useState("");
+export function ManageTagsDialog({ tags, onRewrite, onClose, initialPanel }: ManageTagsDialogProps) {
+  const [panel, setPanel] = useState<Panel | null>(initialPanel ?? null);
+  const [draft, setDraft] = useState(initialPanel?.tag ?? "");
+  const [mergeInto, setMergeInto] = useState(() => (initialPanel ? firstOtherTag(tags, initialPanel.tag) : ""));
   const action = useGuardedAction();
 
   function open(tag: string, mode: Panel["mode"]) {
     action.clearError();
     setPanel({ tag, mode });
     setDraft(tag);
-    setMergeInto(tags.find((t) => !sameTag(t.name, tag))?.name ?? "");
+    setMergeInto(firstOtherTag(tags, tag));
   }
 
   async function apply(from: string, to: string | null) {

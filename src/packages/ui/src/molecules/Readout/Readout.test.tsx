@@ -230,6 +230,40 @@ describe("Readout", () => {
     expect(onEdit).toHaveBeenCalledWith("128");
   });
 
+  it("should call onContextMenu for a right-click on its own cell only", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const onContextMenu = vi.fn();
+    render(
+      <Readout
+        cells={[
+          { id: "key", value: "C minor", caption: "KEY · 4/4", onContextMenu },
+          { id: "cycle", value: "12.25", caption: "CYCLE" },
+        ]}
+      />,
+    );
+
+    // Act
+    await user.pointer({ keys: "[MouseRight]", target: screen.getByText("CYCLE") });
+    await user.pointer({ keys: "[MouseRight]", target: screen.getByText("C minor") });
+
+    // Assert
+    expect(onContextMenu).toHaveBeenCalledTimes(1);
+  });
+
+  it("should call onContextMenu for a right-click on an interactive cell's button", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const onContextMenu = vi.fn();
+    render(<Readout cells={[{ id: "bpm", value: "120", caption: "BPM · TAP", label: "Tempo", onEdit: vi.fn(), onContextMenu }]} />);
+
+    // Act
+    await user.pointer({ keys: "[MouseRight]", target: screen.getByRole("button", { name: "Tempo" }) });
+
+    // Assert
+    expect(onContextMenu).toHaveBeenCalledTimes(1);
+  });
+
   it("should name the caption button with captionLabel when given", () => {
     // Arrange / Act
     render(<Readout cells={[{ id: "bpm", value: "120", caption: "BPM · TAP", captionLabel: "Tap tempo", onCaptionClick: () => undefined }]} />);

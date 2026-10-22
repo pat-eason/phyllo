@@ -35,6 +35,20 @@ describe("ViewTabs", () => {
     expect(onNavigate).toHaveBeenCalledWith("mixer");
   });
 
+  it("should pass the tab handlers to every tab", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const onContextMenu = vi.fn();
+    render(<ViewTabs current="arrange" onNavigate={() => {}} tabHandlers={{ onContextMenu }} />);
+
+    // Act
+    await user.pointer({ keys: "[MouseRight]", target: screen.getByRole("button", { name: "Mixer" }) });
+    await user.pointer({ keys: "[MouseRight]", target: screen.getByRole("button", { name: "Arrange" }) });
+
+    // Assert
+    expect(onContextMenu).toHaveBeenCalledTimes(2);
+  });
+
   it("should not navigate when the current view is clicked", async () => {
     // Arrange
     const user = userEvent.setup();

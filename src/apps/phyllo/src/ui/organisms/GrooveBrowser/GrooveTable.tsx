@@ -2,9 +2,9 @@ import { GrooveCard, Icon } from "@phyllo/ui";
 import type { GrooveSummary, LibrarySort } from "@phyllo/model";
 import { useRef, useState } from "react";
 import type { KeyboardEvent, MouseEvent } from "react";
+import { isContextMenuKey } from "../../../hooks";
 import { toCardData } from "./format";
 import styles from "./GrooveTable.module.css";
-import { contextAnchorFromKey } from "./interaction";
 import type { GrooveHandlers } from "./interaction";
 import type { RowSelection } from "./useRowSelection";
 
@@ -56,7 +56,7 @@ function ariaSortFor(column: Column, sort: LibrarySort): "ascending" | "descendi
  * Table view. Rows are GrooveCard rows with a roving tab stop: Up/Down/Home/End move, Shift+Up/Down extend the
  * selection, Space toggles, Enter opens, Esc clears. Click selects, ⌘/Ctrl-click toggles, ⇧-click selects a range.
  */
-export function GrooveTable({ grooves, now, sort, onSortChange, selection, previewingPath, onOpen, onPreview, onFavoriteChange, onContextMenu }: GrooveTableProps) {
+export function GrooveTable({ grooves, now, sort, onSortChange, selection, previewingPath, onOpen, onPreview, onFavoriteChange, onContextMenu, onContextKey }: GrooveTableProps) {
   const [activePath, setActivePath] = useState<string | null>(null);
   const rows = useRef(new Map<string, HTMLElement>());
 
@@ -70,10 +70,8 @@ export function GrooveTable({ grooves, now, sort, onSortChange, selection, previ
   }
 
   function handleRowKeyDown(event: KeyboardEvent<HTMLElement>, groove: GrooveSummary, index: number) {
-    const anchor = contextAnchorFromKey(event);
-    if (anchor) {
-      event.preventDefault();
-      onContextMenu(groove, anchor);
+    if (isContextMenuKey(event)) {
+      onContextKey(groove, event);
       return;
     }
     // Keys typed on a button inside the row (play, name, favorite) keep their own meaning.
@@ -161,10 +159,7 @@ export function GrooveTable({ grooves, now, sort, onSortChange, selection, previ
               }}
               onClickCapture={(event) => handleRowClickCapture(event, groove)}
               onKeyDown={(event) => handleRowKeyDown(event, groove, index)}
-              onContextMenu={(event) => {
-                event.preventDefault();
-                onContextMenu(groove, { x: event.clientX, y: event.clientY, trigger: null });
-              }}
+              onContextMenu={(event) => onContextMenu(groove, event)}
               onOpen={() => onOpen(groove)}
               onPreview={() => onPreview(groove)}
               onFavoriteChange={(favorite) => onFavoriteChange(groove, favorite)}

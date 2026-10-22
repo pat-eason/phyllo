@@ -3,9 +3,12 @@ import type { LibraryCollection, TagInfo } from "@phyllo/model";
 import { tagColor } from "@phyllo/model";
 import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
+import { useContextMenuTrigger } from "../../../hooks";
 import { grooveCount } from "./format";
 import styles from "./LibrarySidebar.module.css";
-import { cleanTag } from "./tags";
+import { cleanTag, sameTag } from "./tags";
+import { tagMenuEntries } from "./tagMenu";
+import type { TagMenuCommands } from "./tagMenu";
 
 export interface LibrarySidebarProps {
   collection: LibraryCollection;
@@ -21,6 +24,35 @@ export interface LibrarySidebarProps {
   selectedGrooveCount: number;
   onCreateTag: (name: string) => void;
   onManageTags: () => void;
+  /** Tag menu: Rename… and Delete… open Manage tags on that tag; Merge into rewrites it straight away. */
+  onRenameTag: (tag: string) => void;
+  onMergeTag: (tag: string, into: string) => void;
+  onDeleteTag: (tag: string) => void;
+}
+
+interface TagButtonProps {
+  tag: TagInfo;
+  allTags: readonly string[];
+  pressed: boolean;
+  commands: TagMenuCommands;
+}
+
+/** One tag filter; right-click or Shift+F10 opens its menu. */
+function TagButton({ tag, allTags, pressed, commands }: TagButtonProps) {
+  const trigger = useContextMenuTrigger(() => ({
+    label: `Tag ${tag.name}`,
+    entries: tagMenuEntries(tag.name, allTags, pressed, commands),
+  }));
+  return (
+    <button type="button" className={styles["tag"]} aria-pressed={pressed} onClick={() => commands.toggleFilter(tag.name)} {...trigger}>
+      <span className={styles["dot"]} style={{ background: tag.color }} aria-hidden="true" />
+      <span className={styles["tagName"]}>{tag.name}</span>
+      {" "}
+      <span className={styles["count"]}>{tag.count}</span>
+      {" "}
+      <span className={styles["countUnit"]}>{tag.count === 1 ? "groove" : "grooves"}</span>
+    </button>
+  );
 }
 
 const COLLECTIONS: { id: LibraryCollection; label: string; count: keyof LibrarySidebarProps["counts"] }[] = [
@@ -42,7 +74,12 @@ export function LibrarySidebar({
   selectedGrooveCount,
   onCreateTag,
   onManageTags,
+  onRenameTag,
+  onMergeTag,
+  onDeleteTag,
 }: LibrarySidebarProps) {
+  const tagCommands: TagMenuCommands = { toggleFilter: onToggleTag, rename: onRenameTag, merge: onMergeTag, delete: onDeleteTag };
+  const tagNames = tags.map((t) => t.name);
   const [creating, setCreating] = useState(false);
   const [draft, setDraft] = useState("");
   const radioRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -123,22 +160,10 @@ export function LibrarySidebar({
         </div>
         <ul className={styles["tagList"]}>
           {tags.map((tag) => {
-            const pressed = selectedTags.some((t) => t.toLowerCase() === tag.name.toLowerCase());
+            const pressed = selectedTags.some((t) => sameTag(t, tag.name));
             return (
               <li key={tag.name}>
-                <button
-                  type="button"
-                  className={styles["tag"]}
-                  aria-pressed={pressed}
-                  onClick={() => onToggleTag(tag.name)}
-                >
-                  <span className={styles["dot"]} style={{ background: tag.color }} aria-hidden="true" />
-                  <span className={styles["tagName"]}>{tag.name}</span>
-                  {" "}
-                  <span className={styles["count"]}>{tag.count}</span>
-                  {" "}
-                  <span className={styles["countUnit"]}>{tag.count === 1 ? "groove" : "grooves"}</span>
-                </button>
+                <TagButton tag={tag} allTags={tagNames} pressed={pressed} commands={tagCommands} />
               </li>
             );
           })}
