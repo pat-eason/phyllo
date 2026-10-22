@@ -4,7 +4,7 @@ import { IconButton, Readout, TransportControls } from "@phyllo/ui";
 import type { ReadoutCell, ReadoutSubscribe } from "@phyllo/ui";
 import { useMemo, useRef } from "react";
 import type { KeyboardEvent } from "react";
-import { useProjectSelector, useSettings, useTransport, useUiMode } from "../../../hooks";
+import { useCanRecord, useProjectSelector, useTransport, useUiMode } from "../../../hooks";
 import styles from "./AppHeader.module.css";
 import { addTap, bpmFromTaps, clampBpm } from "./tapTempo";
 
@@ -22,7 +22,7 @@ const cycleText = (position: TransportPosition) => position.cycle.toFixed(2);
 export function TransportSection() {
   const transport = useTransport();
   const { mode } = useUiMode();
-  const { settings } = useSettings();
+  const canRecord = useCanRecord();
   const key = useProjectSelector((project) => project.key);
   const taps = useRef<number[]>([]);
 
@@ -89,7 +89,7 @@ export function TransportSection() {
         playing={transport.playing}
         recording={transport.recordArmed}
         loop={transport.loop.enabled}
-        showRecord={settings.midi.enabledPorts.length > 0}
+        showRecord={canRecord}
         onToStart={transport.toStart}
         onPlayPause={() => void transport.togglePlay()}
         onStop={transport.stop}

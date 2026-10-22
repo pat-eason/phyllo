@@ -53,7 +53,7 @@ function hintFor(tab: LibraryTab, guided: boolean): string {
   }
   return tab === "extras"
     ? "Drag a snippet onto a track · ⏎ adds it to the selected track"
-    : "⌘K quick add · ⏎ inserts on the selected track · ⌥-drag to layer with stack()";
+    : "⌘K quick add · ⏎ inserts on the selected track · ⇧-drop to layer with stack()";
 }
 
 /**

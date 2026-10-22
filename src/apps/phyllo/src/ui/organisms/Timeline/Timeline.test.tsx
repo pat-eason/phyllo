@@ -242,6 +242,39 @@ describe("Timeline", () => {
     expect(clip("Kick, bars 9 to 16, bd*4, muted")).toBeInTheDocument();
   });
 
+  it("should mute every other track on ⌘-click, leaving the clicked one playing", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    renderTimeline({}, { initialProject: withTracks(arrangeProject(), { bass: { mute: true } }) });
+
+    // Act
+    await user.keyboard("{Meta>}");
+    await user.click(screen.getByRole("button", { name: "Mute Bass" }));
+    await user.keyboard("{/Meta}");
+
+    // Assert
+    expect(screen.getByRole("button", { name: "Mute Bass" })).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("button", { name: "Mute Kick" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Mute Clap" })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("should unmute everything on a second ⌘-click of the same track", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    renderTimeline();
+    await user.keyboard("{Meta>}");
+    await user.click(screen.getByRole("button", { name: "Mute Bass" }));
+
+    // Act
+    await user.click(screen.getByRole("button", { name: "Mute Bass" }));
+    await user.keyboard("{/Meta}");
+
+    // Assert
+    for (const name of ["Kick", "Clap", "Bass"]) {
+      expect(screen.getByRole("button", { name: `Mute ${name}` })).toHaveAttribute("aria-pressed", "false");
+    }
+  });
+
   it("should move a clip by dragging its body, as one undo step", async () => {
     // Arrange
     const user = userEvent.setup();

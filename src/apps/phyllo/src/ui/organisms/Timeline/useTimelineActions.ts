@@ -19,7 +19,8 @@ export interface TimelineActions {
   select(trackId: string | null): void;
   seek(bar: number): void;
   setLoop(patch: Partial<Project["loop"]>): void;
-  setMute(trackId: string, mute: boolean): void;
+  /** `othersOnly` (⌘-click): mute every other track and unmute this one; again on that exact state unmutes them all. */
+  setMute(trackId: string, mute: boolean, othersOnly: boolean): void;
   /** `exclusive` (⌥-click): solo only this track, or clear every solo when it already was the only one. */
   setSolo(trackId: string, solo: boolean, exclusive: boolean): void;
   /** Adds and selects a new track of `kind` (Add-track menu). */
@@ -62,7 +63,20 @@ export function useTimelineActions(): TimelineActions {
       select: (trackId) => dispatch({ type: "ui/select", trackId }),
       seek: (bar) => transport().seek(bar),
       setLoop: (patch) => transport().setLoop(patch),
-      setMute: (trackId, mute) => dispatch({ type: "track/setMute", trackId, mute }),
+      setMute(trackId, mute, othersOnly) {
+        if (!othersOnly) {
+          dispatch({ type: "track/setMute", trackId, mute });
+          return;
+        }
+        const tracks = project().project.tracks;
+        const othersMuted = tracks.every((t) => t.mute === (t.id !== trackId));
+        batch(() => {
+          for (const t of tracks) {
+            const next = othersMuted ? false : t.id !== trackId;
+            if (t.mute !== next) dispatch({ type: "track/setMute", trackId: t.id, mute: next });
+          }
+        });
+      },
       setSolo(trackId, solo, exclusive) {
         if (!exclusive) {
           dispatch({ type: "track/setSolo", trackId, solo });

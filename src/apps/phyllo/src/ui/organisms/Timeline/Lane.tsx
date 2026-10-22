@@ -235,7 +235,7 @@ export const Lane = memo(function Lane({
         {...(error ? { error } : {})}
         codeTrack={kind === "code"}
         onSelect={() => actions.select(trackId)}
-        onMuteChange={(mute) => actions.setMute(trackId, mute)}
+        onMuteChange={(mute, event) => actions.setMute(trackId, mute, event.metaKey || event.ctrlKey)}
         onSoloChange={(solo, event) => actions.setSolo(trackId, solo, event.altKey)}
         onRename={(name) => actions.dispatch({ type: "track/update", trackId, patch: { name } })}
         onRemove={() => actions.dispatch({ type: "track/remove", trackId })}
