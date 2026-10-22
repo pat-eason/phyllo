@@ -1,4 +1,4 @@
-import { createModifier } from "@phyllo/model";
+import { cloneModifier, createModifier } from "@phyllo/model";
 import type { Modifier, ParamName, ProjectAction, TrackSource } from "@phyllo/model";
 import { useAppStores } from "../../../hooks";
 
@@ -13,7 +13,13 @@ export interface InspectorActions {
   setParam(param: ParamName, value: number | null): void;
   /** Disables the modifiers that drive `param`, then sets the fixed value: one undo step. */
   replaceModulation(param: ParamName, value: number, drivers: readonly Modifier[]): void;
+  /** Disables `modifiers` (they stay in the chain, switched off): one undo step. */
+  disableModifiers(modifiers: readonly Modifier[]): void;
   addModifier(code: string, options?: { label?: string; origin?: Modifier["origin"] }): void;
+  /** Inserts a ready-made modifier (Duplicate / Paste: give it a fresh id with `cloneModifier`) at `index`, default the end. */
+  insertModifier(modifier: Modifier, index?: number): void;
+  /** Appends a clone of `modifier` to another track's chain. */
+  copyModifierToTrack(trackId: string, modifier: Modifier): void;
   updateModifier(modifierId: string, patch: Partial<Omit<Modifier, "id">>): void;
   removeModifier(modifierId: string): void;
   moveModifier(modifierId: string, toIndex: number): void;
@@ -43,6 +49,16 @@ export function useInspectorActions(trackId: string): InspectorActions {
         store.endGesture();
       }
     },
+    disableModifiers(modifiers) {
+      store.beginGesture();
+      try {
+        for (const m of modifiers) dispatch({ type: "modifier/update", trackId, modifierId: m.id, patch: { enabled: false } });
+      } finally {
+        store.endGesture();
+      }
+    },
+    insertModifier: (modifier, index) => dispatch({ type: "modifier/add", trackId, modifier, ...(index === undefined ? {} : { index }) }),
+    copyModifierToTrack: (target, modifier) => dispatch({ type: "modifier/add", trackId: target, modifier: cloneModifier(modifier) }),
     addModifier: (code, options = {}) =>
       dispatch({ type: "modifier/add", trackId, modifier: createModifier(code, { origin: "user", ...options }) }),
     updateModifier: (modifierId, patch) => dispatch({ type: "modifier/update", trackId, modifierId, patch }),

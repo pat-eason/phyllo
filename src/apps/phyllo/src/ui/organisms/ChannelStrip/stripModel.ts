@@ -19,6 +19,8 @@ export interface InsertItem {
   value: string;
   /** Set for param inserts. */
   param?: ParamName;
+  /** Set for modifier inserts. */
+  modifierId?: string;
   /** A plain number the strip can edit inline. */
   editable: boolean;
   /** A modifier or a patterned value drives it. */
@@ -87,7 +89,7 @@ export function trackInserts(track: Track): InsertItem[] {
     if (!call) continue;
     const def = findModifier(call.name);
     if (def && def.category !== "sound" && def.category !== "stereo") continue;
-    items.push({ key: `m:${m.id}`, label: call.name, value: compactArgs(call.args), editable: false, modulated: false, code: m.code });
+    items.push({ key: `m:${m.id}`, label: call.name, value: compactArgs(call.args), modifierId: m.id, editable: false, modulated: false, code: m.code });
   }
   return items;
 }

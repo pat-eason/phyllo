@@ -4,8 +4,11 @@ import { modulatedParams } from "@phyllo/engine";
 import { Fader, formatDb, gainToDb, dbToGain, Knob, Meter, Select, ToggleButton } from "@phyllo/ui";
 import type { SelectOption } from "@phyllo/ui";
 import { useMemo, type CSSProperties } from "react";
-import { useMeters, useProject, useProjectSelector, useSelection } from "../../../hooks";
+import { useContextMenuTrigger, useMeters, useProject, useProjectSelector, useSelection } from "../../../hooks";
+import { useTrackMenu } from "../../contextMenu";
+import { navigate } from "../../shell/router";
 import { useTransportStopped } from "./useTransportStopped";
+import { isTextField, trackStripExtra } from "./stripMenus";
 import { EffectMenu } from "./EffectMenu";
 import { InsertList } from "./InsertList";
 import { nextFreeOrbit, soundLine, trackInserts } from "./stripModel";
@@ -66,6 +69,21 @@ export function TrackStrip({ trackId }: { trackId: string }) {
   const [area, faderHeight] = useFillHeight<HTMLDivElement>();
   const inserts = useMemo(() => (track ? trackInserts(track) : []), [track]);
   const modulated = useMemo(() => (track ? modulatedParams(track) : new Set<ParamName>()), [track]);
+  const buildTrackMenu = useTrackMenu();
+  const menu = useContextMenuTrigger(() => {
+    if (!track) return null;
+    const showInInspector = () => {
+      select(track.id);
+      navigate({ screen: "arrange" });
+    };
+    const gain = track.params.gain;
+    return buildTrackMenu(track.id, {
+      extra: trackStripExtra(typeof gain === "string" || modulated.has("gain"), {
+        resetVolume: () => dispatch({ type: "track/setParam", trackId: track.id, param: "gain", value: dbToGain(0) }),
+        showInInspector,
+      }),
+    });
+  });
 
   if (!track) return null;
   const selected = selectedId === track.id;
@@ -79,6 +97,7 @@ export function TrackStrip({ trackId }: { trackId: string }) {
   ];
 
   return (
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Shift+F10 reaches the menu from the controls inside
     <section
       className={styles["strip"]}
       data-kind="track"
@@ -87,6 +106,12 @@ export function TrackStrip({ trackId }: { trackId: string }) {
       data-strip=""
       aria-label={`${track.name} channel`}
       style={{ "--strip-color": track.color } as CSSProperties}
+      onContextMenu={(event) => {
+        if (!isTextField(event.target)) menu.onContextMenu(event);
+      }}
+      onKeyDown={(event) => {
+        if (!isTextField(event.target)) menu.onKeyDown(event);
+      }}
     >
       <div className={styles["bar"]} aria-hidden="true" />
       <button type="button" className={styles["head"]} aria-pressed={selected} onClick={() => select(track.id)}>

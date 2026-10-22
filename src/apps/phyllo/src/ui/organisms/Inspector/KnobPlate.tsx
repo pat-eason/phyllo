@@ -4,6 +4,8 @@ import { modulatedParams, modulationRange } from "@phyllo/engine";
 import { Button, ParamKnob, Surface, TextField } from "@phyllo/ui";
 import { useId, useLayoutEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
+import { useContextMenuTrigger } from "../../../hooks";
+import { knobMenuEntries } from "./inspectorMenus";
 import { useTipHighlight } from "./useTipHighlight";
 import { ccFor, modifiersSetting, parseTypedValue } from "./inspectorModel";
 import type { InspectorActions } from "./useInspectorActions";
@@ -63,6 +65,7 @@ export function KnobPlate({ track, mode, ccMap, actions }: KnobPlateProps) {
             editing={editing === p}
             onRequest={(v) => request(p, v)}
             onReset={() => actions.setParam(p, null)}
+            onRemoveModulation={() => actions.disableModifiers(modifiersSetting(track, p))}
             onStartEdit={() => setEditing(p)}
             onStopEdit={() => setEditing(null)}
             onGestureStart={actions.beginGesture}
@@ -92,13 +95,14 @@ interface KnobCellProps {
   editing: boolean;
   onRequest: (value: number) => void;
   onReset: () => void;
+  onRemoveModulation: () => void;
   onStartEdit: () => void;
   onStopEdit: () => void;
   onGestureStart: () => void;
   onGestureEnd: () => void;
 }
 
-function KnobCell({ param, track, mode, modulated, cc, editing, onRequest, onReset, onStartEdit, onStopEdit, onGestureStart, onGestureEnd }: KnobCellProps) {
+function KnobCell({ param, track, mode, modulated, cc, editing, onRequest, onReset, onRemoveModulation, onStartEdit, onStopEdit, onGestureStart, onGestureEnd }: KnobCellProps) {
   const spec = PARAM_SPECS[param];
   const value = track.params[param];
   const range = modulated ? modulationRange(track, param) : null;
@@ -106,6 +110,19 @@ function KnobCell({ param, track, mode, modulated, cc, editing, onRequest, onRes
   const guided = mode === "guided";
   const tipTarget = param === "lpf" ? "inspector-knob-lpf" : undefined;
   const highlighted = useTipHighlight(tipTarget);
+  // While the typed-value field is open it keeps the browser's own text menu.
+  const menu = useContextMenuTrigger(() =>
+    editing
+      ? null
+      : {
+          label: `${spec.guidedLabel} knob`,
+          entries: knobMenuEntries(
+            { hasValue: value !== undefined, drivers: modulated ? modifiersSetting(track, param) : [] },
+            { reset: onReset, typeValue: onStartEdit, removeModulation: onRemoveModulation },
+          ),
+          returnFocus: knob.current,
+        },
+  );
 
   let valueText: string;
   if (typeof value === "string") valueText = `patterned ${value}`;
@@ -130,7 +147,7 @@ function KnobCell({ param, track, mode, modulated, cc, editing, onRequest, onRes
     );
 
   return (
-    <div className={styles["knobCell"]}>
+    <div className={styles["knobCell"]} {...menu}>
       <ParamKnob
         ref={knob}
         param={param}

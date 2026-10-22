@@ -1,14 +1,15 @@
 import type { OutputDevice } from "@phyllo/engine";
-import { formatNumber } from "@phyllo/model";
+import { DEFAULT_MASTER, formatNumber } from "@phyllo/model";
 import { Button, dbToGain, Fader, formatDb, gainToDb, Meter, Select, Switch } from "@phyllo/ui";
 import type { SelectOption } from "@phyllo/ui";
 import { useEffect, useRef, useState } from "react";
-import { useAppStores, useEngine, useMeters, useNative, useProject, useProjectFile, useProjectSelector, useSettings } from "../../../hooks";
+import { useAppStores, useContextMenuTrigger, useEngine, useMeters, useNative, useProject, useProjectFile, useProjectSelector, useSettings } from "../../../hooks";
 import { useToasts } from "../../toasts";
 import { useTransportStopped } from "./useTransportStopped";
 import { startOutputRecording, takeFileName } from "./recordOutput";
 import type { OutputRecording } from "./recordOutput";
 import { formatElapsed } from "./stripModel";
+import { isTextField, masterMenuEntries } from "./stripMenus";
 import { useFillHeight } from "./useFillHeight";
 import styles from "./ChannelStrip.module.css";
 
@@ -189,8 +190,32 @@ export function MasterStrip() {
 
   const recording = status.kind === "recording";
 
+  const menu = useContextMenuTrigger(() => ({
+    label: "Master",
+    entries: masterMenuEntries(
+      { limiter: master.limiter, levelChanged: master.postgain !== DEFAULT_MASTER.postgain },
+      {
+        setLimiter: (limiter) => dispatch({ type: "master/set", patch: { limiter } }),
+        // The fader's double-click: back to 0 dB.
+        resetLevel: () => dispatch({ type: "master/set", patch: { postgain: DEFAULT_MASTER.postgain } }),
+      },
+    ),
+  }));
+
   return (
-    <section className={styles["strip"]} data-kind="master" data-strip="" aria-label="Master channel">
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Shift+F10 reaches the menu from the controls inside
+    <section
+      className={styles["strip"]}
+      data-kind="master"
+      data-strip=""
+      aria-label="Master channel"
+      onContextMenu={(event) => {
+        if (!isTextField(event.target)) menu.onContextMenu(event);
+      }}
+      onKeyDown={(event) => {
+        if (!isTextField(event.target)) menu.onKeyDown(event);
+      }}
+    >
       <div className={styles["bar"]} aria-hidden="true" />
       <div className={styles["head"]}>
         <span className={styles["name"]}>Master</span>
