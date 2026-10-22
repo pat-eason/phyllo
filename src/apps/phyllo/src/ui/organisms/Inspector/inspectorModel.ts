@@ -122,5 +122,19 @@ export function parseTypedValue(text: string): number | null {
   return cleaned !== "" && Number.isFinite(n) ? n : null;
 }
 
-/** MIME type for dragging a modifier template (payload = template code) onto the modifier list. */
+/** MIME type for dragging a modifier template onto the modifier list (payload: LibraryPanel's `ModifierDragPayload` JSON). */
 export const MODIFIER_DRAG_MIME = "application/x-phyllo-modifier";
+
+/** The dropped modifier's code and label; plain template code is accepted too. Null when there is nothing to add. */
+export function readModifierDrag(raw: string): { code: string; label?: string } | null {
+  const text = raw.trim();
+  if (!text) return null;
+  if (!text.startsWith("{")) return { code: text };
+  try {
+    const { code, label } = JSON.parse(text) as Record<string, unknown>;
+    if (typeof code !== "string" || code.trim() === "") return null;
+    return typeof label === "string" && label !== "" ? { code: code.trim(), label } : { code: code.trim() };
+  } catch {
+    return null;
+  }
+}

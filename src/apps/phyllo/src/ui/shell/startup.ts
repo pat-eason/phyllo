@@ -37,9 +37,9 @@ export function writeLastProject(path: string | null, storage: KeyValueStorage |
 export interface StartInput {
   /** Route in the URL at launch (a reload keeps its screen), or null. */
   explicit: Route | null;
-  /** A settings file existed before this launch. */
-  hadSavedSettings: boolean;
   libraryCount: number;
+  /** Settings › System › Reopen the last groove on launch. */
+  reopenLast: boolean;
   /** Project open last session (localStorage). */
   lastProject: string | null;
 }
@@ -52,18 +52,18 @@ export interface StartPlan {
 }
 
 /**
- * SPEC §6.2 / §6.7: first launch (no saved settings and an empty library) → Guided start; else reopen the project
- * from last session → Arrange (or the project screen in the URL); else the Library. A non-project route in the URL
- * (Library, Settings, Guided start) is kept, and the last project still reopens behind it.
+ * Launch lands on the Library, or Guided start when the library is empty. Only when Settings › System › "Reopen the
+ * last groove" is on does the project from last session reopen first → Arrange (or the project screen in the URL),
+ * falling back to the Library. A non-project route in the URL (Library, Settings, Guided start) is kept, and the
+ * last project still reopens behind it.
  */
-export function planStart({ explicit, hadSavedSettings, libraryCount, lastProject }: StartInput): StartPlan {
-  const firstLaunch = !hadSavedSettings && libraryCount === 0;
+export function planStart({ explicit, libraryCount, reopenLast, lastProject }: StartInput): StartPlan {
+  const home: Route = libraryCount === 0 ? { screen: "start" } : { screen: "library" };
   const keepExplicit = explicit !== null && !PROJECT_SCREENS.has(explicit.screen);
-  const reopen = firstLaunch ? null : lastProject;
+  const reopen = reopenLast ? lastProject : null;
   if (keepExplicit) return { route: explicit, reopen, fallback: explicit };
-  if (firstLaunch) return { route: { screen: "start" }, reopen: null, fallback: { screen: "start" } };
-  if (reopen !== null) return { route: explicit ?? { screen: "arrange" }, reopen, fallback: { screen: "library" } };
-  return { route: { screen: "library" }, reopen: null, fallback: { screen: "library" } };
+  if (reopen !== null) return { route: explicit ?? { screen: "arrange" }, reopen, fallback: home };
+  return { route: home, reopen: null, fallback: home };
 }
 
 export interface StartupOptions {
@@ -144,10 +144,6 @@ async function runStartup(
   onError: (title: string, detail: string) => void,
 ): Promise<StartResult> {
   const { native } = stores;
-  const hadSavedSettings = await native.settingsStore
-    .load()
-    .then((value) => value !== null)
-    .catch(() => true);
   await stores.start().catch((error: unknown) => onError("Couldn't load settings", String(error)));
 
   // Listen first, then take what arrived before JS was listening (NativeApi contract).
@@ -167,8 +163,8 @@ async function runStartup(
 
   const plan = planStart({
     explicit,
-    hadSavedSettings,
     libraryCount: stores.library.getState().grooves.length,
+    reopenLast: stores.settings.getState().settings.system.reopenLastProject,
     lastProject: readLastProject(),
   });
   if (plan.reopen !== null) {

@@ -1,0 +1,78 @@
+.splash {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  background: var(--ph-bg);
+  color: var(--ph-text);
+  animation: out var(--splash-ms) ease-in forwards;
+}
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 56px;
+}
+
+.bar {
+  width: 8px;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--ph-accent, currentColor);
+  transform-origin: bottom;
+  transform: scaleY(0.15);
+  animation: pulse 900ms ease-in-out infinite alternate;
+  animation-delay: calc(var(--i) * -140ms);
+}
+
+.wordmark {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  opacity: 0;
+  animation: rise 700ms 350ms ease-out forwards;
+}
+
+@keyframes pulse {
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Hold, then fade over the last 400ms of the splash. */
+@keyframes out {
+  0%,
+  86% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar {
+    animation: none;
+    transform: scaleY(0.6);
+  }
+
+  .wordmark {
+    animation: none;
+    opacity: 1;
+  }
+}

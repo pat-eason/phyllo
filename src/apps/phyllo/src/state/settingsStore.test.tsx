@@ -80,7 +80,7 @@ describe("settingsStore", () => {
       midi: { enabledPorts: [], ccMap: {} },
       osc: { enabled: false, host: "127.0.0.1", port: 57120 },
       sampleFolders: [],
-      system: { mediaKeys: true, menuBar: false, fileAssociations: true, autosave: true },
+      system: { mediaKeys: true, menuBar: false, fileAssociations: true, autosave: true, reopenLastProject: false },
       tips: { hidden: false, step: 1 },
       library: { view: "grid", tileSize: 2, sort: "edited" },
       codeDrawer: { open: null },

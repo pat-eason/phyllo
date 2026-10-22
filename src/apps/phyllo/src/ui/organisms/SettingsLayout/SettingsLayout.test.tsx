@@ -608,7 +608,7 @@ describe("SettingsLayout", () => {
     await user.click(region("System").getByRole("switch", { name: "Keep playing from the menu bar" }));
 
     // Assert
-    expect(settings().system).toEqual({ mediaKeys: true, menuBar: true, fileAssociations: true, autosave: true });
+    expect(settings().system).toEqual({ mediaKeys: true, menuBar: true, fileAssociations: true, autosave: true, reopenLastProject: false });
   });
 
   it("should call onOpenHistory from Open version history", async () => {

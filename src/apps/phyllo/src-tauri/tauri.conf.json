@@ -20,7 +20,8 @@
         "minHeight": 760,
         "titleBarStyle": "Overlay",
         "hiddenTitle": true,
-        "backgroundThrottling": "disabled"
+        "backgroundThrottling": "disabled",
+        "dragDropEnabled": false
       }
     ],
     "security": {

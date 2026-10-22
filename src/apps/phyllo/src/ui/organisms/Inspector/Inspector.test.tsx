@@ -358,6 +358,19 @@ describe("Inspector", () => {
     expect(track()?.modifiers.map((m) => m.code)).toEqual([".degradeBy(.3)"]);
   });
 
+  it("should accept a library snippet dropped on the empty modifier hint", () => {
+    // Arrange
+    const { track } = setup({ mode: "pro", patch: { bass: { modifiers: [] } } });
+    const hint = screen.getByText(/No modifiers yet/);
+    const payload = JSON.stringify({ name: "lpf", code: ".lpf(800)", label: "Low-pass filter" });
+    const dataTransfer = { types: [MODIFIER_DRAG_MIME], getData: (type: string) => (type === MODIFIER_DRAG_MIME ? payload : ""), dropEffect: "none" };
+    // Act
+    fireEvent.dragOver(hint, { dataTransfer });
+    fireEvent.drop(hint, { dataTransfer });
+    // Assert
+    expect(track()?.modifiers.map((m) => [m.code, m.label])).toEqual([[".lpf(800)", "Low-pass filter"]]);
+  });
+
   it("should change a melodic track's sound from the searchable picker", async () => {
     // Arrange
     const { actions, user } = setup();

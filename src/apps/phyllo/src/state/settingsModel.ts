@@ -9,7 +9,7 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze({
   midi: { enabledPorts: [], ccMap: {} },
   osc: { enabled: false, host: "127.0.0.1", port: 57120 },
   sampleFolders: [],
-  system: { mediaKeys: true, menuBar: false, fileAssociations: true, autosave: true },
+  system: { mediaKeys: true, menuBar: false, fileAssociations: true, autosave: true, reopenLastProject: false },
   tips: { hidden: false, step: 1 },
   library: { view: "grid", tileSize: 2, sort: "edited" },
   /** null = follow the mode default (collapsed in Guided, open in Pro, SPEC §6.1). */
@@ -105,6 +105,7 @@ export function mergeSettings(raw: unknown, base: Settings = defaultSettings()):
       menuBar: bool(system.menuBar, base.system.menuBar),
       fileAssociations: bool(system.fileAssociations, base.system.fileAssociations),
       autosave: bool(system.autosave, base.system.autosave),
+      reopenLastProject: bool(system.reopenLastProject, base.system.reopenLastProject),
     },
     tips: {
       hidden: bool(tips.hidden, base.tips.hidden),

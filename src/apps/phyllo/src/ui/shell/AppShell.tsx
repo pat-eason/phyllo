@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useStore } from "zustand";
 import { useAppStores } from "../../state/context";
 import type { LibraryPanelHandle } from "../organisms/LibraryPanel";
@@ -25,6 +25,7 @@ import type { Route } from "./router";
 import { LibraryPanelRefContext, ShellContext } from "./shellContext";
 import type { ShellState, ShellToast } from "./shellContext";
 import { detectMac } from "./shortcuts";
+import { Splash, SPLASH_MS } from "./Splash";
 import { useStartup } from "./startup";
 import { useGlobalShortcuts } from "./useGlobalShortcuts";
 
@@ -62,6 +63,8 @@ export interface AppShellProps {
   openUrl?: (url: string) => void;
   /** ⌘ vs Ctrl. Default: detected from the platform. */
   isMac?: boolean;
+  /** Startup animation length in ms; 0 skips it. Default 3000. */
+  splashMs?: number;
 }
 
 /**
@@ -76,7 +79,7 @@ export function AppShell(props: AppShellProps) {
   );
 }
 
-function AppShellContent({ openUrl = defaultOpenUrl, isMac = detectMac() }: AppShellProps) {
+function AppShellContent({ openUrl = defaultOpenUrl, isMac = detectMac(), splashMs = SPLASH_MS }: AppShellProps) {
   const stores = useAppStores();
   const hashRoute = useHashRoute();
   const [initialRoute] = useState<Route | null>(() => hashRoute);
@@ -95,7 +98,7 @@ function AppShellContent({ openUrl = defaultOpenUrl, isMac = detectMac() }: AppS
     void toasts.push({ title, tone: tone ?? "neutral", ...(detail ? { body: detail } : {}) });
 
   // `run` is declared below; startup only calls the handler later, from an event.
-  const { ready, projectOpen } = useStartup({
+  const { ready: startupReady, projectOpen } = useStartup({
     stores,
     initialRoute,
     onOpenFiles: (paths) => {
@@ -104,6 +107,15 @@ function AppShellContent({ openUrl = defaultOpenUrl, isMac = detectMac() }: AppS
     },
     onError: (title, detail) => notify({ title, detail, tone: "error" }),
   });
+
+  // Startup runs behind the animation; the first screen waits for both.
+  const [splashDone, setSplashDone] = useState(splashMs <= 0);
+  useEffect(() => {
+    if (splashMs <= 0) return;
+    const timer = setTimeout(() => setSplashDone(true), splashMs);
+    return () => clearTimeout(timer);
+  }, [splashMs]);
+  const ready = startupReady && splashDone;
 
   const shell: ShellState = {
     route: hashRoute,
@@ -190,7 +202,7 @@ function AppShellContent({ openUrl = defaultOpenUrl, isMac = detectMac() }: AppS
   return (
     <ShellContext.Provider value={shell}>
       <LibraryPanelRefContext.Provider value={libraryPanelRef}>
-        {ready ? <Screen route={hashRoute} onOpenHistory={shell.openHistory} /> : <div className={screenStyles["boot"]} aria-busy="true" />}
+        {ready ? <Screen route={hashRoute} onOpenHistory={shell.openHistory} /> : (splashDone ? <div className={screenStyles["boot"]} aria-busy="true" /> : <Splash durationMs={splashMs} />)}
         <ExportSlot open={exportOpen} onClose={shell.closeExport} />
         {dialog.kind === "history" ? (
           <VersionHistoryDialog
