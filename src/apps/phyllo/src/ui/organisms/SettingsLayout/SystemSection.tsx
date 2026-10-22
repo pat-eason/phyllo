@@ -31,6 +31,11 @@ const SYSTEM_SWITCHES: readonly SystemSwitch[] = [
     help: "Double-click a file in Finder to open it here. Your system sets the association when Phyllo is installed; this switch decides whether Phyllo opens the files it is handed.",
   },
   {
+    key: "reopenLastProject",
+    title: "Reopen the last groove on launch",
+    help: "Off: Phyllo opens to your Library (or the intro if you have no grooves yet).",
+  },
+  {
     key: "autosave",
     title: "Autosave and version history",
     help: "Saves every change; restore earlier versions from File › History.",

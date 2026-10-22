@@ -55,6 +55,10 @@ interface RenderOptions extends MockStoresOptions {
 
 async function renderApp(options: RenderOptions = {}) {
   const { savedSettings = false, library = [], lastOpen, ...storeOptions } = options;
+  // A remembered groove only reopens when the setting is on.
+  if (lastOpen !== undefined) {
+    storeOptions.initialSettings = { ...storeOptions.initialSettings, system: { ...storeOptions.initialSettings?.system, reopenLastProject: true } };
+  }
   stores = createMockStores(storeOptions);
   const paths = await seedLibrary(stores.native, library);
   if (savedSettings) await stores.native.settingsStore.save({ uiMode: "guided" });
@@ -63,7 +67,7 @@ async function renderApp(options: RenderOptions = {}) {
   const result = render(
     <PhylloProvider stores={stores} autoStart={false}>
       <AppThemeProvider>
-        <App isMac={false} openUrl={() => undefined} />
+        <App isMac={false} openUrl={() => undefined} splashMs={0} />
       </AppThemeProvider>
     </PhylloProvider>,
   );
@@ -100,6 +104,16 @@ describe("App", () => {
     expect(await screen.findByRole("complementary", { name: "Track inspector" })).toBeInTheDocument();
     expect(window.location.hash).toBe("#/arrange");
     expect(screen.getByRole("list", { name: "Tracks" })).toBeInTheDocument();
+  });
+
+  it("should show the Library, not the last groove, when reopening is off", async () => {
+    // Arrange / Act
+    await renderApp({ savedSettings: true, library: [fixtureProject({ name: "Night bus" })] });
+    localStorage.setItem(LAST_PROJECT_KEY, "/Phyllo/missing.phyllo");
+
+    // Assert
+    expect(await screen.findByRole("button", { name: /Open Night bus/ })).toBeInTheDocument();
+    expect(window.location.hash).toBe("#/library");
   });
 
   it("should show the Library when no project was open last session", async () => {

@@ -328,7 +328,7 @@ export interface Settings {
   };
   osc: { enabled: boolean; host: string; port: number };
   sampleFolders: string[];
-  system: { mediaKeys: boolean; menuBar: boolean; fileAssociations: boolean; autosave: boolean };
+  system: { mediaKeys: boolean; menuBar: boolean; fileAssociations: boolean; autosave: boolean; reopenLastProject: boolean };
   tips: { hidden: boolean; step: number };
   library: { view: LibraryView; tileSize: 0 | 1 | 2 | 3 | 4; sort: LibrarySort };
   codeDrawer: { open: boolean | null };
