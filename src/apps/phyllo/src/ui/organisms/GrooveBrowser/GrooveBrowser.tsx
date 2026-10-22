@@ -26,8 +26,11 @@ import { useSearchText } from "./useSearchText";
 export interface GrooveBrowserProps {
   /** Called after a groove was opened in the project store; the screen navigates to Arrange. */
   onOpenGroove?: (path: string) => void;
-  /** Bulk "Export..." from the list selection or the context menu. */
-  onBulkExport?: (paths: string[]) => void;
+  /**
+   * "Export…" for one groove (its menu, or the list selection bar with one row selected). The groove is opened first,
+   * since export works on the open project; without this prop the action is hidden.
+   */
+  onExportGroove?: (path: string) => void;
   /** Empty library: the "New groove" button. */
   onNewGroove?: () => void;
   /** Empty library: the "Import..." button. */
@@ -52,7 +55,7 @@ interface MenuState {
  * The Groove library: collections and tags on the left, search / sort / tile size / view on top, then the grooves as
  * a grid of tiles or a table. All state comes from `useLibrary()`; file operations go through its actions.
  */
-export function GrooveBrowser({ onOpenGroove, onBulkExport, onNewGroove, onImport, now, className }: GrooveBrowserProps) {
+export function GrooveBrowser({ onOpenGroove, onExportGroove, onNewGroove, onImport, now, className }: GrooveBrowserProps) {
   const library = useLibrary();
   const native = useNative();
   const [mountedAt] = useState(() => Date.now());
@@ -68,9 +71,12 @@ export function GrooveBrowser({ onOpenGroove, onBulkExport, onNewGroove, onImpor
   const returnFocus = useRef<HTMLElement | null>(null);
   const { auditioning, audition, stop } = useAudition();
 
-  const actions = createGrooveActions({ library, native, notify: setNotice, onOpenGroove });
+  const actions = createGrooveActions({ library, native, notify: setNotice, onOpenGroove, onExportGroove });
   const listView = library.view === "list";
   const selectedPaths = listView ? selection.selected : [];
+  const selectedGrooves = library.grooves.filter((g) => selectedPaths.includes(g.path));
+  // Export works on one groove at a time (it becomes the open project), so the bar offers it for a single row only.
+  const exportable = onExportGroove && selectedGrooves.length === 1 ? selectedGrooves[0] : undefined;
   const unusedPending = pendingTags.filter((tag) => !hasTag(library.tags.map((t) => t.name), tag));
   const tagSuggestions = [...library.tags.map((t) => t.name), ...unusedPending];
   const filtersActive = library.selectedTags.length > 0 || library.query !== "";
@@ -116,9 +122,9 @@ export function GrooveBrowser({ onOpenGroove, onBulkExport, onNewGroove, onImpor
     setMenu({ paths: inSelection ? selection.selected : [groove.path], anchor });
   }
 
-  function exportGrooves(paths: string[]) {
-    if (onBulkExport) onBulkExport(paths);
-    else setNotice({ tone: "info", text: "Export isn't connected in this view yet." });
+  function exportGroove(groove: GrooveSummary) {
+    stop();
+    void actions.exportGroove(groove);
   }
 
   function menuItems(state: MenuState): MenuItem[] {
@@ -128,7 +134,6 @@ export function GrooveBrowser({ onOpenGroove, onBulkExport, onNewGroove, onImpor
     if (targets.length > 1) {
       return [
         { id: "tags", label: "Edit tags", onSelect: () => setDialog({ kind: "tags", targets }) },
-        { id: "export", label: "Export", onSelect: () => exportGrooves(targets.map((g) => g.path)) },
         { id: "trash", label: "Move to Trash", destructive: true, onSelect: () => setDialog({ kind: "trash", targets }) },
       ];
     }
@@ -137,6 +142,7 @@ export function GrooveBrowser({ onOpenGroove, onBulkExport, onNewGroove, onImpor
       { id: "rename", label: "Rename", onSelect: () => setDialog({ kind: "rename", groove: first }) },
       { id: "duplicate", label: "Duplicate", onSelect: () => void actions.duplicate(first) },
       { id: "tags", label: "Edit tags", onSelect: () => setDialog({ kind: "tags", targets: [first] }) },
+      ...(onExportGroove ? [{ id: "export", label: "Export…", onSelect: () => exportGroove(first) }] : []),
       { id: "reveal", label: "Show in Finder", onSelect: () => void actions.reveal(first) },
       { id: "trash", label: "Move to Trash", destructive: true, onSelect: () => setDialog({ kind: "trash", targets: [first] }) },
     ];
@@ -220,19 +226,21 @@ export function GrooveBrowser({ onOpenGroove, onBulkExport, onNewGroove, onImpor
               size="sm"
               onClick={() => {
                 returnFocus.current = null;
-                setDialog({ kind: "tags", targets: library.grooves.filter((g) => selectedPaths.includes(g.path)) });
+                setDialog({ kind: "tags", targets: selectedGrooves });
               }}
             >
               Add tags
             </Button>
-            <Button size="sm" onClick={() => exportGrooves(selectedPaths)}>
-              Export
-            </Button>
+            {exportable ? (
+              <Button size="sm" onClick={() => exportGroove(exportable)}>
+                Export…
+              </Button>
+            ) : null}
             <Button
               size="sm"
               onClick={() => {
                 returnFocus.current = null;
-                setDialog({ kind: "trash", targets: library.grooves.filter((g) => selectedPaths.includes(g.path)) });
+                setDialog({ kind: "trash", targets: selectedGrooves });
               }}
             >
               Move to Trash

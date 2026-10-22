@@ -15,6 +15,8 @@ export interface GrooveActionsDeps {
   notify: (notice: Notice) => void;
   /** The screen's navigation after a groove is opened. */
   onOpenGroove?: (path: string) => void;
+  /** Shows the export dialog once `exportGroove` has made the groove the open project. */
+  onExportGroove?: (path: string) => void;
 }
 
 /** What the dialogs await: an error message, or null on success. */
@@ -22,6 +24,8 @@ export type ActionResult = Promise<string | null>;
 
 export interface GrooveActions {
   open: (groove: GrooveSummary) => Promise<void>;
+  /** Export works on the open project, so this opens the groove first (pending edits are saved), then exports it. */
+  exportGroove: (groove: GrooveSummary) => Promise<void>;
   toggleFavorite: (groove: GrooveSummary) => Promise<void>;
   rename: (groove: GrooveSummary, name: string) => ActionResult;
   duplicate: (groove: GrooveSummary) => Promise<void>;
@@ -40,7 +44,7 @@ function messageOf(caught: unknown): string {
 }
 
 /** File operations behind the browser's tiles, rows, menu and dialogs, all through `useLibrary()` and `useNative()`. */
-export function createGrooveActions({ library, native, notify, onOpenGroove }: GrooveActionsDeps): GrooveActions {
+export function createGrooveActions({ library, native, notify, onOpenGroove, onExportGroove }: GrooveActionsDeps): GrooveActions {
   const fail = (text: string) => notify({ tone: "error", text });
 
   /** Runs `op` on each groove in turn (files are rewritten one at a time) and stops at the first failure. */
@@ -57,6 +61,11 @@ export function createGrooveActions({ library, native, notify, onOpenGroove }: G
       const result = await library.open(groove.path);
       if (result.ok) onOpenGroove?.(groove.path);
       else fail(`Couldn't open ${groove.name}: ${result.error}`);
+    },
+    async exportGroove(groove) {
+      const result = await library.open(groove.path);
+      if (result.ok) onExportGroove?.(groove.path);
+      else fail(`Couldn't open ${groove.name} to export it: ${result.error}`);
     },
     async toggleFavorite(groove) {
       const result = await library.toggleFavorite(groove.path);

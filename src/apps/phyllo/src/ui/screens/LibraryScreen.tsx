@@ -52,7 +52,7 @@ export function LibraryScreen() {
           onOpenGroove={() => shell.navigate({ screen: "arrange" })}
           onNewGroove={newGroove}
           onImport={() => void startImport()}
-          onBulkExport={() => shell.openExport()}
+          onExportGroove={() => shell.openExport()}
         />
       </main>
     </div>
