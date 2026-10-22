@@ -26,6 +26,8 @@ describe("shortcuts", () => {
     [key("m"), "track.mute"],
     [key("s"), "track.solo"],
     [cmd("k"), "library.search"],
+    [cmd("j"), "view.libraryPanel"],
+    [cmd("j", { shiftKey: true }), "view.inspectorPanel"],
     [cmd("z"), "edit.undo"],
     [cmd("z", { shiftKey: true }), "edit.redo"],
     [cmd("e"), "file.export"],

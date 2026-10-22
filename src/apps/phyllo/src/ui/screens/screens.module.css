@@ -48,31 +48,43 @@
   width: var(--arrange-inspector-w);
 }
 
-/* Zero-width flex item; the wide hit area hangs over both neighbours so layout never shifts. */
+/* A collapsed column stays mounted (library search focus, scroll position) but takes no space and is inert. */
+.body > .collapsed {
+  visibility: hidden;
+  overflow: hidden;
+}
+
+/* Zero-width flex item; the grip's wide hit area hangs over both neighbours so layout never shifts. */
 .splitter {
   position: relative;
   z-index: 2;
   flex: none;
   align-self: stretch;
   width: 0;
-  cursor: col-resize;
-  touch-action: none;
 }
 
-.splitter::before {
+/* Collapsed: a slim rail that holds the expand tab. */
+.rail {
+  width: 16px;
+  border-inline: 1px solid var(--ph-line);
+  background: var(--ph-chrome);
+}
+
+.grip {
   position: absolute;
   top: 0;
   bottom: 0;
   left: -4px;
   width: 8px;
-  content: "";
+  cursor: col-resize;
+  touch-action: none;
 }
 
-.splitter::after {
+.grip::after {
   position: absolute;
   top: 0;
   bottom: 0;
-  left: -1px;
+  left: 3px;
   width: 2px;
   background: var(--ph-accent);
   content: "";
@@ -80,13 +92,69 @@
   transition: opacity var(--ph-dur-fast) var(--ph-ease);
 }
 
-.splitter:hover::after,
-.splitter:focus-visible::after {
+.grip:hover::after,
+.grip:focus-visible::after {
   opacity: 1;
 }
 
-.splitter:focus-visible {
+.grip:focus-visible {
   outline: none;
+}
+
+.fold {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 44px;
+  margin-top: -22px;
+  padding: 0;
+  border: 1px solid var(--ph-line);
+  background: var(--ph-raised);
+  color: var(--ph-muted);
+  font: var(--ph-text-body);
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--ph-dur-fast) var(--ph-ease);
+}
+
+/* Expanded: the tab sits just inside the panel edge and shows on hover; collapsed it fills the rail. */
+.splitter:hover .fold,
+.fold:focus-visible,
+.rail .fold {
+  opacity: 1;
+}
+
+.fold:hover {
+  color: var(--ph-text);
+}
+
+.foldLeft {
+  right: 0;
+  border-right: 0;
+  border-radius: var(--ph-r-sm) 0 0 var(--ph-r-sm);
+}
+
+.foldRight {
+  left: 0;
+  border-left: 0;
+  border-radius: 0 var(--ph-r-sm) var(--ph-r-sm) 0;
+}
+
+.rail .foldLeft {
+  right: auto;
+  left: 0;
+  border-radius: 0 var(--ph-r-sm) var(--ph-r-sm) 0;
+  border-left: 0;
+  border-right: 1px solid var(--ph-line);
+}
+
+.rail .foldRight {
+  right: auto;
+  left: 0;
+  border-radius: var(--ph-r-sm) 0 0 var(--ph-r-sm);
+  border-right: 0;
+  border-left: 1px solid var(--ph-line);
 }
 
 .center {

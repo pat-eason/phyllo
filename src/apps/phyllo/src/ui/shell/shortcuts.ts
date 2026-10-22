@@ -37,6 +37,8 @@ export type ShellActionId =
   | "view.mixer"
   | "view.library"
   | "view.codeDrawer"
+  | "view.libraryPanel"
+  | "view.inspectorPanel"
   | "view.uiMode"
   | "view.theme.dark"
   | "view.theme.light"
@@ -92,6 +94,7 @@ export interface ShortcutDef {
 
 const onProject = (ctx: ShortcutContext) => ctx.screen !== null && PROJECT_SCREENS.has(ctx.screen);
 const onProjectOrLibrary = (ctx: ShortcutContext) => onProject(ctx) || ctx.screen === "library";
+const onArrange = (ctx: ShortcutContext) => ctx.screen === "arrange";
 const proArrange = (ctx: ShortcutContext) => ctx.screen === "arrange" && ctx.uiMode === "pro";
 
 /**
@@ -118,6 +121,8 @@ export const SHORTCUTS: readonly ShortcutDef[] = [
   { action: "view.mixer", key: "3", mod: true, menu: "view.mixer", inFields: true, label: "Mixer", keys: ["⌘", "3"] },
   { action: "view.library", key: "l", mod: true, shift: true, menu: "view.library", inFields: true, label: "Groove library", keys: ["⇧", "⌘", "L"] },
   { action: "view.codeDrawer", key: "/", mod: true, menu: "view.codeDrawer", label: "Show or hide the code drawer", keys: ["⌘", "/"] },
+  { action: "view.libraryPanel", key: "j", mod: true, when: onArrange, label: "Show or hide the sound library", keys: ["⌘", "J"] },
+  { action: "view.inspectorPanel", key: "j", mod: true, shift: true, when: onArrange, label: "Show or hide the inspector", keys: ["⇧", "⌘", "J"] },
   { action: "view.uiMode", key: "g", mod: true, shift: true, menu: "view.uiMode", inFields: true, label: "Switch Guided / Pro", keys: ["⇧", "⌘", "G"] },
   { action: "file.save", key: "s", mod: true, menu: "file.save", inFields: true, when: onProject, label: "Save", keys: ["⌘", "S"] },
   { action: "file.saveAs", key: "s", mod: true, shift: true, menu: "file.saveAs", inFields: true, when: onProject, label: "Save as", keys: ["⇧", "⌘", "S"] },

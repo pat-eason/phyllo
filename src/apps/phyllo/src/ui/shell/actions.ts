@@ -4,6 +4,7 @@ import type { MenuActionId } from "../../native/types";
 import type { AppStores } from "../../state/createAppStores";
 import { codeDrawerOpen } from "../../state/settingsModel";
 import { importFiles, openPath, pickFile, pickFiles, replacesOpenProject } from "./fileActions";
+import { setArrangePanel } from "../screens/useResizableWidth";
 import { PROJECT_SCREENS } from "./router";
 import type { ShellState } from "./shellContext";
 import type { ShellActionId } from "./shortcuts";
@@ -74,6 +75,7 @@ export function createShellActions(stores: AppStores, shell: ShellState, env: Sh
     "library.search": () => {
       if (!shell.projectOpen) return;
       if (shell.route?.screen !== "arrange") shell.navigate({ screen: "arrange" });
+      setArrangePanel("library", "open");
       shell.requestSearchFocus();
     },
     "edit.undo": () => project().undo(),
@@ -122,6 +124,8 @@ export function createShellActions(stores: AppStores, shell: ShellState, env: Sh
       if (shell.projectOpen) shell.navigate({ screen: "mixer" });
     },
     "view.library": () => shell.navigate({ screen: "library" }),
+    "view.libraryPanel": () => setArrangePanel("library", "toggle"),
+    "view.inspectorPanel": () => setArrangePanel("inspector", "toggle"),
     "view.codeDrawer": () => {
       settings().set("codeDrawer", { open: !codeDrawerOpen(settings().settings) });
     },
