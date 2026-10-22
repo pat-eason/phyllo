@@ -9,6 +9,8 @@ export interface GrooveMenuCommands {
   duplicate(groove: GrooveSummary): void;
   reveal(groove: GrooveSummary): void;
   editTags(targets: GrooveSummary[]): void;
+  /** Opens the groove and the Export dialog; omit where export isn't available. Export works on one groove at a time. */
+  exportGroove?: (groove: GrooveSummary) => void;
   /** Sets the favourite flag on every target that doesn't have it yet. */
   setFavorite(targets: GrooveSummary[], favorite: boolean): void;
   trash(targets: GrooveSummary[]): void;
@@ -42,6 +44,7 @@ export function grooveMenuEntries(targets: GrooveSummary[], commands: GrooveMenu
     { id: "favorite", label: "Favourite", checked: first.favorite, onSelect: () => commands.setFavorite([first], !first.favorite) },
     { id: "tags", label: "Edit tags…", onSelect: () => commands.editTags([first]) },
     MENU_SEPARATOR,
+    commands.exportGroove && { id: "export", label: "Export…", onSelect: () => commands.exportGroove?.(first) },
     { id: "reveal", label: "Show in Finder", onSelect: () => commands.reveal(first) },
     MENU_SEPARATOR,
     { id: "trash", label: "Move to Trash…", destructive: true, onSelect: () => commands.trash([first]) },

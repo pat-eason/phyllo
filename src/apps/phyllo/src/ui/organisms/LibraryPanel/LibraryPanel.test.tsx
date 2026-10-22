@@ -54,6 +54,14 @@ describe("LibraryPanel", () => {
     expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual(["Sounds", "Samples", "Snippets"]);
   });
 
+  it("should name the key that layers a dropped sound in Pro's hint", () => {
+    // Arrange / Act
+    renderWithStores(<LibraryPanel />, pro);
+
+    // Assert
+    expect(screen.getByText(/⇧-drop to layer with stack\(\)/)).toBeInTheDocument();
+  });
+
   it("should show friendly names first in Guided and code names first in Pro", () => {
     // Arrange / Act
     const first = renderWithStores(<LibraryPanel />, guided);

@@ -1,6 +1,7 @@
 import type {
   LoopSettings,
   MeterSnapshot,
+  MetronomeSettings,
   OutputDevice,
   PhylloEngine,
   PreviewSound,
@@ -24,6 +25,8 @@ export interface FakeEngine extends PhylloEngine {
   readonly initCount: number;
   /** Last value passed to `setLimiter` (null until called). */
   readonly limiter: boolean | null;
+  /** Last value passed to `setMetronome` (null until called). */
+  readonly metronome: MetronomeSettings | null;
 }
 
 export interface FakeEngineOptions {
@@ -70,6 +73,7 @@ export function createFakeEngine(options: FakeEngineOptions = {}): FakeEngine {
   let lookahead = 100;
   let outputDevice: string | null = null;
   let limiter: boolean | null = null;
+  let metronome: MetronomeSettings | null = null;
   let previewStops = 0;
 
   const setStatus = (next: EngineStatus) => {
@@ -211,6 +215,9 @@ export function createFakeEngine(options: FakeEngineOptions = {}): FakeEngine {
       previewStops += 1;
     },
     async registerSamples() {},
+    setMetronome(settings) {
+      metronome = { ...settings };
+    },
     setLimiter(on) {
       limiter = on;
     },
@@ -248,6 +255,9 @@ export function createFakeEngine(options: FakeEngineOptions = {}): FakeEngine {
     },
     get songLength() {
       return songLength;
+    },
+    get metronome() {
+      return metronome;
     },
     get limiter() {
       return limiter;

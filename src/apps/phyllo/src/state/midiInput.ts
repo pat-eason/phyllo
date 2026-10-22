@@ -131,7 +131,8 @@ export interface MidiInputHandle {
   dispose(): void;
 }
 
-const isInputId = (id: string) => id.startsWith("in:");
+/** Native MIDI port ids are `in:<name>` / `out:<name>`; only inputs can be recorded from. */
+export const isInputId = (id: string) => id.startsWith("in:");
 
 interface PendingParam {
   trackId: string;

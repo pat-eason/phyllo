@@ -152,6 +152,7 @@ export function createTransportStore(deps: TransportStoreDeps): TransportStoreHa
     if (!engine) return;
     engine.setLoop(project.loop);
     engine.setSongLength(project.lengthBars);
+    engine.setMetronome({ on: store.getState().metronome, beatsPerBar: project.tempo.beatsPerBar });
   };
 
   cleanups.push(
@@ -167,6 +168,15 @@ export function createTransportStore(deps: TransportStoreDeps): TransportStoreHa
       if (p.loop !== q.loop || p.tempo !== q.tempo || p.lengthBars !== q.lengthBars) {
         store.setState({ bpm: p.tempo.bpm, beatsPerBar: p.tempo.beatsPerBar, loop: p.loop });
         pushToEngine(p);
+      }
+    }),
+  );
+
+  // The click follows the header toggle and the project's time signature.
+  cleanups.push(
+    store.subscribe((state, prev) => {
+      if (state.metronome !== prev.metronome) {
+        host.peek()?.setMetronome({ on: state.metronome, beatsPerBar: projectNow().tempo.beatsPerBar });
       }
     }),
   );

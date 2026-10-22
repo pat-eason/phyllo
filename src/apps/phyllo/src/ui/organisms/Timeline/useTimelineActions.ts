@@ -28,7 +28,8 @@ export interface TimelineActions {
   /** What Copy last put on the app clipboard (context menus). */
   clipboard(): ClipboardItem | null;
   copy(item: ClipboardItem): void;
-  setMute(trackId: string, mute: boolean): void;
+  /** `othersOnly` (⌘-click): mute every other track and unmute this one; again on that exact state unmutes them all. */
+  setMute(trackId: string, mute: boolean, othersOnly: boolean): void;
   /** `exclusive` (⌥-click): solo only this track, or clear every solo when it already was the only one. */
   setSolo(trackId: string, solo: boolean, exclusive: boolean): void;
   /** Adds and selects a new track of `kind` (Add-track menu). */
@@ -79,7 +80,20 @@ export function useTimelineActions(): TimelineActions {
       toggleLoop: () => transport().toggleLoop(),
       clipboard: () => stores.clipboard.getState().item,
       copy: (item) => stores.clipboard.getState().copy(item),
-      setMute: (trackId, mute) => dispatch({ type: "track/setMute", trackId, mute }),
+      setMute(trackId, mute, othersOnly) {
+        if (!othersOnly) {
+          dispatch({ type: "track/setMute", trackId, mute });
+          return;
+        }
+        const tracks = project().project.tracks;
+        const othersMuted = tracks.every((t) => t.mute === (t.id !== trackId));
+        batch(() => {
+          for (const t of tracks) {
+            const next = othersMuted ? false : t.id !== trackId;
+            if (t.mute !== next) dispatch({ type: "track/setMute", trackId: t.id, mute: next });
+          }
+        });
+      },
       setSolo(trackId, solo, exclusive) {
         if (!exclusive) {
           dispatch({ type: "track/setSolo", trackId, solo });

@@ -1,4 +1,5 @@
 import type { EngineStatus, GeneratedProgram, MeterLevel } from "@phyllo/model";
+import type { MetronomeSettings } from "./metronome";
 
 export type Unsubscribe = () => void;
 
@@ -131,6 +132,11 @@ export interface PhylloEngine {
   /** Registers `{ name: [url, …] }` (e.g. convertFileSrc URLs) and preloads every buffer. */
   registerSamples(map: Record<string, string[]>, baseUrl?: string): Promise<void>;
   setLimiter(on: boolean): void;
+  /**
+   * Click on every beat (accented downbeat) while playing. Live playback only: never in the generated code, offline
+   * renders, stems or the meters. Applies from the next scheduled beat.
+   */
+  setMetronome(settings: MetronomeSettings): void;
   /** Linear peaks 0–1, [left, right]. All zero while stopped. Pull this from rAF. */
   getMeters(): MeterSnapshot;
   /** `AudioContext.setSinkId` when supported; false otherwise (SPEC §10 Q2). null = system default. */
