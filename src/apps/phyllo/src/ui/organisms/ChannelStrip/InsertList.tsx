@@ -1,9 +1,61 @@
 import type { Track } from "@phyllo/model";
-import { useRef, useState, type KeyboardEvent } from "react";
-import { useProject } from "../../../hooks";
+import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useContextMenuTrigger, useProject } from "../../../hooks";
+import { navigate } from "../../shell/router";
 import { parseInsertValue } from "./stripModel";
 import type { InsertItem } from "./stripModel";
+import { modifierInsertMenuEntries, paramInsertMenuEntries } from "./stripMenus";
 import styles from "./ChannelStrip.module.css";
+
+interface InsertRowProps {
+  track: Track;
+  item: InsertItem;
+  onEditValue: () => void;
+  children: ReactNode;
+}
+
+/** One non-editing insert row with its right-click menu. */
+function InsertRow({ track, item, onEditValue, children }: InsertRowProps) {
+  const { dispatch } = useProject();
+  const menu = useContextMenuTrigger(() => {
+    const modifier = item.modifierId ? track.modifiers.find((m) => m.id === item.modifierId) : undefined;
+    const { param } = item;
+    if (!modifier && !param) return null;
+    // Like the strip itself, an insert's menu selects the track first.
+    dispatch({ type: "ui/select", trackId: track.id });
+    const showInInspector = () => navigate({ screen: "arrange" });
+    const label = `${track.name} insert ${item.label}`;
+    if (modifier) {
+      const modifierId = modifier.id;
+      return {
+        label,
+        entries: modifierInsertMenuEntries(modifier.enabled, {
+          setEnabled: (enabled) => dispatch({ type: "modifier/update", trackId: track.id, modifierId, patch: { enabled } }),
+          showInInspector,
+          remove: () => dispatch({ type: "modifier/remove", trackId: track.id, modifierId }),
+        }),
+      };
+    }
+    return {
+      label,
+      entries: paramInsertMenuEntries(
+        { editable: item.editable, hasValue: param !== undefined && track.params[param] !== undefined },
+        {
+          editValue: onEditValue,
+          showInInspector,
+          remove: () => {
+            if (param) dispatch({ type: "track/setParam", trackId: track.id, param, value: null });
+          },
+        },
+      ),
+    };
+  });
+  return (
+    <li className={styles["insert"]} title={item.code} {...menu}>
+      {children}
+    </li>
+  );
+}
 
 export interface InsertListProps {
   track: Track;
@@ -77,7 +129,7 @@ export function InsertList({ track, items, labelledBy }: InsertListProps) {
           </>
         );
         return (
-          <li key={item.key} className={styles["insert"]} title={item.code}>
+          <InsertRow key={item.key} track={track} item={item} onEditValue={() => startEdit(item)}>
             {item.editable ? (
               <button
                 type="button"
@@ -90,7 +142,7 @@ export function InsertList({ track, items, labelledBy }: InsertListProps) {
             ) : (
               body
             )}
-          </li>
+          </InsertRow>
         );
       })}
     </ul>

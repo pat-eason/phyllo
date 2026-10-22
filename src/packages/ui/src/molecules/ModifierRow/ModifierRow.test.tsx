@@ -140,6 +140,34 @@ describe("ModifierRow", () => {
     expect(screen.getByRole("button", { name: `Edit ${CODE}` })).toHaveFocus();
   });
 
+  it("should open the editor when editRequest changes to a positive number", () => {
+    // Arrange
+    const props = { code: CODE, description: "Doubles ~50% of notes", enabled: true, onEnabledChange: vi.fn(), onRemove: vi.fn(), onEdit: vi.fn() };
+    const { rerender } = render(
+      <div role="list">
+        <ModifierRow {...props} editRequest={0} />
+      </div>,
+    );
+
+    // Act
+    rerender(
+      <div role="list">
+        <ModifierRow {...props} editRequest={1} />
+      </div>,
+    );
+
+    // Assert
+    expect(screen.getByRole("textbox", { name: `Edit ${CODE}` })).toHaveFocus();
+  });
+
+  it("should ignore the editRequest it was mounted with", () => {
+    // Arrange / Act
+    renderRow({ editRequest: 3 });
+
+    // Assert
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+  });
+
   it("should not edit on a single click or without onEdit", async () => {
     // Arrange
     const user = userEvent.setup();

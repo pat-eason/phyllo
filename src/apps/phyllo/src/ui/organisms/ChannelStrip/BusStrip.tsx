@@ -1,8 +1,9 @@
 import { PARAM_SPECS } from "@phyllo/model";
 import type { Bus } from "@phyllo/model";
 import { Knob, Meter, ToggleButton } from "@phyllo/ui";
-import { useProject, useProjectSelector, useMeters } from "../../../hooks";
+import { useAppStores, useContextMenuTrigger, useProject, useProjectSelector, useMeters } from "../../../hooks";
 import { useTransportStopped } from "./useTransportStopped";
+import { busMenuEntries } from "./stripMenus";
 import { insertLabel } from "./stripModel";
 import { useFillHeight } from "./useFillHeight";
 import styles from "./ChannelStrip.module.css";
@@ -43,6 +44,7 @@ export function BusStrip({ orbit }: { orbit: number }) {
     return tracks.length > 0 && tracks.every((t) => t.mute);
   });
   const { dispatch, beginGesture, endGesture } = useProject();
+  const stores = useAppStores();
   const { orbitMeterFor } = useMeters();
   const stopped = useTransportStopped();
   const [area, meterHeight] = useFillHeight<HTMLDivElement>();
@@ -56,8 +58,53 @@ export function BusStrip({ orbit }: { orbit: number }) {
     endGesture();
   };
 
+  const menu = useContextMenuTrigger(() => {
+    const { project } = stores.project.getState();
+    const memberTracks = project.tracks.filter((t) => t.orbit === orbit);
+    const busValues = project.buses.find((b) => b.orbit === orbit);
+    const soloed = memberTracks.length > 0 && project.tracks.every((t) => t.solo === (t.orbit === orbit));
+    return {
+      label: `Bus ${orbit}`,
+      entries: busMenuEntries(
+        {
+          orbit,
+          members: memberTracks.map((t) => ({ id: t.id, name: t.name })),
+          allMuted: memberTracks.length > 0 && memberTracks.every((t) => t.mute),
+          soloed,
+          hasEffects: BUS_PARAMS.some((p) => busValues?.[p] !== undefined),
+        },
+        {
+          setMute,
+          setSolo(solo) {
+            beginGesture();
+            try {
+              for (const t of project.tracks) {
+                const next = solo && t.orbit === orbit;
+                if (t.solo !== next) dispatch({ type: "track/setSolo", trackId: t.id, solo: next });
+              }
+            } finally {
+              endGesture();
+            }
+          },
+          selectTrack: (trackId) => dispatch({ type: "ui/select", trackId }),
+          // `undefined` unsets the field on the bus (the reducer deletes it), so codegen omits the call again.
+          resetEffects: () => dispatch({ type: "bus/set", orbit, patch: { roomsize: undefined, delaytime: undefined, delayfeedback: undefined } }),
+        },
+      ),
+    };
+  });
+
   return (
-    <section className={styles["strip"]} data-kind="bus" data-strip="" aria-label={`Bus ${orbit} channel`} aria-describedby={noteId}>
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Shift+F10 reaches the menu from the controls inside
+    <section
+      className={styles["strip"]}
+      data-kind="bus"
+      data-strip=""
+      aria-label={`Bus ${orbit} channel`}
+      aria-describedby={noteId}
+      onContextMenu={menu.onContextMenu}
+      onKeyDown={menu.onKeyDown}
+    >
       <div className={styles["bar"]} aria-hidden="true" />
       <div className={styles["head"]}>
         <span className={styles["name"]}>Bus {orbit}</span>
