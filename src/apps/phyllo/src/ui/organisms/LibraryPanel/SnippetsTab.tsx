@@ -6,6 +6,7 @@ import { MODIFIER_DRAG_MIME } from "./dragTypes";
 import type { ModifierDragPayload } from "./dragTypes";
 import { GroupHeading } from "./parts";
 import type { LibraryActions } from "./useLibraryActions";
+import { useSnippetMenu } from "./useLibraryMenus";
 import styles from "./LibraryPanel.module.css";
 
 export interface SnippetsTabProps {
@@ -23,6 +24,7 @@ interface SnippetRowProps {
 }
 
 function SnippetRow({ def, hasSelection, actions }: SnippetRowProps) {
+  const menu = useSnippetMenu(actions, def);
   function handleDragStart(event: DragEvent<HTMLLIElement>) {
     const payload: ModifierDragPayload = { name: def.name, code: def.template, label: def.description };
     event.dataTransfer.setData(MODIFIER_DRAG_MIME, JSON.stringify(payload));
@@ -31,7 +33,8 @@ function SnippetRow({ def, hasSelection, actions }: SnippetRowProps) {
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLLIElement>) {
-    if (event.target !== event.currentTarget || event.key !== "Enter") return;
+    menu.onKeyDown(event);
+    if (event.defaultPrevented || event.target !== event.currentTarget || event.key !== "Enter") return;
     event.preventDefault();
     actions.insertModifier(def);
   }
@@ -47,6 +50,7 @@ function SnippetRow({ def, hasSelection, actions }: SnippetRowProps) {
       aria-roledescription="draggable snippet"
       aria-label={`${def.name}: ${def.description}`}
       onDragStart={handleDragStart}
+      onContextMenu={menu.onContextMenu}
       onKeyDown={handleKeyDown}
     >
       <span className={styles["snippetBody"]}>

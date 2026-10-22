@@ -1,5 +1,7 @@
 import { useRef } from "react";
 import type { CSSProperties, KeyboardEvent, PointerEvent } from "react";
+import { useContextMenuTrigger } from "../../../hooks";
+import { velocityMenuEntries } from "./stepMenus";
 import styles from "./StepSequencer.module.css";
 
 export interface VelocityLaneProps {
@@ -15,6 +17,10 @@ export interface VelocityLaneProps {
   target: "param" | "tokens";
   /** Every change while dragging or on a key press (0–1 per step). */
   onChange: (velocities: number[]) => void;
+  /** Some hit isn't at the default level, so "Reset velocities" would change something. */
+  canReset: boolean;
+  /** Menu "Reset velocities": every hit of the row back to the default level (one undo step). */
+  onReset: () => void;
   onGestureStart: () => void;
   onGestureEnd: () => void;
 }
@@ -28,7 +34,11 @@ function clamp01(v: number): number {
 }
 
 /** Velocity bars for the selected row's hits: drag across them to draw, or focus one and use the arrow keys. */
-export function VelocityLane({ label, sound, color, steps, velocities, target, onChange, onGestureStart, onGestureEnd }: VelocityLaneProps) {
+export function VelocityLane({ label, sound, color, steps, velocities, target, onChange, canReset, onReset, onGestureStart, onGestureEnd }: VelocityLaneProps) {
+  const menu = useContextMenuTrigger(() => ({
+    label: `${label} velocity`,
+    entries: velocityMenuEntries(label, canReset && velocities !== null, { reset: onReset }),
+  }));
   const slots = useRef<(HTMLDivElement | null)[]>([]);
   const drawing = useRef(false);
 
@@ -78,6 +88,8 @@ export function VelocityLane({ label, sound, color, steps, velocities, target, o
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>, step: number) {
+    menu.onKeyDown(event);
+    if (event.defaultPrevented) return;
     const v = velocities?.[step] ?? 0;
     let next: number;
     switch (event.key) {
@@ -109,7 +121,8 @@ export function VelocityLane({ label, sound, color, steps, velocities, target, o
   }
 
   return (
-    <div className={styles["velocity"]}>
+    // The bars are the focusable sliders; they open the menu from the keyboard (Shift+F10).
+    <div className={styles["velocity"]} onContextMenu={menu.onContextMenu}>
       <div className={styles["velocityLabel"]}>
         <span className={styles["velocityTitle"]}>Velocity</span>
         <span className={styles["velocityHint"]}>

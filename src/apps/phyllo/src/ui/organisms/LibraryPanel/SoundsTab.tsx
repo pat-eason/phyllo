@@ -5,8 +5,9 @@ import { useId, useMemo, useState } from "react";
 import { ChipList, DrumList, GroupHeading, SampleList } from "./parts";
 import { shortPath } from "./soundRefs";
 import { bankFor, groupResults, matchingSamples } from "./soundSearch";
-import type { SampleFolders } from "./useSampleFolders";
+import type { LinkedFolder, SampleFolders } from "./useSampleFolders";
 import type { LibraryActions } from "./useLibraryActions";
+import { useBankMenu, useFolderMenu } from "./useLibraryMenus";
 import styles from "./LibraryPanel.module.css";
 
 /** Matching sample files shown in a search before "Show all". */
@@ -30,21 +31,49 @@ interface BankChipsProps {
   onSelect(bank: string): void;
 }
 
+function BankChip({ bank, selected, onSelect }: { bank: DrumBank; selected: string; onSelect(bank: string): void }) {
+  const menu = useBankMenu(bank, selected, onSelect);
+  return (
+    <Chip
+      variant="filter"
+      selected={bank.code === selected}
+      title={bank.description}
+      onClick={() => onSelect(bank.code)}
+      onContextMenu={menu.onContextMenu}
+      onKeyDown={menu.onKeyDown}
+    >
+      {bank.name}
+    </Chip>
+  );
+}
+
 function BankChips({ banks, selected, onSelect }: BankChipsProps) {
   return (
     <div className={styles["chips"]} role="group" aria-label="Drum machine">
       {banks.map((bank) => (
-        <Chip
-          key={bank.code}
-          variant="filter"
-          selected={bank.code === selected}
-          title={bank.description}
-          onClick={() => onSelect(bank.code)}
-        >
-          {bank.name}
-        </Chip>
+        <BankChip key={bank.code} bank={bank} selected={selected} onSelect={onSelect} />
       ))}
     </div>
+  );
+}
+
+/** A linked folder in the Sounds tab: click opens the Samples tab; right-click opens the folder menu. */
+function FolderRow({ folder, samples, onOpenSamples }: { folder: LinkedFolder; samples: SampleFolders; onOpenSamples(): void }) {
+  const menu = useFolderMenu(samples, folder.path);
+  return (
+    <li {...menu}>
+      <button
+        type="button"
+        className={styles["folderRow"]}
+        title={folder.path}
+        aria-label={`${folder.path}, ${folder.scan.files.length} files. Open in Samples`}
+        onClick={onOpenSamples}
+      >
+        <Icon name="folder" size={16} />
+        <span className={styles["path"]}>{shortPath(folder.path)}</span>
+        <span className={styles["count"]}>{folder.scan.status === "loading" ? "…" : folder.scan.files.length}</span>
+      </button>
+    </li>
   );
 }
 
@@ -143,19 +172,7 @@ export function SoundsTab({ mode, query, bank, onBankChange, actions, samples, o
         {samples.folders.length > 0 ? (
           <ul className={styles["folderList"]}>
             {samples.folders.map((folder) => (
-              <li key={folder.path}>
-                <button
-                  type="button"
-                  className={styles["folderRow"]}
-                  title={folder.path}
-                  aria-label={`${folder.path}, ${folder.scan.files.length} files. Open in Samples`}
-                  onClick={onOpenSamples}
-                >
-                  <Icon name="folder" size={16} />
-                  <span className={styles["path"]}>{shortPath(folder.path)}</span>
-                  <span className={styles["count"]}>{folder.scan.status === "loading" ? "…" : folder.scan.files.length}</span>
-                </button>
-              </li>
+              <FolderRow key={folder.path} folder={folder} samples={samples} onOpenSamples={onOpenSamples} />
             ))}
           </ul>
         ) : null}

@@ -2,7 +2,8 @@ import { STARTERS } from "@phyllo/model";
 import type { StarterDef, StarterId } from "@phyllo/model";
 import { Button, EmptyState, StarterCard } from "@phyllo/ui";
 import { useState } from "react";
-import { useAppStores } from "../../../hooks";
+import { useAppStores, useContextMenuTrigger } from "../../../hooks";
+import { starterMenuEntries } from "./libraryMenus";
 import { GroupHeading } from "./parts";
 import styles from "./LibraryPanel.module.css";
 
@@ -15,6 +16,29 @@ export interface StartersTabProps {
 
 function matches(starter: StarterDef, needle: string): boolean {
   return `${starter.name} ${starter.description} ${starter.key} ${starter.tags.join(" ")}`.toLowerCase().includes(needle);
+}
+
+interface StarterItemProps {
+  starter: StarterDef;
+  selected: boolean;
+  onChoose(): void;
+}
+
+/** One starter card; its right-click menu does what a click does. */
+function StarterItem({ starter, selected, onChoose }: StarterItemProps) {
+  const menu = useContextMenuTrigger(() => ({ label: `Starter ${starter.name}`, entries: starterMenuEntries(onChoose) }));
+  return (
+    <StarterCard
+      name={starter.name}
+      description={starter.description}
+      bpm={starter.bpm}
+      trackCount={starter.trackCount === 0 ? "Empty" : starter.trackCount}
+      preview={starter.preview.map((steps, row) => ({ color: starter.colors[row] ?? starter.colors[0], steps }))}
+      selected={selected}
+      onSelect={onChoose}
+      {...menu}
+    />
+  );
 }
 
 /** Guided "Starters" tab: starter grooves; a click starts a new project (after a confirmation when the open one has unsaved changes). */
@@ -60,16 +84,7 @@ export function StartersTab({ query, highlighted, onClearSearch }: StartersTabPr
         data-highlight={highlighted ? "" : undefined}
       >
         {shown.map((starter) => (
-          <StarterCard
-            key={starter.id}
-            name={starter.name}
-            description={starter.description}
-            bpm={starter.bpm}
-            trackCount={starter.trackCount === 0 ? "Empty" : starter.trackCount}
-            preview={starter.preview.map((steps, row) => ({ color: starter.colors[row] ?? starter.colors[0], steps }))}
-            selected={pending === starter.id}
-            onSelect={() => choose(starter)}
-          />
+          <StarterItem key={starter.id} starter={starter} selected={pending === starter.id} onChoose={() => choose(starter)} />
         ))}
       </div>
       {pendingStarter ? (

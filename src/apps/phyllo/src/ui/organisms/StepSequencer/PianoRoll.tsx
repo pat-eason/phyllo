@@ -1,8 +1,10 @@
 import { StepCell, Switch } from "@phyllo/ui";
 import { useState } from "react";
 import type { CSSProperties } from "react";
+import { useContextMenuTrigger } from "../../../hooks";
 import { STEPS } from "./drumGrid";
 import { pitchRows } from "./pitchGrid";
+import { pianoCellMenuEntries } from "./stepMenus";
 import styles from "./StepSequencer.module.css";
 
 export interface PianoRollProps {
@@ -17,6 +19,36 @@ export interface PianoRollProps {
 
 const BEATS = [0, 1, 2, 3];
 
+interface PianoCellProps {
+  index: number;
+  noteLabel: string;
+  color: string;
+  on: boolean;
+  anyNotes: boolean;
+  onToggle: () => void;
+  onClearAll: () => void;
+}
+
+/** One piano-roll cell; its menu places or removes the note, or clears the roll. */
+function PianoCell({ index, noteLabel, color, on, anyNotes, onToggle, onClearAll }: PianoCellProps) {
+  const menu = useContextMenuTrigger(() => ({
+    label: `${noteLabel} step ${index + 1}`,
+    entries: pianoCellMenuEntries({ noteLabel, on, anyNotes }, { toggle: onToggle, clearAll: onClearAll }),
+  }));
+  return (
+    <StepCell
+      className={styles["pianoCell"]}
+      index={index}
+      rowLabel={noteLabel}
+      color={color}
+      on={on}
+      beatStart={index % 4 === 0}
+      onChange={onToggle}
+      {...menu}
+    />
+  );
+}
+
 /** 16 steps × pitches of the project key (two octaves); click a cell to place or remove that step's note. */
 export function PianoRoll({ notes, keyName, color, onChange }: PianoRollProps) {
   const [snap, setSnap] = useState(true);
@@ -28,6 +60,12 @@ export function PianoRoll({ notes, keyName, color, onChange }: PianoRollProps) {
     next[step] = removing ? null : midi;
     onChange(next, removing ? null : midi);
   }
+
+  function clearAll() {
+    onChange(new Array<null>(STEPS).fill(null), null);
+  }
+
+  const anyNotes = notes.some((note) => note !== null);
 
   return (
     <div className={styles["piano"]}>
@@ -54,14 +92,14 @@ export function PianoRoll({ notes, keyName, color, onChange }: PianoRollProps) {
                       const i = beat * 4 + s;
                       return (
                         <div key={i} role="gridcell" className={styles["pianoCellWrap"]}>
-                          <StepCell
-                            className={styles["pianoCell"]}
+                          <PianoCell
                             index={i}
-                            rowLabel={row.label}
+                            noteLabel={row.label}
                             color={color}
                             on={notes[i] === row.midi}
-                            beatStart={s === 0}
-                            onChange={() => toggle(row.midi, i)}
+                            anyNotes={anyNotes}
+                            onToggle={() => toggle(row.midi, i)}
+                            onClearAll={clearAll}
                           />
                         </div>
                       );
