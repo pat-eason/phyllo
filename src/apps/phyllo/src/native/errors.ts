@@ -13,7 +13,6 @@ const CODES: ReadonlySet<string> = new Set<NativeErrorCode>([
   'unsupported_format',
   'encode',
   'menu',
-  'window',
   'tray',
   'notification',
   'network',

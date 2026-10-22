@@ -487,22 +487,53 @@ describe("GrooveBrowser", () => {
     expect(await screen.findByRole("button", { name: "road trip 2 grooves" })).toBeInTheDocument();
   });
 
-  it("should select a range with Shift and report bulk export paths", async () => {
+  it("should select a range with Shift and not offer Export for several grooves", async () => {
     // Arrange
-    const onBulkExport = vi.fn();
-    const { user } = await setup({ library: { view: "list" }, props: { onBulkExport } });
+    const { user } = await setup({ library: { view: "list" }, props: { onExportGroove: vi.fn() } });
     await screen.findByText("12 grooves");
 
     // Act
     await user.keyboard("{Shift>}");
     await user.click(screen.getByRole("button", { name: "Tidal study 2" }));
     await user.keyboard("{/Shift}");
-    await user.click(screen.getByRole("button", { name: "Export" }));
 
     // Assert
     expect(screen.getByText("3 selected")).toBeInTheDocument();
-    expect(onBulkExport).toHaveBeenCalledTimes(1);
-    expect(onBulkExport.mock.calls[0]?.[0]).toHaveLength(3);
+    expect(screen.queryByRole("button", { name: "Export…" })).not.toBeInTheDocument();
+  });
+
+  it("should open the one selected groove, then export it", async () => {
+    // Arrange
+    const onExportGroove = vi.fn();
+    const { user, stores } = await setup({ library: { view: "list" }, props: { onExportGroove } });
+    await screen.findByText("12 grooves");
+    const nightBus = stores.library.getState().grooves.find((g) => g.name === "Night bus");
+    await user.keyboard("{Meta>}");
+    await user.click(screen.getByRole("button", { name: "Night bus" }));
+    await user.keyboard("{/Meta}");
+
+    // Act
+    await user.click(screen.getByRole("button", { name: "Export…" }));
+
+    // Assert
+    await waitFor(() => expect(onExportGroove).toHaveBeenCalledWith(nightBus?.path));
+    expect(stores.project.getState().filePath).toBe(nightBus?.path);
+  });
+
+  it("should export a groove from its context menu", async () => {
+    // Arrange
+    const onExportGroove = vi.fn();
+    const { user, stores } = await setup({ props: { onExportGroove } });
+    await screen.findByText("12 grooves");
+    const kite = stores.library.getState().grooves.find((g) => g.name === "Kite season");
+    await rightClick(user, screen.getByRole("heading", { level: 3, name: "Kite season" }));
+
+    // Act
+    await user.click(screen.getByRole("menuitem", { name: "Export…" }));
+
+    // Assert
+    await waitFor(() => expect(onExportGroove).toHaveBeenCalledWith(kite?.path));
+    expect(stores.project.getState().filePath).toBe(kite?.path);
   });
 
   it("should move row focus with the arrow keys and toggle selection with Space", async () => {

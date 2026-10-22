@@ -14,6 +14,7 @@ export default tseslint.config(
       "**/storybook-static/**",
       "**/playwright-report/**",
       "**/test-results/**",
+      "**/.vitepress/cache/**",
       "**/node_modules/**",
       "__inspiration/**",
       "__prompts/**",
@@ -44,7 +45,7 @@ export default tseslint.config(
 
   // Tooling files run in Node.
   {
-    files: ["**/*.config.{js,ts,mjs}", "**/e2e/**/*.ts", "**/.storybook/main.ts"],
+    files: ["**/*.config.{js,ts,mjs}", "**/e2e/**/*.ts", "**/.storybook/main.ts", "src/apps/manual/capture/**/*.ts", "src/apps/manual/docs/.vitepress/**/*.ts"],
     languageOptions: { globals: globals.node },
   },
 

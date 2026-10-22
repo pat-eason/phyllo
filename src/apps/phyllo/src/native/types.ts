@@ -18,7 +18,6 @@ export type NativeErrorCode =
   | 'unsupported_format'
   | 'encode'
   | 'menu'
-  | 'window'
   | 'tray'
   | 'notification'
   /** A download failed (offline, HTTP error, redirect to a disallowed host). */

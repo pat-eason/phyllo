@@ -96,6 +96,14 @@ describe("AppHeader", () => {
     expect(screen.queryByRole("button", { name: "Record" })).not.toBeInTheDocument();
   });
 
+  it("should not offer recording when only a MIDI output is enabled", () => {
+    // Arrange / Act
+    renderHeader({}, { initialSettings: { midi: { enabledPorts: ["out:IAC Bus 1"] } } });
+
+    // Assert
+    expect(screen.queryByRole("button", { name: "Record" })).not.toBeInTheDocument();
+  });
+
   it("should offer the record key and arm it when a MIDI input is enabled", async () => {
     // Arrange
     const user = userEvent.setup();
@@ -122,6 +130,33 @@ describe("AppHeader", () => {
     expect(stores.transport.getState().loop.enabled).toBe(!loopBefore);
     expect(stores.transport.getState().metronome).toBe(true);
     expect(screen.getByRole("button", { name: "Metronome" })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("should click on every beat of the bar once the metronome is on", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const { stores } = renderHeader();
+
+    // Act
+    await user.click(screen.getByRole("button", { name: "Metronome" }));
+    await user.click(screen.getByRole("button", { name: "Play" }));
+
+    // Assert
+    expect(stores.fakeEngine.metronome).toEqual({ on: true, beatsPerBar: 4 });
+  });
+
+  it("should stop clicking when the metronome is switched off during playback", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const { stores } = renderHeader();
+    await user.click(screen.getByRole("button", { name: "Play" }));
+    await user.click(screen.getByRole("button", { name: "Metronome" }));
+
+    // Act
+    await user.click(screen.getByRole("button", { name: "Metronome" }));
+
+    // Assert
+    expect(stores.fakeEngine.metronome).toEqual({ on: false, beatsPerBar: 4 });
   });
 
   it("should edit the tempo in place", async () => {

@@ -56,6 +56,8 @@ declare module "@strudel/core" {
   export const silence: Pattern;
   export function pure<T>(v: T): Pattern<T>;
   export function stack(...pats: unknown[]): Pattern;
+  /** Each value (or pattern) gets an equal share of one cycle. */
+  export function sequence(...pats: unknown[]): Pattern;
   export function arrange(...sections: [number, Pattern][]): Pattern;
   export function register(name: string | string[], fn: (...args: never[]) => unknown, patternify?: boolean): unknown;
   export function evalScope(...modules: unknown[]): Promise<unknown[]>;

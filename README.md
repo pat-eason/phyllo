@@ -4,6 +4,8 @@ A desktop DAW for [Strudel](https://strudel.cc), the JavaScript port of TidalCyc
 
 Phyllo is a [Tauri 2](https://tauri.app) app: Strudel makes the sound inside the web view, and a Rust shell handles files, devices and the OS.
 
+📖 **[Read the manual](https://pat-eason.github.io/phyllo/)** (or run it locally with `pnpm --filter phyllo-manual dev`): a tutorial for first-timers, one page per screen with annotated screenshots, and the exact Strudel mapping for live coders.
+
 ![Arrange view, Guided mode, playing](docs/screenshots/arrange-guided.png)
 
 ## Features
@@ -75,6 +77,8 @@ pnpm --filter @phyllo/engine e2e            # audio engine in a real browser
 pnpm --filter phyllo e2e:visual             # capture every screen to test-results/screens/
 pnpm stories                                # Storybook for atoms and molecules (port 6006)
 pnpm --filter phyllo stories                # Storybook for organisms with mock stores (port 6007)
+pnpm --filter phyllo-manual dev             # the user manual (VitePress, port 5180)
+pnpm --filter phyllo-manual screenshots     # regenerate the manual's annotated screenshots from the live app
 (cd src/apps/phyllo/src-tauri && cargo test) # Rust tests
 ```
 
@@ -88,6 +92,7 @@ pnpm monorepo; all source lives under `src/`.
 | `src/packages/engine` | `@phyllo/engine`: code generation (project → Strudel), parsing (Strudel → project), mini-notation ↔ step grid, strudel.cc links, and the Strudel runtime (scheduling, errors, meters, offline render). |
 | `src/packages/ui` | `@phyllo/ui`: design tokens, `ThemeProvider`, bundled fonts, and the atoms and molecules (knobs, faders, meters, clips, cards…) with stories. Knows nothing about Strudel or Tauri. |
 | `src/shared/model` | `@phyllo/model`: the `.phyllo` project model, reducer, parameter specs, serialization, and content (starters, tips, sound and modifier catalogs). |
+| `src/apps/manual` | The user manual: a VitePress static site published to GitHub Pages, with Playwright specs that capture its annotated screenshots. See its README. |
 | `docs/` | Strudel API verification report and scripts, README screenshots. |
 
 ## How it works

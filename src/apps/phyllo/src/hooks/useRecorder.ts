@@ -1,6 +1,7 @@
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import { useAppStores } from "../state/context";
+import { isInputId } from "../state/midiInput";
 import type { MidiInputState } from "../state/midiInput";
 import type { RecorderState } from "../state/recorder";
 import type { SampleFoldersState } from "../state/sampleFolders";
@@ -18,6 +19,12 @@ export function useRecorder(): UseRecorder {
     recorder,
     useShallow((s) => ({ armed: s.armed, recording: s.recording, arm: s.arm, lastTake: s.lastTake })),
   );
+}
+
+/** True while at least one MIDI input is enabled in Settings, the only case where there is anything to record. */
+export function useCanRecord(): boolean {
+  const { settings } = useAppStores();
+  return useStore(settings, (s) => s.settings.midi.enabledPorts.some(isInputId));
 }
 
 /** Sound names from the linked sample folders (`s("<name>")`), in folder then file order. */

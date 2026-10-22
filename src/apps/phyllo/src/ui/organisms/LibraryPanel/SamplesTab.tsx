@@ -115,7 +115,7 @@ export function SamplesTab({ mode, query, actions, samples, onClearSearch }: Sam
       <EmptyState
         compact
         title="No sample folders yet"
-        body="Link a folder of .wav or .mp3 files and its sounds show up here."
+        body="Link a folder of audio files (WAV, AIFF, FLAC, MP3, OGG or M4A) and its sounds show up here."
       />
     );
   } else if (needle && !anyMatch && samples.folders.every((folder) => folder.scan.status !== "loading")) {

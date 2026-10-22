@@ -120,7 +120,7 @@ describe('native system integration (menu, windows, tray, media keys, open files
     expect([...OPENABLE_EXTENSIONS]).toEqual(rustExtensions);
   });
 
-  it('should keep every Rust error code, including menu/window/tray/notification, as a NativeError code', () => {
+  it('should keep every Rust error code, including menu/tray/notification, as a NativeError code', () => {
     // Arrange
     const codes = [...errorRs.matchAll(/=> "(\w+)",/g)].map((m) => m[1]!);
 
@@ -128,7 +128,7 @@ describe('native system integration (menu, windows, tray, media keys, open files
     const mapped = codes.map((code) => toNativeError({ code, message: 'x' }).code);
 
     // Assert
-    expect(codes).toEqual(expect.arrayContaining(['menu', 'window', 'tray', 'notification']));
+    expect(codes).toEqual(expect.arrayContaining(['menu', 'tray', 'notification']));
     expect(mapped).toEqual(codes);
   });
 
