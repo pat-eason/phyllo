@@ -350,11 +350,11 @@
   color: var(--ph-accent-text);
 }
 
+/* Portaled to <body> with fixed placement from AddTrackRow, so the scrolling timeline can't clip it. */
 .menu {
-  position: absolute;
-  bottom: calc(100% + 4px);
-  left: 8px;
-  z-index: 5;
+  position: fixed;
+  z-index: 50;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 2px;
