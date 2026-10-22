@@ -47,6 +47,8 @@ export interface TrackHeaderProps extends Omit<ComponentPropsWithoutRef<"div">, 
   onSoloChange: (soloed: boolean, event: MouseEvent<HTMLButtonElement>) => void;
   /** Double-click the name (or F2) to rename in place; Enter commits, Escape cancels. */
   onRename?: (name: string) => void;
+  /** Shows a remove button (on hover, focus or selection) and removes on Delete/Backspace from the name button. */
+  onRemove?: () => void;
   /** Extra native props for the Mute button, e.g. `data-tip-target`. `pressed`, `kind`, `label` and `onChange` stay owned by the header. */
   muteProps?: TrackHeaderToggleProps;
   /** Extra native props for the Solo button (see `muteProps`). */
@@ -80,6 +82,7 @@ export const TrackHeader = forwardRef<HTMLDivElement, TrackHeaderProps>(function
     onMuteChange,
     onSoloChange,
     onRename,
+    onRemove,
     muteProps,
     soloProps,
     className,
@@ -125,6 +128,10 @@ export const TrackHeader = forwardRef<HTMLDivElement, TrackHeaderProps>(function
 
   function onNameKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
     if (event.key === "F2") startEditing();
+    if (onRemove && (event.key === "Delete" || event.key === "Backspace")) {
+      event.preventDefault();
+      onRemove();
+    }
   }
 
   const meterProps = {
@@ -207,6 +214,11 @@ export const TrackHeader = forwardRef<HTMLDivElement, TrackHeaderProps>(function
         ) : null}
       </div>
       <Meter className={styles["meter"]} {...meterProps} />
+      {onRemove ? (
+        <button type="button" className={styles["remove"]} aria-label={`Remove ${name}`} title="Remove track" onClick={onRemove}>
+          <Icon name="close" size={12} />
+        </button>
+      ) : null}
       <ToggleButton {...muteProps} kind="mute" label={`Mute ${name}`} pressed={muted} onChange={onMuteChange} />
       <ToggleButton {...soloProps} kind="solo" label={`Solo ${name}`} pressed={soloed} onChange={onSoloChange} />
     </div>

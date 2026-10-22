@@ -220,4 +220,39 @@ describe("TrackHeader", () => {
     // Assert
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
   });
+
+  it("should call onRemove from the remove button", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const onRemove = vi.fn();
+    setup({ onRemove });
+
+    // Act
+    await user.click(screen.getByRole("button", { name: "Remove Kick" }));
+
+    // Assert
+    expect(onRemove).toHaveBeenCalledTimes(1);
+  });
+
+  it("should call onRemove on Delete from the focused name", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const onRemove = vi.fn();
+    setup({ onRemove });
+    screen.getByRole("button", { name: "Kick" }).focus();
+
+    // Act
+    await user.keyboard("{Delete}");
+
+    // Assert
+    expect(onRemove).toHaveBeenCalledTimes(1);
+  });
+
+  it("should not render a remove button without onRemove", () => {
+    // Arrange / Act
+    setup();
+
+    // Assert
+    expect(screen.queryByRole("button", { name: "Remove Kick" })).not.toBeInTheDocument();
+  });
 });

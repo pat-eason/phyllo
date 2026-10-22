@@ -145,6 +145,37 @@
   flex: none;
 }
 
+.remove {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ph-r-xs);
+  background: transparent;
+  color: var(--ph-muted);
+  cursor: pointer;
+  opacity: 0;
+}
+
+.header:hover .remove,
+.header[data-selected] .remove,
+.remove:focus-visible {
+  opacity: 1;
+}
+
+.remove:hover {
+  color: var(--ph-rec);
+}
+
+.remove:focus-visible {
+  outline: 2px solid var(--ph-accent);
+  outline-offset: 1px;
+}
+
 .visuallyHidden {
   position: absolute;
   width: 1px;

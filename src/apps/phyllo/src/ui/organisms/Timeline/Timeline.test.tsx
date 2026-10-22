@@ -309,6 +309,18 @@ describe("Timeline", () => {
     expect(clip("Lead, bars 17 to 28, c4 [eb4 g4] ~ bb4")).toBeInTheDocument();
   });
 
+  it("should remove a track from its remove button", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    renderTimeline();
+
+    // Act
+    await user.click(screen.getByRole("button", { name: "Remove Keys" }));
+
+    // Assert
+    expect(trackRows().map((row) => row.getAttribute("aria-label"))).toEqual(["Kick", "Clap", "Hats", "Bass", "Lead", "Vox chop"]);
+  });
+
   it("should delete the focused clip with Delete", async () => {
     // Arrange
     const user = userEvent.setup();
