@@ -1,6 +1,7 @@
 import {
   forwardRef,
   useEffect,
+  useEffectEvent,
   useId,
   useRef,
   useState,
@@ -99,12 +100,11 @@ export const ModifierRow = forwardRef<HTMLDivElement, ModifierRowProps>(function
   useEffect(() => () => stopDrag.current?.(), []);
 
   const seenRequest = useRef(editRequest);
-  const beginEdit = useRef(startEdit);
-  beginEdit.current = startEdit;
+  const beginEdit = useEffectEvent(() => startEdit());
   useEffect(() => {
     if (editRequest === seenRequest.current) return;
     seenRequest.current = editRequest;
-    if (editRequest > 0) beginEdit.current();
+    if (editRequest > 0) beginEdit();
   }, [editRequest]);
 
   function startEdit() {

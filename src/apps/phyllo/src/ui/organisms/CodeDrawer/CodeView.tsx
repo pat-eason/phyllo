@@ -45,12 +45,6 @@ function selectAllOnCommandA(event: KeyboardEvent<HTMLPreElement>) {
   window.getSelection()?.selectAllChildren(event.currentTarget);
 }
 
-/** Selected text keeps the web view's own menu (Copy, Look Up), so the code's menu stays out of the way. */
-function hasSelectionWithin(element: Element): boolean {
-  const selection = window.getSelection();
-  return selection !== null && !selection.isCollapsed && selection.rangeCount > 0 && selection.getRangeAt(0).intersectsNode(element);
-}
-
 /**
  * Line-numbered, syntax-colored code. The gutter is a separate column so selecting and copying the code never
  * picks up line numbers; error rows are `user-select: none` for the same reason. ⌘A inside selects only the code.
@@ -83,9 +77,7 @@ export function CodeView({ lines, literals, tracks, selectedTrackId, error, line
   /** `trackId`: the track of the right-clicked line, null for the code in general. */
   function openMenu(event: MouseEvent<HTMLElement>, trackId: string | null) {
     if (!menuCommands) return;
-    // A pattern being edited is a text field with its own menu.
-    if (event.target instanceof Element && event.target.closest("input, textarea")) return;
-    if (hasSelectionWithin(event.currentTarget)) return;
+    // A pattern being edited and selected code keep the web view's own menu: `openFromEvent` lets those through.
     const track = tracks.find((t) => t.id === trackId) ?? null;
     contextMenu.openFromEvent(event, { label: "Generated code", entries: codeMenuEntries(track, menuCommands) });
   }

@@ -725,7 +725,7 @@ describe("GrooveBrowser", () => {
     const menu = await rightClick(user, screen.getByRole("button", { name: "lo-fi 2 grooves" }));
 
     // Act
-    await user.click(within(menu).getByRole("menuitemcheckbox", { name: "Show only this tag" }));
+    await user.click(within(menu).getByRole("menuitemcheckbox", { name: "Filter by this tag" }));
 
     // Assert
     expect(screen.getByRole("button", { name: "lo-fi 2 grooves" })).toHaveAttribute("aria-pressed", "true");

@@ -566,6 +566,19 @@ describe("AppHeader", () => {
     expect(stores.project.getState().project.key).toBe("Eb major");
   });
 
+  it("should open the key cell's menu from the keyboard", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    renderHeader();
+    screen.getByRole("button", { name: "C minor, 4/4, change key or time signature" }).focus();
+
+    // Act
+    await user.keyboard("{Enter}");
+
+    // Assert
+    expect(await screen.findByRole("menu", { name: "Key and time signature" })).toBeInTheDocument();
+  });
+
   it("should set the beats per bar from the key cell's menu", async () => {
     // Arrange
     const user = userEvent.setup();

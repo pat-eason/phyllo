@@ -15,7 +15,7 @@ export interface TagMenuCommands {
 export function tagMenuEntries(tag: string, allTags: readonly string[], filtering: boolean, commands: TagMenuCommands): MenuEntryInput[] {
   const others = allTags.filter((name) => !sameTag(name, tag));
   return [
-    { id: "filter", label: "Show only this tag", checked: filtering, onSelect: () => commands.toggleFilter(tag) },
+    { id: "filter", label: "Filter by this tag", checked: filtering, onSelect: () => commands.toggleFilter(tag) },
     MENU_SEPARATOR,
     { id: "rename", label: "Rename…", onSelect: () => commands.rename(tag) },
     {

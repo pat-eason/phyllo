@@ -9,7 +9,7 @@ import { useTrackMenu } from "../../contextMenu";
 import { usePointerDrag } from "./pointerDrag";
 import { isSoundDrag, readSoundRef } from "./soundDrop";
 import styles from "./Timeline.module.css";
-import { snapDelta, wholeBarStep } from "./timelineModel";
+import { isPrimaryPress, snapDelta, wholeBarStep } from "./timelineModel";
 import type { EditTool, Snap } from "./timelineModel";
 import { trackSoundCode, trackViz } from "./trackDisplay";
 import type { TimelineActions } from "./useTimelineActions";
@@ -93,6 +93,7 @@ export const Lane = memo(function Lane({
   const gridStart = (bar: number) => 1 + Math.floor((bar - 1) / step) * step;
 
   function dragClip(clip: ClipModel, mode: "move" | ClipEdge, event: ReactPointerEvent<HTMLElement>, duplicate: boolean) {
+    if (!isPrimaryPress(event)) return;
     const len = clip.endBar - clip.startBar;
     const next = (dx: number): Range => {
       const delta = snapDelta(dx / barWidth, step);
@@ -120,7 +121,7 @@ export const Lane = memo(function Lane({
   }
 
   function onLanePointerDown(event: ReactPointerEvent<HTMLDivElement>) {
-    if (event.button !== 0 || event.target !== event.currentTarget) return;
+    if (!isPrimaryPress(event) || event.target !== event.currentTarget) return;
     if (tool !== "draw") {
       actions.select(trackId);
       return;

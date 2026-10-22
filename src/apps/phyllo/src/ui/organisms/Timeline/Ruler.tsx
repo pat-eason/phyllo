@@ -6,7 +6,7 @@ import { usePointerDrag } from "./pointerDrag";
 import { SectionChips } from "./SectionChips";
 import type { SectionChipsHandle } from "./SectionChips";
 import styles from "./Timeline.module.css";
-import { snapDelta, snapPosition, wholeBarStep } from "./timelineModel";
+import { isPrimaryPress, snapDelta, snapPosition, wholeBarStep } from "./timelineModel";
 import type { Snap } from "./timelineModel";
 import type { TimelineActions } from "./useTimelineActions";
 import { useTimelineMenus } from "./useTimelineMenus";
@@ -79,7 +79,7 @@ export const Ruler = memo(function Ruler({ lengthBars, barWidth, sections, loop,
   }
 
   function onTrackPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
-    if (event.button !== 0) return;
+    if (!isPrimaryPress(event)) return;
     event.preventDefault();
     if (event.shiftKey) {
       // ⇧-drag: draw a loop region from the bar under the pointer.
@@ -109,7 +109,7 @@ export const Ruler = memo(function Ruler({ lengthBars, barWidth, sections, loop,
   }
 
   function onLoopPointerDown(mode: "move" | "start" | "end", event: ReactPointerEvent<HTMLElement>) {
-    if (event.button !== 0) return;
+    if (!isPrimaryPress(event)) return;
     event.preventDefault();
     event.stopPropagation();
     const origin = { startBar: loop.startBar, endBar: loop.endBar };

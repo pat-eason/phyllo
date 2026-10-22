@@ -60,8 +60,8 @@ export interface NativeContextMenu {
  * - On macOS the popup runs a modal tracking loop, so `popup` resolves only once the menu has closed; the chosen
  *   item's `action` arrives through its channel around the same time. The menu object is therefore kept until the
  *   next popup and released then, never straight after `popup`, so a late action is not lost.
- * - `destructive` and `title` have no native equivalent. An item with a `swatch` becomes an icon item and its
- *   `checked` state is not shown (muda has no checked icon item).
+ * - `destructive` and `title` have no native equivalent. An item with a `swatch` becomes an icon item; when it is
+ *   also `checked` a trailing ✓ in the label stands in for the check mark (muda has no checked icon item).
  */
 export function createNativeContextMenu(): NativeContextMenu {
   let previous: Menu | null = null;
@@ -94,7 +94,8 @@ export function createNativeContextMenu(): NativeContextMenu {
           action: () => entry.onSelect(),
           ...(entry.accelerator ? { accelerator: entry.accelerator } : {}),
         };
-        if (entry.swatch) return { ...base, icon: await swatch(entry.swatch) };
+        // muda has no checked icon item, so a checked swatch (the current colour) carries the check in its label.
+        if (entry.swatch) return { ...base, text: entry.checked ? `${entry.label}  ✓` : entry.label, icon: await swatch(entry.swatch) };
         if (entry.checked !== undefined) return { ...base, checked: entry.checked };
         return base;
       }),

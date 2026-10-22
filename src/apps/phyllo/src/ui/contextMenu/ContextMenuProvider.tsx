@@ -6,7 +6,7 @@ import { createPortal } from "react-dom";
 import { ContextMenuContext } from "../../hooks/useContextMenu";
 import type { ContextMenuApi, ContextMenuRequest } from "../../hooks/useContextMenu";
 import type { NativeApi } from "../../native/api";
-import { suppressWebViewMenu } from "./webViewMenu";
+import { clearRightClickWordSelection, isTextEntry, suppressWebViewMenu, wantsWebViewMenu, watchRightClickSelection } from "./webViewMenu";
 
 /** Keyboard-opened menus sit this far inside the element's corner. */
 const KEYBOARD_OFFSET = 24;
@@ -37,6 +37,8 @@ function activeElement(): HTMLElement | null {
 export function ContextMenuProvider({ native, suppressWebViewMenu: suppress = native.kind === "tauri", children }: ContextMenuProviderProps) {
   const [open, setOpen] = useState<OpenMenu | null>(null);
 
+  useEffect(() => watchRightClickSelection(document), []);
+
   useEffect(() => {
     if (!suppress) return undefined;
     return suppressWebViewMenu(document, { allowWithAlt: import.meta.env.DEV });
@@ -60,11 +62,16 @@ export function ContextMenuProvider({ native, suppressWebViewMenu: suppress = na
     return {
       open: show,
       openFromEvent(event, request) {
+        // Text fields and selected text keep the web view's own menu (Cut/Copy/Paste, Look Up), even inside an
+        // element that has a Phyllo menu.
+        if (wantsWebViewMenu(event.target, document)) return;
         event.preventDefault();
         event.stopPropagation();
+        clearRightClickWordSelection(document);
         show(request, { x: event.clientX, y: event.clientY });
       },
       openAtElement(element, request) {
+        if (isTextEntry(document.activeElement)) return;
         const rect = element.getBoundingClientRect();
         show(request, { x: rect.left + Math.min(KEYBOARD_OFFSET, rect.width / 2), y: rect.top + Math.min(KEYBOARD_OFFSET, rect.height / 2) });
       },
@@ -74,7 +81,18 @@ export function ContextMenuProvider({ native, suppressWebViewMenu: suppress = na
   function close(reason: MenuCloseReason) {
     const returnFocus = open?.returnFocus;
     setOpen(null);
-    if ((reason === "escape" || reason === "tab") && returnFocus?.isConnected) returnFocus.focus();
+    if (!returnFocus) return;
+    if (reason === "escape" || reason === "tab") {
+      if (returnFocus.isConnected) returnFocus.focus();
+      return;
+    }
+    if (reason !== "select") return;
+    // The chosen item may move focus itself (an inline rename); only when focus fell to <body> with the removed menu
+    // does it go back where it was, as it would after a native menu.
+    requestAnimationFrame(() => {
+      const active = document.activeElement;
+      if ((active === null || active === document.body) && returnFocus.isConnected) returnFocus.focus();
+    });
   }
 
   return (

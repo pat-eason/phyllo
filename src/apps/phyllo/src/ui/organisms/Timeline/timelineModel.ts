@@ -4,6 +4,7 @@
  */
 
 import type { TrackKind } from "@phyllo/model";
+import { detectMac } from "../../shell/shortcuts";
 
 /** Pro pointer modes (SPEC §6.1, shortcuts V / B / S per §7). Guided always uses `select`. */
 export type EditTool = "select" | "draw" | "split";
@@ -89,3 +90,11 @@ export const TRACK_KINDS: readonly { kind: TrackKind; label: string; hint: strin
   { kind: "sample", label: "Sample", hint: "Your own sound file" },
   { kind: "code", label: "Code", hint: "Free Strudel code" },
 ];
+
+/**
+ * A plain primary-button press. On macOS Ctrl+click is a right-click: it opens the context menu, so it must not
+ * also seek, draw a clip or start a drag.
+ */
+export function isPrimaryPress(event: { button: number; ctrlKey: boolean }, isMac: boolean = detectMac()): boolean {
+  return event.button === 0 && !(isMac && event.ctrlKey);
+}

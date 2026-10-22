@@ -87,6 +87,21 @@ describe('native context menu', () => {
     expect(mocks.imageNew).toHaveBeenCalledWith(expect.any(Uint8Array), 32, 32);
   });
 
+  it('should mark the checked swatch item with a trailing check in its label', async () => {
+    // Arrange
+    const menu = createNativeContextMenu();
+    const entries: MenuEntry[] = [
+      { id: 'green', label: 'Green', swatch: '#7FD98A', checked: true, onSelect: () => undefined },
+      { id: 'blue', label: 'Blue', swatch: '#8AB4FF', checked: false, onSelect: () => undefined },
+    ];
+
+    // Act
+    await menu.popup(entries, { x: 0, y: 0 });
+
+    // Assert
+    expect(builtItems().map((item) => item.text)).toEqual(['Green  ✓', 'Blue']);
+  });
+
   it("should run the entry's onSelect when its native item is chosen", async () => {
     // Arrange
     const onRename = vi.fn();

@@ -263,6 +263,8 @@ export function rulerMenuEntries(project: Project, context: RulerMenuContext, co
       title: startsHere ? "A section already starts at this bar" : undefined,
       onSelect: () => addSection(commands, project, sectionRangeFrom(sections, start, lengthBars), context.renameNewSection),
     },
+    // Inside the loop band (whose body passes right-clicks through to the ruler).
+    loop.enabled && context.bar >= loop.startBar && context.bar <= loop.endBar && sectionFromLoopEntry(project, commands, context.renameNewSection),
     {
       id: "songEnd",
       label: "Set song end here",
@@ -273,24 +275,32 @@ export function rulerMenuEntries(project: Project, context: RulerMenuContext, co
   ];
 }
 
-/** Right-click menu of the loop band (which exists while the loop is on). */
+function sectionFromLoopEntry(
+  project: Project,
+  commands: TimelineMenuCommands,
+  renameNewSection?: (sectionId: string) => void,
+): MenuEntryInput {
+  const { loop, sections } = project;
+  // A section that would swallow whole sections is not an addition but a replacement; leave that to the user.
+  const replaces = sections.some((s) => loop.startBar <= s.startBar && s.endBar <= loop.endBar);
+  return {
+    id: "sectionFromLoop",
+    label: "Add section from loop",
+    disabled: replaces,
+    title: replaces ? "The loop already covers a whole section" : undefined,
+    onSelect: () => addSection(commands, project, { startBar: loop.startBar, endBar: loop.endBar }, renameNewSection),
+  };
+}
+
+/** Right-click menu of the loop band's grip and edges (the band itself lets pointer events through to the ruler). */
 export function loopMenuEntries(
   project: Project,
   commands: TimelineMenuCommands,
   renameNewSection?: (sectionId: string) => void,
 ): MenuEntryInput[] {
-  const { loop, sections } = project;
-  // A section that would swallow whole sections is not an addition but a replacement; leave that to the user.
-  const replaces = sections.some((s) => loop.startBar <= s.startBar && s.endBar <= loop.endBar);
   return [
-    { id: "loopToggle", label: "Loop", checked: loop.enabled, accelerator: acceleratorFor("transport.loop"), onSelect: commands.toggleLoop },
-    {
-      id: "sectionFromLoop",
-      label: "Add section from loop",
-      disabled: replaces,
-      title: replaces ? "The loop already covers a whole section" : undefined,
-      onSelect: () => addSection(commands, project, { startBar: loop.startBar, endBar: loop.endBar }, renameNewSection),
-    },
+    { id: "loopToggle", label: "Loop", checked: project.loop.enabled, accelerator: acceleratorFor("transport.loop"), onSelect: commands.toggleLoop },
+    sectionFromLoopEntry(project, commands, renameNewSection),
   ];
 }
 

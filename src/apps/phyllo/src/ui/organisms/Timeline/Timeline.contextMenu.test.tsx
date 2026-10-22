@@ -469,6 +469,29 @@ describe("Timeline context menus", () => {
     expect(project(s).sections.find((x) => x.name === "Section 5")).toMatchObject({ startBar: 10, endBar: 12 });
   });
 
+  it("should offer Add section from loop when the ruler is right-clicked inside the loop", async () => {
+    // Arrange
+    const { user, stores: s } = setup({}, arrangeProject({ loop: { enabled: true, startBar: 10, endBar: 12 } }));
+    await rightClick(user, screen.getByTestId("ruler"), xOf(11));
+
+    // Act
+    await user.click(item("Add section from loop"));
+
+    // Assert
+    expect(project(s).sections.find((x) => x.name === "Section 5")).toMatchObject({ startBar: 10, endBar: 12 });
+  });
+
+  it("should not offer Add section from loop outside the loop", async () => {
+    // Arrange
+    const { user } = setup({}, arrangeProject({ loop: { enabled: true, startBar: 10, endBar: 12 } }));
+
+    // Act
+    await rightClick(user, screen.getByTestId("ruler"), xOf(5));
+
+    // Assert
+    expect(screen.queryByRole("menuitem", { name: "Add section from loop" })).not.toBeInTheDocument();
+  });
+
   it("should rename a section from its menu", async () => {
     // Arrange
     const { user } = setup();

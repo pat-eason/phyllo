@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { useContextMenuTrigger } from "../../hooks/useContextMenu";
@@ -12,6 +12,32 @@ function Target({ build, label = "Target" }: { build: () => ContextMenuRequest |
   return (
     <button type="button" {...trigger}>
       {label}
+    </button>
+  );
+}
+
+/** A menu target with a rename field inside it, like a track header while renaming. */
+function WithField({ build }: { build: () => ContextMenuRequest | null }) {
+  const trigger = useContextMenuTrigger(build);
+  return (
+    <div role="group" aria-label="Header" {...trigger}>
+      <input aria-label="Track name" />
+    </div>
+  );
+}
+
+/** Mimics WebKit: a right mousedown on text selects the word under the pointer before `contextmenu` fires. */
+function SelectsWordOnRightClick({ build }: { build: () => ContextMenuRequest | null }) {
+  const trigger = useContextMenuTrigger(build);
+  return (
+    <button
+      type="button"
+      {...trigger}
+      onMouseDown={(event) => {
+        if (event.button === 2) window.getSelection()?.selectAllChildren(event.currentTarget);
+      }}
+    >
+      ~/Music/Phyllo/Groove.phyllo
     </button>
   );
 }
@@ -152,5 +178,76 @@ describe("ContextMenuProvider", () => {
 
     // Assert
     expect(event.defaultPrevented).toBe(false);
+  });
+
+  it("should leave a text field inside a menu target to the web view menu", async () => {
+    // Arrange
+    const build = vi.fn(() => bassMenu());
+    const { user } = renderWith(
+      <WithField build={build} />,
+    );
+
+    // Act
+    await user.pointer({ keys: "[MouseRight]", target: screen.getByRole("textbox", { name: "Track name" }) });
+
+    // Assert
+    expect(build).not.toHaveBeenCalled();
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+  });
+
+  it("should leave Shift+F10 in a text field inside a menu target to the field", async () => {
+    // Arrange
+    const build = vi.fn(() => bassMenu());
+    const { user } = renderWith(<WithField build={build} />);
+    screen.getByRole("textbox", { name: "Track name" }).focus();
+
+    // Act
+    await user.keyboard("{Shift>}{F10}{/Shift}");
+
+    // Assert
+    expect(build).not.toHaveBeenCalled();
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+  });
+
+  it("should open the Phyllo menu when the right-click itself selected the word under the pointer", async () => {
+    // Arrange
+    const { user } = renderWith(<SelectsWordOnRightClick build={() => bassMenu()} />);
+
+    // Act
+    await user.pointer({ keys: "[MouseRight]", target: screen.getByRole("button", { name: /Groove\.phyllo/ }) });
+
+    // Assert
+    expect(await screen.findByRole("menu", { name: "Track Bass" })).toBeInTheDocument();
+    expect(window.getSelection()?.isCollapsed).toBe(true);
+  });
+
+  it("should keep the web view menu for text that was selected before the right-click", async () => {
+    // Arrange
+    const build = vi.fn(() => bassMenu());
+    const { user } = renderWith(<Target build={build} label="Selected words" />);
+    const target = screen.getByRole("button", { name: "Selected words" });
+    window.getSelection()?.selectAllChildren(target);
+
+    // Act
+    await user.pointer({ keys: "[MouseRight]", target });
+
+    // Assert
+    expect(build).not.toHaveBeenCalled();
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+  });
+
+  it("should return focus to where the menu was opened after choosing an item from the keyboard", async () => {
+    // Arrange
+    const { user } = renderWith(<Target build={() => bassMenu()} />);
+    const target = screen.getByRole("button", { name: "Target" });
+    target.focus();
+    await user.keyboard("{Shift>}{F10}{/Shift}");
+    await screen.findByRole("menu", { name: "Track Bass" });
+
+    // Act
+    await user.keyboard("{Enter}");
+
+    // Assert
+    await waitFor(() => expect(target).toHaveFocus());
   });
 });

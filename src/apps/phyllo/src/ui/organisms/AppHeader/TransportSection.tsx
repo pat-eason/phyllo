@@ -27,6 +27,7 @@ export function TransportSection() {
   const { settings } = useSettings();
   const key = useProjectSelector((project) => project.key);
   const taps = useRef<number[]>([]);
+  const sectionRef = useRef<HTMLDivElement>(null);
   const { dispatch } = useProject();
   const contextMenu = useContextMenu();
 
@@ -66,6 +67,14 @@ export function TransportSection() {
       default:
         return null;
     }
+  }
+
+  // The key cell has no other action, so a click (or Enter/Space) opens its menu: the only place key and time
+  // signature can be changed, so it must be reachable without a right-click.
+  function openKeyMenu() {
+    const cell = sectionRef.current?.querySelector<HTMLElement>('[data-cell="key"]');
+    const request = cellMenu("key");
+    if (cell && request) contextMenu.openAtElement(cell, request);
   }
 
   function openCellMenu(event: MouseEvent<HTMLElement>, cellId: string) {
@@ -115,7 +124,14 @@ export function TransportSection() {
       onNudge: (delta) => setBpm(clampBpm(bpm + delta)),
       onContextMenu: (event) => openCellMenu(event, "bpm"),
     },
-    { id: "key", value: key, caption: `KEY · ${beatsPerBar}/4`, onContextMenu: (event) => openCellMenu(event, "key") },
+    {
+      id: "key",
+      value: key,
+      caption: `KEY · ${beatsPerBar}/4`,
+      label: `${key}, ${beatsPerBar}/4, change key or time signature`,
+      onActivate: openKeyMenu,
+      onContextMenu: (event) => openCellMenu(event, "key"),
+    },
     {
       id: "cycle",
       value: position.cycle.toFixed(2),
@@ -126,7 +142,7 @@ export function TransportSection() {
   ];
 
   return (
-    <div className={styles["transportSection"]} data-tauri-drag-region="">
+    <div ref={sectionRef} className={styles["transportSection"]} data-tauri-drag-region="">
       <TransportControls
         playing={transport.playing}
         recording={transport.recordArmed}

@@ -1,6 +1,7 @@
 import type { MenuEntryInput } from "@phyllo/ui";
 import { createContext, useContext } from "react";
 import type { KeyboardEvent, MouseEvent } from "react";
+import { isTextEntry, wantsWebViewMenu } from "../ui/contextMenu/webViewMenu";
 
 export interface ContextMenuRequest {
   /** Accessible name of the DOM menu, e.g. `Track "Bass"`. */
@@ -46,16 +47,19 @@ export interface ContextMenuTrigger {
 /**
  * Handlers that open the menu `build` returns, for right-click and the keyboard. `build` runs at open time, so the
  * entries reflect current state; return null to let the event through untouched (an outer element's menu, if any).
+ * Events from text fields and selected text are always let through, so the field keeps its own menu.
  */
 export function useContextMenuTrigger(build: (target: HTMLElement) => ContextMenuRequest | null): ContextMenuTrigger {
   const menu = useContextMenu();
   return {
     onContextMenu(event) {
+      if (wantsWebViewMenu(event.target, document)) return;
       const request = build(event.currentTarget);
       if (request) menu.openFromEvent(event, request);
     },
     onKeyDown(event) {
-      if (!isContextMenuKey(event)) return;
+      // Shift+F10 in a text field belongs to the field.
+      if (!isContextMenuKey(event) || isTextEntry(event.target)) return;
       const request = build(event.currentTarget);
       if (!request) return;
       event.preventDefault();
